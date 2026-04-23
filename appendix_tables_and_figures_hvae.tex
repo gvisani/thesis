@@ -1,0 +1,1527 @@
+
+\begin{table}[h]
+\begin{center}
+
+\resizebox{0.5\textwidth}{!}{
+\begin{tabular}{l l c c | c c}
+    \bf Type & \bf Method & \bf z & \bf bw & \bf LC Acc. & \bf KNN Acc.\\
+    \hline
+    \multirow{8}{*}{Unsupervised}
+    & H-AE NR/R      & 120 & 30 & 0.920 & 0.920 \\
+    & H-AE R/R       & 120 & 30 & 0.916 & \textbf{0.923} \\
+    & H-AE NR/R      &  16 & 30 & 0.850 & 0.902 \\
+    & H-AE R/R       &  16 & 30 & 0.844 & 0.901 \\
+    & H-VAE NR/R     & 120 & 30 & \textbf{0.923} & 0.907 \\
+    & H-VAE R/R      & 120 & 30 & 0.916 & 0.900 \\
+    & H-VAE NR/R     &  16 & 30 & 0.878 & 0.897 \\
+    & H-VAE R/R      &  16 & 30 & 0.855 & 0.880 \\
+\end{tabular}
+}
+
+\end{center}
+    \figcaption{Evaluation of network performances for MNIST-on-the-sphere using a K-Nearest Neighbors
+    (KNN) classifier instead of linear classifier in the latent space.}{Results are significantly better than when using a linear classifier for models with smaller
+    ($z = 16$) latent space, comparable or worse for the other models. Interestingly,
+    VAE models have worse KNN classification performance than AE models, reversing the trend seen
+    with of Linear Classification.}
+\label{table:mnist_scores_knn}
+\end{table}
+
+
+\begin{table}[h]
+\begin{center}
+\resizebox{0.7\textwidth}{!}{
+\begin{tabular}{l l c c | c | c c c c c}
+    \bf Type & \bf Method & \bf z & \bf bw & \newlinecell{\bf Class.\\\bf Acc.} & \bf P@N & \bf R@N
+    & \bf F1@N & \bf mAP & \bf NDCG \\
+    \hline
+    \multirow{2}{*}{Unsupervised + LC}
+    & H-AE        &  40 & 90 & 0.654 & 0.548 & 0.569 & 0.545 & 0.500 & 0.597 \\
+    & H-VAE       &  40 & 90 & 0.631 & 0.512 & 0.537 & 0.512 & 0.463 & 0.568 \\
+    \hline
+    \multirow{2}{*}{Unsupervised + KNN}
+    & H-AE        &  40 & 90 & \textbf{0.672} & \textbf{0.560} & \textbf{0.572} & \textbf{0.555} &
+    \textbf{0.501} & \textbf{0.599} \\
+    & H-VAE       &  40 & 90 & 0.658 & 0.541 & 0.558 & 0.539 & 0.487 & 0.591 \\
+\end{tabular}}
+\end{center}
+    \figcaption{Evaluation of network performances for Shrec17 using a KNN classifier instead of
+    linear classifier in the latent space.}{Results are better than when using a linear classifier.}
+\label{table:shrec17_evaluation_knn}
+\end{table}
+
+
+\begin{table}[h]
+    \centering
+     \resizebox{\textwidth}{!}{
+    \begin{tabular}{l | c c c c | c c c c | c c c c}
+         & \multicolumn{4}{c}{\bf H-AE} \vline & \multicolumn{4}{c}{\bf H-VAE ($\beta = 0.025$)}
+         \vline & \multicolumn{4}{c}{\bf H-VAE ($\beta = 0.1$)} \\
+        {\bf \# train} & {\bf MSE} & {\bf Cosine loss} & {\bf LC Acc.} & {\bf KNN Acc.} & {\bf MSE}
+        & {\bf Cosine loss} & {\bf LC Acc.} & {\bf KNN Acc.} & {\bf MSE} & {\bf Cosine loss} & {\bf
+        LC Acc.} & {\bf KNN Acc.} \\
+        \hline
+        0       & $1.3 \times 10^{-2}$ & 1.015 & 0.409 & 0.629  &  $1.5 \times 10^{-2}$ & 0.981 &
+        0.424 & 0.656  &  $1.5 \times 10^{-2}$ & 0.981 & 0.424 & 0.656 \\
+        400     & $9.4 \times 10^{-4}$ & 0.153 & 0.586 & 0.842  &  $9.8 \times 10^{-4}$ & 0.160 &
+        0.616 & 0.848  &  $1.0 \times 10^{-3}$ & 0.163 & 0.558 & 0.780 \\
+        1,000   & $5.9 \times 10^{-4}$ & 0.099 & 0.583 & 0.856  &  $6.3 \times 10^{-4}$ & 0.101 &
+        0.569 & 0.854  &  $6.9 \times 10^{-4}$ & 0.113 & 0.564 & 0.844 \\
+        2,000   & $4.5 \times 10^{-4}$ & 0.073 & 0.560 & 0.900  &  $4.9 \times 10^{-4}$ & 0.081 &
+        0.554 & 0.905  &  $5.5 \times 10^{-4}$ & 0.092 & 0.593 & 0.890 \\
+        5,000   & $3.3 \times 10^{-4}$ & 0.053 & 0.629 & 0.940  &  $3.3 \times 10^{-4}$ & 0.053 &
+        0.638 & 0.961  &  $4.3 \times 10^{-4}$ & 0.072 & 0.588 & 0.921 \\
+        20,000  & $2.2 \times 10^{-4}$ & 0.034 & 0.578 & 0.972  &  $2.4 \times 10^{-4}$ & 0.037 &
+        0.667 & 0.971  &  $2.9 \times 10^{-4}$ & 0.047 & 0.662 & 0.966 \\
+    \end{tabular}
+    }
+    \figcaption{Quantitative data ablation results on the Toy amino acids dataset.}
+    {A random-guessing classifier has an expected accuracy of 0.050.}
+    \label{table:toy_aas_data_ablation_z_eq_2}
+\end{table}
+
+
+
+\begin{table}[h]
+    \centering
+     \begin{tabular}{l | c c c c}
+        {\bf $\beta$} & {\bf MSE} & {\bf Cosine} & {\bf LC Acc.} & {\bf KNN Acc.}\\
+        \hline
+        0 (AE) & $2.2 \times 10^{-4}$ & 0.034 & 0.580 & 0.972 \\
+        0.025  & $2.4 \times 10^{-4}$ & 0.037 & 0.666 & 0.971 \\
+        0.05   & $2.5 \times 10^{-4}$ & 0.039 & 0.669 & 0.968 \\
+        0.1    & $2.9 \times 10^{-4}$ & 0.047 & 0.661 & 0.966 \\
+        0.25   & $6.8 \times 10^{-4}$ & 0.132 & 0.597 & 0.854 \\
+        0.5    & $1.1 \times 10^{-3}$ & 0.203 & 0.467 & 0.722 \\
+    \end{tabular}
+    \figcaption{Quantitative AE vs. VAE ablation results on the Toy amino acids dataset.}
+    {Models were trained on the full dataset (\# train = 20,000).}
+    \label{table:toy_aas_kld_ablation_z_eq_2}
+\end{table}
+
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{l l c c c c | c c}
+    \bf Dataset & \bf Method & \bf $L$ & \bf $z$ & \bf bw & \bf \# Params & \bf MSE & \bf Cosine \\
+    \hline
+    \hline
+    \multirow{8}{*}{MNIST}
+    & H-AE NR/R     & 10 & 120 & 30 & 453k & $6.5 \times 10^{-4}$ & 0.017
+    \\
+    & H-AE R/R      & 10 & 120 & 30 & 453k & $5.8 \times 10^{-4}$ & 0.015
+    \\
+    & H-AE NR/R     & 10 &  16 & 30 & 227k & $1.2 \times 10^{-3}$ & 0.031
+    \\
+    & H-AE R/R      & 10 &  16 & 30 & 227k & $1.2 \times 10^{-3}$ & 0.030
+    \\
+    & H-VAE NR/R    & 10 & 120 & 30 & 453k & $1.9 \times 10^{-3}$ & 0.048
+    \\
+    & H-VAE R/R     & 10 & 120 & 30 & 453k & $2.0 \times 10^{-3}$ & 0.050
+    \\
+    & H-VAE NR/R    & 10 &  16 & 30 & 227k & $2.8 \times 10^{-3}$ & 0.068
+    \\
+    & H-VAE R/R     & 10 &  16 & 30 & 227k & $2.7 \times 10^{-3}$ & 0.067
+    \\
+    \hline
+    \multirow{2}{*}{Shrec17}
+    & H-AE          & 14 &  40 & 90 & 518k & $1.8 \times 10^{-4}$ & 0.130 \\
+    & H-VAE         & 14 &  40 & 90 & 518k & $2.2 \times 10^{-4}$ & 0.151 \\
+    \hline
+    \multirow{12}{*}{Protein NBs}
+    & H-AE          &  3 &  64 & - & 631k & $3.3 \times 10^{-4}$ & 0.084 \\
+    & H-AE          &  4 &  64 & - & 950k & $3.9 \times 10^{-4}$ & 0.125 \\
+    & H-AE          &  6 &  64 & - & 1.6M & $5.4 \times 10^{-4}$ & 0.219 \\
+    & H-AE          &  8 &  64 & - & 2.4M & $6.3 \times 10^{-4}$ & 0.287 \\
+    \cline{2-8}
+    & H-AE          &  3 & 128 & - & 1.2M & $2.1 \times 10^{-4}$ & 0.053 \\
+    & H-AE          &  4 & 128 & - & 1.7M & $2.8 \times 10^{-4}$ & 0.087 \\
+    & H-AE          &  6 & 128 & - & 2.6M & $4.0 \times 10^{-4}$ & 0.156 \\
+    & H-AE          &  8 & 128 & - & 3.8M & $4.9 \times 10^{-4}$ & 0.213 \\
+    \cline{2-8}
+    & H-AE          &  3 & 256 & - & 2.8M & $1.0 \times 10^{-4}$ & 0.025 \\
+    & H-AE          &  4 & 256 & - & 3.8M & $1.9 \times 10^{-4}$ & 0.060 \\
+    & H-AE          &  6 & 256 & - & 4.4M & $2.7 \times 10^{-4}$ & 0.102 \\
+    & H-AE          &  8 & 256 & - & 7.9M & $3.5 \times 10^{-4}$ & 0.148
+\end{tabular}
+\end{center}
+\figcaption{Test MSE and Cosine loss for H-(V)AE models trained on MNIST, Shrec17 and Protein Neighborhoods.}
+{MSE and Cosine values are strongly correlated within datasets but not across datasets.}
+\label{table:mse_and_cosine}
+\end{table}
+
+
+\begin{table}[ht]
+\begin{center}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l l c c c c c c c | c | c c}
+    \bf Dataset & \bf Method & \bf $L$ & \bf $z$ & \bf TP-type & $\mathbf{C_{init}}$ & \bf
+    ChannelsList & \bf DegreesList & \bf \# Params & \bf Speed & \bf MSE & \bf Cosine \\
+    \hline
+    \hline
+    \multirow{3}{*}{MNIST}
+    & H-AE  & 10 & 16 &     ETP & None &      [16,16,16,16,16,16] & [10,10,8,4,2,1] & 227k &
+    \textbf{1.0} & $1.2 \times 10^{-3}$ & 0.031  \\
+    & H-AE  & 10 & 16 & Full-TP & None &             [7,6,6,6,16] &    [10,8,4,2,1] & 229k & 1.1 &
+    $9.8 \times 10^{-4}$ & 0.025  \\
+    & H-AE  & 10 & 16 & Full-TP & None &           [5,5,5,5,7,16] & [10,10,8,4,2,1] & 227k & 1.7 &
+    $\mathbf{8.9 \times 10^{-4}}$ & \textbf{0.024}  \\
+    \hline
+    \multirow{2}{*}{Shrec17}
+    & H-AE  & 14 & 40 &     ETP &   12 &  [12,12,12,20,24,32,40] &   [14,14,14,8,4,2,1] & 518k &
+    1.0 & $\mathbf{1.8 \times 10^{-4}}$ & \textbf{0.130} \\
+    & H-AE  & 14 & 40 & Full-TP & None &            [5,5,5,8,40] &         [14,8,4,2,1] & 518k &
+    \textbf{0.9} & $1.9 \times 10^{-4}$ & 0.137    \\
+    & H-AE  & 14 & 40 & Full-TP & None &        [4,3,3,6,6,6,40] &   [14,14,14,8,4,2,1] & 513k &
+    1.9 & $2.0 \times 10^{-4}$ & 0.142    \\
+    \hline
+    \multirow{4}{*}{Protein NBs}
+    & H-AE  & 6 & 64 &     ETP &   44 &  [50,50,50,64,64,64] &   [6,6,6,4,2,1] & 1.6M &
+    \textbf{1.0} & $\mathbf{5.4 \times 10^{-4}}$ & \textbf{0.219} \\
+    & H-AE  & 6 & 64 & Full-TP & None &          [8,8,12,36] &       [6,4,2,1] & 1.6M & 2.1 & $6.7
+    \times 10^{-4}$ & 0.286 \\
+    \cline{2-12}
+    & H-AE  & 8 & 64 &     ETP &   44 &  [50,50,50,64,64,64] &   [6,6,6,4,2,1] & 2.4M &
+    \textbf{1.0} & $\mathbf{6.3 \times 10^{-4}}$ & \textbf{0.287} \\
+    & H-AE  & 8 & 64 & Full-TP & None &          [8,8,12,36] &       [6,4,2,1] & 2.6M & 3.3 & $7.6
+    \times 10^{-4}$ & 0.371 \\
+\end{tabular}
+}
+\end{center}
+    \figcaption{Training speed and reconstruction ablations of H-(V)AE models with different
+    Tensor Product rules.}{To make comparison fair, models were trained using the same training hyperparameters as
+    described in~\ref{sec:exp_details}, and all models were constructed to have comparable number
+    of parameters. Speed was computed as training time and divided by the time of the model using
+    ETP within each dataset. Models with the ETP usually generate better
+    reconstructions and are usually the fastest. The speed and performance gains of the ETP are
+    most apparent on the Protein Neighborhoods task, where we also note that, as the angular
+    resolution of the data ($L$) is increased from 6 to 8, the relative speed gain of the ETP over
+    the Full-TP is significantly accentuated (from 2.1x to 3.3x).}
+\label{table:tp_ablation}
+\end{table}
+
+
+\begin{table}[ht]
+\begin{center}
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{l l c c c | c c}
+    \bf Dataset & \bf Method & \bf $L$ & \bf z & \bf \# train & \bf Equiv. Error & \bf Abs. Value \\
+    \hline
+    \hline
+    \multirow{2}{*}{MNIST}
+    & H-AE NR/R     & 10 &  16 & - & (2.3 $\pm$ 2.7)$\times 10^{-4}$& (1.0 $\pm$ 0.9)$\times
+    10^{-1}$ \\
+    & H-VAE NR/R    & 10 &  16 & - & (2.5 $\pm$ 1.9)$\times 10^{-4}$& (1.3 $\pm$ 1.8)$\times
+    10^{-1}$ \\
+    \hline
+    \multirow{2}{*}{Shrec17}
+    & H-AE          & 14 &  40 & - & (1.4 $\pm$ 2.4)$\times 10^{-5}$& (0.4 $\pm$ 1.1)$\times
+    10^{-2}$ \\
+    & H-VAE         & 14 &  40 & - & (1.4 $\pm$ 3.5)$\times 10^{-5}$& (0.4 $\pm$ 2.2)$\times
+    10^{-2}$ \\
+    \hline
+    \multirow{4}{*}{Toy Aminoacids}
+    & H-AE                   &  4 &  2 &  1,000 & (4.7 $\pm$ 3.7)$\times 10^{-5}$& (2.6 $\pm$
+    4.1)$\times 10^{-2}$ \\
+    & H-VAE $\beta = 0.025$  &  4 &  2 &  1,000 & (5.4 $\pm$ 3.9)$\times 10^{-5}$& (2.8 $\pm$
+    4.0)$\times 10^{-2}$ \\
+    & H-AE                   &  4 &  2 & 20,000 & (9.3 $\pm$ 6.4)$\times 10^{-5}$& (3.5 $\pm$
+    4.7)$\times 10^{-2}$ \\
+    & H-VAE $\beta = 0.025$  &  4 &  2 & 20,000 & (9.0 $\pm$ 4.7)$\times 10^{-5}$& (3.0 $\pm$
+    4.3)$\times 10^{-2}$ \\
+    \hline
+    \multirow{12}{*}{Protein NBs}
+    & H-AE          &  3 &  64 & - & (3.3 $\pm$ 4.2)$\times 10^{-5}$& (1.6 $\pm$ 2.1)$\times
+    10^{-2}$ \\
+    & H-AE          &  4 &  64 & - & (0.6 $\pm$ 0.6)$\times 10^{-5}$& (0.6 $\pm$ 2.1)$\times
+    10^{-2}$ \\
+    & H-AE          &  6 &  64 & - & (0.9 $\pm$ 1.0)$\times 10^{-5}$& (0.4 $\pm$ 1.3)$\times
+    10^{-2}$ \\
+    & H-AE          &  8 &  64 & - & (0.7 $\pm$ 1.0)$\times 10^{-5}$& (0.2 $\pm$ 0.9)$\times
+    10^{-2}$ \\
+    \cline{2-7}
+    & H-AE          &  3 & 128 & - & (1.1 $\pm$ 1.3)$\times 10^{-5}$& (1.0 $\pm$ 3.0)$\times
+    10^{-2}$ \\
+    & H-AE          &  4 & 128 & - & (0.6 $\pm$ 0.7)$\times 10^{-5}$& (0.6 $\pm$ 2.5)$\times
+    10^{-2}$ \\
+    & H-AE          &  6 & 128 & - & (0.1 $\pm$ 0.1)$\times 10^{-5}$& (0.2 $\pm$ 1.7)$\times
+    10^{-2}$ \\
+    & H-AE          &  8 & 128 & - & (0.1 $\pm$ 0.1)$\times 10^{-5}$& (0.1 $\pm$ 1.0)$\times
+    10^{-2}$ \\
+    \cline{2-7}
+    & H-AE          &  3 & 256 & - & (0.6 $\pm$ 0.4)$\times 10^{-5}$& (0.6 $\pm$ 2.0)$\times
+    10^{-2}$ \\
+    & H-AE          &  4 & 256 & - & (0.4 $\pm$ 0.6)$\times 10^{-5}$& (0.6 $\pm$ 2.2)$\times
+    10^{-2}$ \\
+    & H-AE          &  6 & 256 & - & (0.1 $\pm$ 0.1)$\times 10^{-5}$& (0.2 $\pm$ 1.6)$\times
+    10^{-2}$ \\
+    & H-AE          &  8 & 256 & - & (0.09 $\pm$ 0.07)$\times 10^{-5}$& (0.1 $\pm$ 1.3)$\times
+    10^{-2}$ \\
+\end{tabular}
+}
+\end{center}
+    \figcaption{Mean equivariance error for some of our trained H-(V)AE models.}{Errors were computed
+    over 2,000 randomly sampled spherical tensors, each with a randomly
+    sampled rotation. Standard deviation is shown alongside the mean. We also show the mean and
+    standard deviation of the absolute value of the output coefficients, to enable
+    contextualization of the measured equivariance error. The equivariance error due to numerical
+    error (absolute difference in coefficients by rotating input vs. output tensor) is consistently
+    three orders of magnitude lower than the typical absolute value of the coefficients, indicating
+    that equivariance is preserved. The same trend occurs for \textit{untrained} models (not shown
+    here for simplicity).}
+\label{table:equivariance_error}
+\end{table}
+
+
+\begin{table*}[t]
+\begin{center}
+\resizebox{0.8\textwidth}{!}{
+\begin{tabular}{l | c c c c}
+     & \multicolumn{3}{c}{\newlinecell{\textbf{Ligand Binding Affinity}\\\textbf{30\% Similarity}}}
+     \\
+    {\bf Method} & {RMSD $\downarrow$} & {Pearson's r $\uparrow$} & {Spearman's r $\uparrow$} &
+    {Kendall's $\tau$ $\uparrow$} \\
+    \hline
+    \hline
+    DeepDTA~\cite{ozturk_deepdta_2018} &                  $1.565$           & $0.573$           &
+    $0.574$           & - \\ 
+    DeepAffinity~\cite{karimi_deepaffinity_2019} &             $1.893 \pm 0.650$ & $0.415$         
+     & $0.426$           & - \\
+    Cormorant~\cite{anderson_cormorant_2019} &                $1.568 \pm 0.012$ & $0.389$          
+    & $0.408$           & - \\
+    ProtTrans~\cite{elnaggar_prottrans_2022} &                $1.544 \pm 0.015$ & $0.438 \pm 0.053$
+    & $0.434 \pm 0.058$ & - \\
+    3DCNN~\cite{townshend_atom3d_2021} &                    $1.414 \pm 0.021$ & $0.550$           &
+    $0.553$           & - \\
+    GNN~\cite{townshend_atom3d_2021} &                      $1.570 \pm 0.025$ & $0.545$           &
+    $0.533$           & - \\
+    MaSIF~\cite{gainza_deciphering_2020} &                    $1.484 \pm 0.018$ & $0.467 \pm 0.020$
+    & $0.455 \pm 0.014$ & - \\
+    DGAT~\cite{nguyen_graphdta_2021} &                     $1.719 \pm 0.047$ & $0.464$           &
+    $0.472$           & - \\
+    DGIN~\cite{nguyen_graphdta_2021} &                     $1.765 \pm 0.076$ & $0.426$           &
+    $0.432$           & - \\
+    DGAT-GCN~\cite{nguyen_graphdta_2021} &                 $1.550 \pm 0.017$ & $0.498$           &
+    $0.496$           & - \\
+    GVP-GNN~\cite{jing_learning_2021} &                  $1.648 \pm 0.014$ & $0.213 \pm 0.013$ &
+    $0.164 \pm 0.009$ & $0.110 \pm 0.012$ \\
+    EGNN~\cite{satorras_en_2022} &                     $1.492 \pm 0.012$ & $0.489 \pm 0.017$ &
+    $0.472 \pm 0.008$ & $0.329 \pm 0.014$ \\
+    HoloProt~\cite{somnath_multi-scale_2022} &                 $1.464 \pm 0.006$ & $0.509 \pm
+    0.002$ & $0.500 \pm 0.005$ & - \\
+    GBPNet~\cite{aykent_gbpnet_2022} &                   $1.405 \pm 0.009$ & $0.561$           &
+    $0.557$           & - \\
+    EGNN + PLM~\cite{wu_when_2022} &               $1.403 \pm 0.013$ & $0.565 \pm 0.016$ & $0.544
+    \pm 0.005$ & $0.379 \pm 0.007$ \\
+    ProtMD~\cite{wu_pre-training_2022}   &     $1.367 \pm 0.014$ & \underline{$0.601 \pm 0.036$} &
+    \underline{$0.587 \pm 0.042$} & - \\
+    \hline
+    Zernike Inv. + Linear Regression & $1.455 \pm 0.005$ & $0.513 \pm 0.005$ & $0.516 \pm 0.006$ &
+    $0.357 \pm 0.005$ \\
+    Zernike Inv. + Random Forest & \underline{$1.361 \pm 0.011$} & $0.587 \pm 0.009$ & $0.584 \pm
+    0.010$ & \underline{$0.408 \pm 0.008$} \\
+    H-AE + Linear Regression & $1.397 \pm 0.019$ & $0.560 \pm 0.017$ & $0.568 \pm 0.018$ & $0.397
+    \pm 0.016$ \\
+    H-AE + Random Forest &     $\mathbf{1.332 \pm 0.012}$ & $\mathbf{0.612 \pm 0.009}$ &
+    $\mathbf{0.619 \pm 0.009}$ & $\mathbf{0.436 \pm 0.006}$
+\end{tabular}
+}
+\end{center}
+    \figcaption{Comprehensive benchmarking results on the Ligand Binding Affinity task with
+    Atom3D's 30\% similarity split.}{Models are sorted by date of release. In addition to the H-AE infomed models, we also report
+    the performance of baseline models that only use the SO(3)-invariant ($\ell = 0$) component of
+    each neighborhood's Zernike transform (Zernike Inv.). H-AE consistently outperforms this
+    baseline, indicating that the SO(3)-invariant information from the higher-degree features
+    extracted by H-AE are informative for this regression task. Best scores are in \textbf{bold}
+    and second-best scores are \underline{underlined}. Errors for our models are computed as the
+    standard deviation in prediction by 10 Machine Learning models trained with bootstrapped data.}
+\label{table:lba_results_appendix}
+\end{table*}
+
+
+\clearpage{}
+
+\newpage{}
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/training_total_loss_trace_H-AE.pdf}
+    \figcaption{Training loss trace of H-AE, with and without Batch Norm, on
+    MNIST-on-the-sphere.}{Models were trained with the (NR/R; z = 16; AE) specification. The loss on validation data
+    follows the same trend, but it is not shown for simplicity.}
+    \label{fig:training_loss_trace_H-AE}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{c c}
+        \textbf{A}  (NR/R ; z = 16 ; AE) & \textbf{B}  (NR/R ; z = 16 ; VAE ; $\beta = 0.6$) \\
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/AE-NRR-z=16/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        &
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        \\
+        \textbf{C}  (NR/R ; z = 120 ; VAE ; $\beta = 2.8$) & \textbf{D}  (NR/R ; z = 16 ; VAE ;
+        $\beta = 2.0$) \\
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        &
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=2.0/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+    \end{tabular}
+    }
+    \figcaption{UMAP visualization of the invariant latent space learned by
+    selected H-(V)AE models trained on MNIST-on-the-sphere.}{Notably, variational models with appropriately-tuned strength of the prior ($\beta$) present
+    the most cohesive clusters based on digit identity (panels B and C). If the prior is too strong
+    (panel D), the latent space loses most of the digit-based clustering.}
+    \label{fig:mnist_umaps}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{c c}
+        \textbf{A}  (NR/R ; z = 16 ; Cond. VAE; $\beta = 0.6$) & \textbf{B}  (NR/R ; z = 120 ;
+        Cond. VAE ; $\beta = 2.8$) \\
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6-conditional/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        &
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8-conditional/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        \\
+        \textbf{C}  (NR/R ; z = 16 ; Cond. VAE; $\beta = 0.2$) & \textbf{D}  (NR/R ; z = 16 ; Cond
+        .VAE ; $\beta = 2.0$) \\
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.2-conditional/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+        &
+        \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=2.0-conditional/umap-split=test-lowest_total_loss_with_final_kl_model.png}
+    \end{tabular}
+    }
+    \figcaption{UMAP visualization of the invariant latent space learned by
+    selected \textit{conditional} H-VAE models trained on MNIST-on-the-sphere.}{Contrary to using standard models, with a conditional VAE we expect the latent space to not
+    contain information about the conditioning (in this case, the digit identity). We find this is
+    true generally for high-enough strength of the prior $\beta$ (panels A, B and D) but not true
+    if $\beta$ is too low (panel C).}
+    \label{fig:mnist_umaps_conditional}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Quals/figures/loss_functions/cosine_vs_mse_icml.png}
+    \figcaption{Correlation between Cosine loss and MSE values between pairs of random
+    tensors.}{For each dataset, we sample a batch of $N = 1000$ tensors with dataset-specific feature degrees
+    and channel sizes, where each coefficient is sampled from a normal distribution. We mimic the
+    normalization step performed in the real experiment and normalize each tensor by the average
+    total norm of the batch. We then generate a ``noisy" version of each tensor by adding
+    (normalized) Gaussian noise to each coefficient with standard deviation sampled from a uniform
+    distribution between $0$ and some maximum noise level ($10$ in these plots). This procedure
+    results in $N$ pairs of tensors with varying degrees of similarity between them. We compute the
+    MSE and Cosine loss for all $N$ pairs of tensors and visualize them. The two loss values are
+    well correlated in rank as measured by Spearman Correlation. The correlation is significantly
+    stronger in the regime of reconstruction loss below a Cosine loss of 0.5 (SpearmanR $\sim
+    0.99$), a value well above the maximum Cosine loss achieved by H-(V)AE in all our experiments.
+    All the p-values for the Spearman Correlations shown in the plot are significant ($< 0.05$).}
+    \label{fig:cosine_vs_mse}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/ablation_in_beta_cond.png}
+    \figcaption{Trade-off across regularization strength $\beta$ between quality
+    (top) and diversity (bottom) of MNIST-on-the-sphere samples generated by H-VAE with digit
+    conditioning.}{    We train conditional H-VAE models with varying values of regularization strength $\beta$, as
+    well as an SO(3)-equivariant classifier with high accuracy (97\%) on real data. We generate
+    10,000 conditional samples evenly distributed across labels. We approximate the samples'
+    quality by the classifier's accuracy (top) and their variance by the intra-label cosine loss
+    across 100,000 samples pairs; in the bottom plot we also show the intra-label cosine loss on
+    real data. The plots indicate a clear trade-off between sample quality and diversity. In
+    particular, as $\beta$ increases above a certain threshold (higher for a larger latent space),
+    the samples start looking all the same (see
+    Figure~\ref{fig:mnist_conditional_samples_VAE_z_16_beta_2pt0} for examples). We chose values of
+    $\beta$ upon visual inspection and indicate them with a star. We further note that all our
+    models tend to generate samples with lower diversity than real data, as indicated by the cosine
+    loss being below the black dotted line in the bottom plot; this is to be expected since VAEs
+    notoriously tend to "smooth-out" fine details, but the effect is less pronounced with a larger
+    latent space.}
+    \label{fig:ablation_in_beta_cond}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/ablation_in_beta_uncond.png}
+    \figcaption{Ablation in regularization strength $\beta$ on MNIST-on-the-sphere
+    test set.}{    We indicate the chosen values $\beta$ with stars. We emphasize that the values of $\beta$ were
+    chosen according to visual inspection in Figure~\ref{fig:ablation_in_beta_cond} using
+    conditional models.}
+    \label{fig:ablation_in_beta_uncond}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/cosine_loss_across_beta_both_cond_and_uncond.png}
+    \figcaption{Reconstruction loss across $\beta$ for both unconditional and
+    conditional H-VAE models on MNIST-on-the-sphere.}{}
+    \label{fig:cosine_loss_mnist_cond_vs_uncond_ablation_in_beta}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \resizebox{0.4\textwidth}{!}{
+    \begin{tabular}{r c c c c c}
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=0-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=0-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=1-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=1-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=2-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=2-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=3-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=3-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=4-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=4-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=5-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=5-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=6-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=6-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=7-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=7-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=8-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=8-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__true_image-n=4-label=9-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/reconstructions/__rec_image-n=4-label=9-split=test-seed=123456789.png}   
+    \end{tabular}
+    }
+    \figcaption{Reconstructions of Random Test Images by the (NR/R; z = 16; AE)
+    MNIST-on-the-sphere model.}{}
+    \label{fig:mnist_reconstructions_AE_z_16}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \resizebox{0.4\textwidth}{!}{
+    \begin{tabular}{r c c c c c}
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=0-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=0-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=1-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=1-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=2-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=2-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=3-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=3-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=4-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=4-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=5-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=5-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=6-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=6-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=7-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=7-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=8-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=8-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__true_image-n=4-label=9-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/reconstructions/__rec_image-n=4-label=9-split=test-seed=123456789.png}   
+    \end{tabular}
+    }
+    \figcaption{Reconstructions of Random Test Images by the (NR/R; z = 16; VAE;
+    $\beta = 0.6$) MNIST-on-the-sphere model.}{}
+    \label{fig:mnist_reconstructions_VAE_z_16_beta_0pt6}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \resizebox{0.4\textwidth}{!}{
+    \begin{tabular}{r c c c c c}
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=0-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=0-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=0-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=1-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=1-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=1-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=2-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=2-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=2-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=3-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=3-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=3-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=4-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=4-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=4-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=5-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=5-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=5-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=6-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=6-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=6-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=7-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=7-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=7-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=8-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=8-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=8-split=test-seed=123456789.png} \\
+    \hline
+    Original
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__true_image-n=4-label=9-split=test-seed=123456789.png} \\
+    Reconstructed
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=0-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=1-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=2-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=3-label=9-split=test-seed=123456789.png}
+    &
+    \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/reconstructions/__rec_image-n=4-label=9-split=test-seed=123456789.png}   
+    \end{tabular}
+    }
+    \figcaption{Reconstructions of Random Test Images by the (NR/R; z = 120; VAE;
+    $\beta = 2.8$) MNIST-on-the-sphere model.}{}
+    \label{fig:mnist_reconstructions_VAE_z_120_beta_2pt8}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/samples/samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random samples generated by the (NR/R; z = 16; VAE; $\beta = 0.6$)
+    MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal) and feed
+    them to the decoder alongside the canonical frame to generate tensors. We then compute the
+    inverse SFT to map the generated tensor to images in real space. The samples show a wide range
+    of diversity in digit and style.}
+    \label{fig:mnist_samples_VAE_z_16_beta_0pt6}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/samples/samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random samples generated by the (NR/R; z = 120; VAE; $\beta =
+    2.8$) MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal) and feed
+    them to the decoder alongside the canonical frame to generate tensors. We then compute the
+    inverse SFT to map the generated tensor to images in real space. The samples show a wide range
+    of diversity in digit and style.}
+    \label{fig:mnist_samples_VAE_z_120_beta_2pt8}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=2.0/samples/samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random samples generated by the (NR/R; z = 16; VAE; $\beta = 2.0$)
+    MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal) and feed
+    them to the decoder alongside the canonical frame to generate tensors. We then compute the
+    inverse SFT to map the generated tensor to images in real space. Samples look approximately all
+    the same and like a "mush" of all digits, a clear sign that the strength of the prior $\beta$
+    is too high.}
+    \label{fig:mnist_samples_VAE_z_16_beta_2pt0}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6-conditional/samples/conditional_samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random conditional samples generated by the (NR/R; z = 16; VAE;
+    $\beta = 0.6$; conditional) MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal), add digit
+    conditioning, and feed them to the decoder alongside the canonical frame to generate tensors.
+    We then compute the inverse SFT to map the generated tensor to images in real space. Samples
+    reflect their conditioning digit and show a wide variety of styles.}
+    \label{fig:mnist_conditional_samples_VAE_z_16_beta_0pt6}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8-conditional/samples/conditional_samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random conditional samples generated by the (NR/R; z = 120; VAE;
+    $\beta = 2.8$; conditional) MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal), add digit
+    conditioning, and feed them to the decoder alongside the canonical frame to generate tensors.
+    We then compute the inverse SFT to map the generated tensor to images in real space. Samples
+    reflect their conditioning digit and show a wide variety of styles.}
+    \label{fig:mnist_conditional_samples_VAE_z_120_beta_2pt8}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=2.0-conditional/samples/conditional_samples-n_samples=5-seed=123456789.png}
+    \figcaption{Random conditional samples generated by the (NR/R; z = 16; VAE;
+    $\beta = 2.0$; conditional) MNIST-on-the-sphere model.}{    We sample invariant latent embeddings from the prior distribution (isotropic normal), add digit
+    conditioning, and feed them to the decoder alongside the canonical frame to generate tensors.
+    We then compute the inverse SFT to map the generated tensor to images in real space. Samples
+    look the same within each digit, a clear sign that the strength of the prior $\beta$ is too
+    high.}
+    \label{fig:mnist_conditional_samples_VAE_z_16_beta_2pt0}
+\end{figure}
+
+
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c | c | c}
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/AE-NRR-z=16/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png}
+    \end{tabular}}
+    \figcaption{Trajectories across the latent space for the (NR/R; z = 16; AE)
+    MNIST-on-the-sphere model.}{    We compute pairs of invariant latent embeddings using the model's encoder, and linearly
+    interpolate between them through the latent space. We then feed the interpolated embeddings
+    into the decoder, together with the canonical frame, and compute the inverse SFT to get the
+    image in real space. The left and right columns show the original images (after forward and
+    inverse SFT) rotated to be placed in the learned canonical frame, whereas the center rows show
+    the interpolated images. We can see that all trajectories are smooth, respecting spatial
+    consistency, sign of a well structured latent space.}
+    \label{fig:mnist_trajectories_AE_z_16}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c | c | c}
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.pdf}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.pdf} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.pdf} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.pdf}
+    \end{tabular}}
+    \figcaption{Trajectories across the latent space for the (NR/R; z = 16; VAE;
+    $\beta = 0.6$) MNIST-on-the-sphere model.}{    We compute pairs of invariant latent embeddings using the model's encoder, and linearly
+    interpolate between them through the latent space. We then feed the interpolated embeddings
+    into the decoder, together with the canonical frame, and compute the inverse SFT to get the
+    image in real space. The left and right columns show the original images (after forward and
+    inverse SFT) rotated to be placed in the learned canonical frame, whereas the center rows show
+    the interpolated images. We can see that all trajectories are smooth, respecting spatial
+    consistency, sign of a well structured latent space.}
+    \label{fig:mnist_trajectories_VAE_z_16_beta_0pt6}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c | c | c}
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=3-end=7-seed=1.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=0-end=2-seed=1.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=1-end=9-seed=2.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=0.png}
+         \\
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/startlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png} &
+         \includegraphics[width=1.0\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/trajectorieslowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png} &
+         \includegraphics[width=0.1\textwidth]{Quals/figures/mnist/VAE-NRR-z=120-beta=2.8/interpolations/endlowest_total_loss_with_final_kl_model-n_samples=1-start=8-end=5-seed=1.png}
+    \end{tabular}}
+    \figcaption{Trajectories across the latent space for the (NR/R; z = 120; VAE;
+    $\beta = 2.8$) MNIST-on-the-sphere model.}{    We compute pairs of invariant latent embeddings using the model's encoder, and linearly
+    interpolate between them through the latent space. We then feed the interpolated embeddings
+    into the decoder, together with the canonical frame, and compute the inverse SFT to get the
+    image in real space. The left and right columns show the original images (after forward and
+    inverse SFT) rotated to be placed in the learned canonical frame, whereas the center rows show
+    the interpolated images. We can see that all trajectories are smooth, respecting spatial
+    consistency, sign of a well structured latent space.}
+    \label{fig:mnist_trajectories_VAE_z_120_beta_2pt8}
+\end{figure}
+
+\newcommand{\frameimgsize}{0.18}
+\begin{figure*}[htbp]
+    \centering
+    \resizebox{0.83\textwidth}{!}{
+    \begin{tabular}{c | c | c | c | c}
+    & AE - NR/R & AE - R/R & VAE - NR/R & VAE - R/R
+    \\
+    \hline
+    \newlinecell[c]{Trained with\\all digits}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/AE-NRR-z=16/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/AE-RR-z=16/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/VAE-RR-z=16-beta=0.6/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    \\
+    \hline
+    \newlinecell[c]{Trained with\\1s and 7s only}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/AE-NRR-z=16-labels=1,7/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/AE-RR-z=16-labels=1,7/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/VAE-NRR-z=16-beta=0.6-labels=1,7/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    &
+    \includegraphics[valign=m,width=\frameimgsize\textwidth]{Quals/figures/mnist/VAE-RR-z=16-beta=0.6-labels=1,7/canonical_frame/__overlap_of_rec_images_unrotated_by_inverse_of_frame-lowest_total_loss_with_final_kl_model-split=test-labels=7,1.png}
+    \end{tabular}}
+    \figcaption{H-(V)AE implicitly learns to maximally overlap training images on
+    MNIST-on-the-sphere.}{    For each of the 4 models with $z = 16$, we train a version using only images containing 1s and
+    7s. For each of the resulting 8 models, we visualize the sum of training images of digits 1 and
+    7, when rotated to the canonical frame. We compute the sums of images with the same digit, and
+    overlay them with different colors for ease of visualization. We test the hypothesis as whether
+    H-(V)AE learns frames that align the training images such that they maximally overlap; we do so
+    in two ways.\\
+    \textbf{First:} if the hypothesis were true, all canonical images of the same digit should
+    maximally or near-maximally overlap - since they have very similar shape - and thus, their
+    overlays would look like a ``smooth" version of that digit. Indeed, we find this statement to
+    be true for all models irrespective of their training strategy.\\
+    \textbf{Second:} we consider the alignment of images of different digits. We take 1s and 7s as
+    examples given their similarity in shape. If the hypothesis were true, models trained with only
+    1s and 7s should align canonical 1s along the long side of canonical 7s; indeed we find this to
+    be the case for two out of four cases, interestingly corresponding to the
+    variational models. The same alignment between 1s and 7s, however, does not necessarily hold
+    for models trained with all digits. This is because maximizing overlap across a set of diverse
+    shapes does not necessarily maximize the overlap within any independent pair of such shapes.
+    Indeed, we find that canonical 1s and canonical 7s do not overlap optimally with each other for
+    models trained with all digits.\\
+    We note that these tests do not provide a formal proof, but rather empirical evidence of the
+    characteristics of frames learned by H-(V)AE on the MNIST-on-the-sphere task.}
+    \label{fig:canonical_frames_1,7}
+\end{figure*}
+
+
+\begin{figure}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c c}
+    \includegraphics[width=0.5\textwidth]{Quals/figures/shrec17/AE/__pretty_umap_invariants-lowest_rec_loss-split=test.png}
+    &
+    \includegraphics[width=0.5\textwidth]{Quals/figures/shrec17/VAE/__pretty_umap_invariants-lowest_total_loss_with_final_kl_model-split=test.png}
+    \end{tabular}}
+    \figcaption{2D visualization via UMAP of the invariant latent embeddings of Shrec17 test
+    data learned by H-(V)AE.}{    Left: H-AE, Right: H-VAE. Points are colored by class (55 classes).}
+    \label{fig:shrec17_umaps}
+\end{figure}
+
+
+
+
+
+\begin{figure}[h]
+    \includegraphics[width=1.0\textwidth]{Quals/figures/toy_aminoacids/z=2/data_ablation/AAs_data_ablation_umaps-AE-lowest_total_loss_with_final_kl_model-z=2.png}
+    \figcaption{Amino acid latent space learned by H-AE.}{    Visualization of the test data's invariant latent space learned by H-AE trained with varying
+    amounts of the training data. As more training data is added, the separation of clusters
+    containing residues with most similar conformations becomes more distinct. Notably, even with
+    no training data, conformation clusters can be identified.}
+    \label{fig:toy_aminoacids_data_ablation_umap_AE}
+\end{figure}
+
+\begin{figure}[h]
+    \includegraphics[width=1.0\textwidth]{Quals/figures/toy_aminoacids/z=2/data_ablation/AAs_data_ablation_umaps-VAE_min_loss_with_final_kl-lowest_total_loss_with_final_kl_model-z=2.png}
+    \figcaption{Amino acid latent space learned by H-VAE.}{    Visualization of the test data's invariant latent space learned by H-VAE ($\beta = 0.025$)
+    trained with varying amounts of training data.}
+    \label{fig:toy_aminoacids_data_ablation_umap_VAE}
+\end{figure}
+
+
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Quals/figures/loss_functions/mse_per_feature_type_mnist_and_toy_aminoacids.pdf}
+    \figcaption{Reconstruction loss as a function of feature degree $\ell$.}{Test reconstruction loss (MSE)
+    of H-VAE split by feature degree $\ell$, for the
+    MNIST-on-the-sphere (left) and Toy amino acids dataset (right). In both cases, features of
+    larger degrees are harder to reconstruct accurately. The increase in loss is more steep for}
+    smaller degrees.
+    \label{fig:loss_per_feature}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{Quals/figures/neighborhoods/umaps_sec_struc.pdf}
+    \figcaption{2D UMAP visualization of the 128-dimensional invariant latent space
+    learned by H-AE trained on the protein structure neighborhoods with L = 6, annotated by
+    secondary structure.}{    Within each figure, each point represents a neighborhood. Top left panel: points are colored by
+    secondary structure of the neighborhood's central residue; a simple logisitc regression model
+    trained on the embeddings of 300,000 training neighborhoods is able to recover the central
+    residue's secondary structure on the test set with ~90\% accuracy. Other panels: points are
+    colored by the relative abundance of a single secondary structure component, computed as the
+    proportion of atoms within the neighborhood that are assigned to that secondary structure.}
+    \label{fig:umaps_sec_struct_with_abundances}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics{Quals/figures/neighborhoods/umap_total_power.pdf}
+    \figcaption{2D UMAP visualization of the 128-dimensional invariant latent space
+    learned by H-AE trained on the protein structure neighborhoods with L = 6, annotated by number
+    of atoms}{    Within each figure, each point represents a neighborhood. Points are colored by the
+    \textit{total power} of the neighborhood's zernike projection, which is a proxy for the
+    neighborhood's \textbf{number of atoms}.}
+    \label{fig:umap_total_power}
+\end{figure}

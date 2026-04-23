@@ -1,0 +1,262 @@
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{Quals/figures/null_reconstruction/null_reconstruction_rmsd_per_resname__rmsd_avg.pdf}
+    \figcaption{Null Reconstruction Error on Test data by using data-derived values as
+    redundant internal coordinates.}{Effectively, each redundant internal coordinate (i.e. excluding chi angles) gets substituted
+    from a single value computed as the median of the corresponding value in a reference dataset.
+    Across all structures, the average Null Reconstruction RMSD is 0.127 \AA. We notice a small
+    number of outliers (single residues with abnormally high RMSD), but we do not investigate the
+    causes.}
+    \label{fig:null_reconstruction}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{Quals/figures/null_reconstruction/null_reconstruction_rmsd_per_resname__rmsd_avg__comparison_1700_vs_100_pdbs.pdf}
+    \figcaption{Difference in Null Reconstruction Error on Test data by using a smaller set of
+    structures for reference.}{}
+    \label{fig:null_reconstruction_comparison}
+\end{figure}
+
+\begin{table}
+    \centering
+    \begin{tabular}{c | c | c}
+        \textbf{Amino-Acid} & \textbf{$\mathbf{\pi}$-Symmetric $\mathbf{\chi}$} & \textbf{Pairs of
+        Equivalent Atom names} \\
+        \hline
+        ARG & - & NH1-NH2 \\
+        TYR & $\chi_2$ & CD1-CE1, CD2-CE2 \\
+        PHE & $\chi_2$ & CD1-CE1, CD2-CE2 \\
+        ASP & $\chi_2$ & OD1-OD2 \\
+        GLU & $\chi_3$ & OE1-OE2
+        % \\
+        % VAL & $\chi_1$ & CG1-CG2 \\
+        % LEU & $\chi_2$ & CD1-CD2
+    \end{tabular}
+    \figcaption{List of conformational symmetries that we take into consideration.}{}
+    \label{table:symmetric_conformations}
+\end{table}
+
+\begin{figure}
+    \centering
+    % \resizebox{\textwidth}{!}{
+    \begin{tabular}{c}
+        \includegraphics[valign=m,width=1.0\textwidth]{Quals/figures/simple_task/simple_task_fixed_symmetries__training_curves.pdf}
+        \\
+        \includegraphics[valign=m,width=0.20\textwidth]{Quals/figures/simple_task/model_type_plus_split_legend.pdf}
+    \end{tabular}
+    % }
+    \figcaption{$\chi$ angles error trace during training for the simple task of predicting
+    $\chi$ angles from true amino-acid conformations.}{The Sin-Cos and Plane Norms models show comparable convergence curves, except for
+    $\ell_{\text{max}} = 1$ where the Plane Norms model struggles with $\chi_3$ and $\chi_4$. The
+    Angles model has the worst convergence trace, even overfitting for high $\ell_{\text{max}}$.}
+    \label{fig:simple_task_training_curves}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c c}
+        \includegraphics[valign=m,width=0.85\textwidth]{Quals/figures/simple_task/simple_task_upweighting_later_chis_fixed_symmetries__test_predictions_by_model_type.pdf}
+        &
+        \includegraphics[valign=m,width=0.15\textwidth]{Quals/figures/simple_task/lmax_legend.pdf}
+    \end{tabular}
+    }
+    \figcaption{Test MAE for the simple task of predicting $\chi$ angles from atomic
+    conformation, with loss weighted by frequency.}{Models trained with weighting $\chi$ angles in the 
+    loss function based on their frequency.
+    We use the following weights for $\chi_{1}$ to $\chi_{4}$, which are derived from how many
+    residues have which $\chi$ angle: $[1.0, 18.0/14.0, 18.0/5.0, 18.0/2.0]$. We then re-scale them
+    to make sure the absolute scale of the loss function is the same as it was in the un-weighted
+    case.}
+    \label{fig:simple_task_performance_by_model_type_with_weighted_loss}
+\end{figure}
+
+
+
+\begin{table}[t]
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l l c c c c | c c c | c c c}
+     & & \multicolumn{4}{c}{Angle MAE $\degree$ $\downarrow$} & \multicolumn{3}{c}{Angle Accuracy
+     \% $\uparrow$} & \multicolumn{3}{c}{Atom RMSD \AA $\downarrow$} \\
+     % \hline
+     & \textbf{Method} & $\chi_1$ & $\chi_2$ & $\chi_3$ & $\chi_4$ & All & Core & Surface & All &
+     Core & Surface \\
+     \hline
+     \hline
+     \multirow{8}{*}{CASP13}
+     & H-Packer$_0$ $\ell_{\text{max}} = 4$    & 27.60 & 32.31 & 47.87 & 52.77 & 48.3 & 59.1 &
+     \textbf{40.5} & 0.979 & 0.771 & 1.136 \\
+     & H-Packer$_0$ $\ell_{\text{max}} = 5$    & \textbf{26.89} & \textbf{31.95} & \textbf{47.51 }&
+     \textbf{52.75} & \textbf{49.3} & \textbf{61.5} & 40.4 & \textbf{0.961} & \textbf{0.726} &
+     \textbf{1.131} \\
+     \cline{2-12}
+     & H-Packer$_2$ $\ell_{\text{max}} = 4$    & 24.36 & 29.94 & 46.01 & \textbf{52.89} & 53.0 &
+     67.7 & 42.5 & 0.884 & 0.610 & 1.083 \\
+     & H-Packer$_2$ $\ell_{\text{max}} = 5$    & \textbf{23.64} & \textbf{29.47} & \textbf{45.17} &
+     53.26 & \textbf{54.4} & \textbf{69.9} & \textbf{43.6} & \textbf{0.863} & \textbf{0.575} &
+     \textbf{1.070} \\
+     \cline{2-12}
+     & H-Packer$_5$ $\ell_{\text{max}} = 4$    & 24.27 & 29.76 & 46.32 & \textbf{52.56} & 53.5 &
+     68.8 & 43.0 & 0.878 & 0.594 & 1.081 \\
+     & H-Packer$_5$ $\ell_{\text{max}} = 5$    & \textbf{23.60} & \textbf{29.40} & \textbf{44.91} &
+     52.91 & \textbf{54.7} & \textbf{70.7} & \textbf{43.7} & \textbf{0.858} & \textbf{0.564} &
+     \textbf{1.067} \\
+     \cline{2-12}
+     & H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 20.78 & 27.48 & 44.58 & \textbf{51.97} & 56.8 &
+     72.7 & 45.6 & 0.790 & 0.514 & 0.999 \\
+     & H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & \textbf{20.03} & \textbf{26.88} & \textbf{42.74} &
+     52.07 & \textbf{58.4} & \textbf{75.4 }& \textbf{46.4} & \textbf{0.765} & \textbf{0.483} &
+     \textbf{0.980} \\
+     \hline
+     \hline
+     \multirow{8}{*}{CASP14}
+     & H-Packer$_0$ $\ell_{\text{max}} = 4$    & 33.14 & 36.10 & 49.30 & \textbf{50.22} & 39.8 &
+     55.9 & 30.7 & 1.102 & 0.780 & 1.307 \\
+     & H-Packer$_0$ $\ell_{\text{max}} = 5$    & \textbf{32.31} & \textbf{35.90} & \textbf{49.05} &
+     50.34 & \textbf{40.8} & \textbf{57.0} & \textbf{31.6} & \textbf{1.087} & \textbf{0.762} &
+     \textbf{1.297} \\
+     \cline{2-12}
+     & H-Packer$_2$ $\ell_{\text{max}} = 4$    & 30.43 & 34.49 & 48.13 & \textbf{50.39} & 43.3 &
+     63.0 & 32.7 & 1.027 & 0.658 & 1.265 \\
+     & H-Packer$_2$ $\ell_{\text{max}} = 5$    & \textbf{29.96} & \textbf{34.32} & \textbf{47.46} &
+     50.50 & \textbf{45.0} & \textbf{65.1} & \textbf{34.1} & \textbf{1.011} & \textbf{0.629} &
+     \textbf{1.250} \\
+     \cline{2-12}
+     & H-Packer$_5$ $\ell_{\text{max}} = 4$    & 30.36 & 34.38 & 48.76 & 50.62 & 43.5 & 64.1 & 32.5
+     & 1.024 & 0.648 & 1.260 \\
+     & H-Packer$_5$ $\ell_{\text{max}} = 5$    & \textbf{29.61} & \textbf{34.03} & \textbf{46.72} &
+     \textbf{50.35} & \textbf{45.2} & \textbf{65.5} & \textbf{34.0} & \textbf{1.002} &
+     \textbf{0.626} & \textbf{1.244} \\
+     \cline{2-12}
+     & H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 26.84 & 32.10 & 46.90 & 50.03 & 46.7 & 68.1 & 35.0
+     & 0.934 & 0.557 & 1.178 \\
+     & H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & \textbf{26.58} & \textbf{31.54} & \textbf{45.67} &
+     \textbf{49.46} & \textbf{48.1} & \textbf{69.5} & \textbf{36.2} & \textbf{0.915} &
+     \textbf{0.534} & \textbf{1.160} \\
+     \hline
+    \end{tabular}
+    }
+    \figcaption{Ablation in $\ell_{\text{max}}$ of H-Packer, comprehensive of all metrics.}{}
+    \label{tab:full_ablation_in_lmax}
+\end{table}
+
+
+\begin{table}[t]
+    \centering
+    
+    \begin{tabular}{l c c c | c c c }
+     & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
+     & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
+     % \hline
+     \textbf{Method} & All & Core & Surface & All & Core & Surface \\
+     \hline \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 4$    & 0.943 & 0.733 & 1.099 & 1.065 & 0.743 & 1.273 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 4$    & 0.848 & 0.577 & 1.046 & 0.989 & 0.618 & 1.230 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 4$    & 0.841 & 0.561 & 1.043 & 0.986 & 0.608 & 1.223 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 0.755 & 0.483 & 0.962 & 0.899 & 0.526 & 1.143 \\
+     \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 5$    & 0.923 & 0.689 & 1.092 & 1.050 & 0.723 & 1.262 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.826 & 0.540 & 1.032 & 0.972 & 0.591 & 1.214 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.821 & 0.530 & 1.029 & 0.964 & 0.589 & 1.208 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.730 & 0.452 & 0.941 & 0.880 & 0.504 & 1.124 \\
+        
+    \end{tabular}
+    \figcaption{Reconstruction RMSD when considering the additional (non-natural) symmetries
+    used by AttnPacker.}{}
+    \label{tab:rmsd_with_symmetries}
+\end{table}
+
+
+\begin{table}[t]
+    \centering
+    
+    \begin{tabular}{l c c c | c c c }
+     & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
+     & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
+     % \hline
+     \textbf{Method} & All & Core & Surface & All & Core & Surface \\
+     \hline \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 4$    & 0.964 & 0.745 & 1.129 & 1.086 & 0.754 & 1.297 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 4$    & 0.863 & 0.576 & 1.074 & 1.010 & 0.628 & 1.255 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 4$    & 0.858 & 0.560 & 1.071 & 1.007 & 0.617 & 1.249 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 0.767 & 0.477 & 0.987 & 0.915 & 0.526 & 1.167 \\
+     \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 5$    & 0.943 & 0.697 & 1.123 & 1.070 & 0.735 & 1.286 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.842 & 0.540 & 1.060 & 0.992 & 0.598 & 1.239 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.837 & 0.529 & 1.057 & 0.984 & 0.596 & 1.232 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.741 & 0.444 & 0.968 & 0.895 & 0.500 & 1.147 \\
+        
+    \end{tabular}
+    \figcaption{Reconstruction RMSD when standardizing the true structure by reconstructing it
+    using our data-derived constant redundant internal coordinates.}{}
+    \label{tab:rmsd_with_standardization}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    
+    \begin{tabular}{l c c c | c c c }
+     & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
+     & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
+     % \hline
+     \textbf{Method} & All & Core & Surface & All & Core & Surface \\
+     \hline \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 4$    & 0.927 & 0.708 & 1.092 & 1.049 & 0.717 & 1.263 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 4$    & 0.828 & 0.543 & 1.038 & 0.973 & 0.588 & 1.220 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 4$    & 0.821 & 0.527 & 1.033 & 0.969 & 0.577 & 1.213 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 0.733 & 0.447 & 0.950 & 0.881 & 0.494 & 1.132 \\
+     \hline
+     H-Packer$_0$ $\ell_{\text{max}} = 5$    & 0.906 & 0.661 & 1.084 & 1.034 & 0.696 & 1.251 \\
+     H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.805 & 0.506 & 1.023 & 0.953 & 0.560 & 1.202 \\
+     H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.800 & 0.496 & 1.019 & 0.945 & 0.558 & 1.195 \\
+     H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.706 & 0.414 & 0.930 & 0.860 & 0.471 & 1.111 \\
+        
+    \end{tabular}
+    \figcaption{Reconstruction RMSD when considering both the additional (non-natural)
+    symmetries used by AttnPacker, and when standardizing the true structure by reconstructing it
+    using our data-derived constant redundant internal coordinates.}{}
+    \label{tab:rmsd_with_symmetries_and_standardization}
+\end{table}
+
+\begin{figure}
+    \centering
+    \resizebox{0.9\textwidth}{!}{
+    \includegraphics{Quals/figures/CASP13_error_per_aa__split=0.pdf}
+    }
+    \figcaption{Angle Error distribution on CASP13 for H-PAcker$_5^{\ell_{\text{max}}=5}$,
+    part 1.}{}
+    \label{fig:casp13_error_distributions_part_1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \resizebox{0.9\textwidth}{!}{
+    \includegraphics{Quals/figures/CASP13_error_per_aa__split=1.pdf}
+    }
+    \figcaption{Angle Error distribution on CASP13 for H-PAcker$_5^{\ell_{\text{max}}=5}$,
+    part 2.}{}
+    \label{fig:casp13_error_distributions_part_2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \resizebox{0.9\textwidth}{!}{
+    \includegraphics{Quals/figures/CASP14_error_per_aa__split=0.pdf}
+    }
+    \figcaption{Angle Error distribution on CASP14 for H-PAcker$_5^{\ell_{\text{max}}=5}$,
+    part 1.}{}
+    \label{fig:casp14_error_distributions_part_1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \resizebox{0.9\textwidth}{!}{
+    \includegraphics{Quals/figures/CASP14_error_per_aa__split=1.pdf}
+    }
+    \figcaption{Angle Error distribution on CASP14 for H-PAcker$_5^{\ell_{\text{max}}=5}$,
+    part 2.}{}
+    \label{fig:casp14_error_distributions_part_2}
+\end{figure}

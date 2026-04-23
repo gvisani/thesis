@@ -1,0 +1,993 @@
+
+\section{HERMES neural network model for amino acid propensities}
+ HERMES is a self-supervised structure-based machine learning model for
+ proteins~\cite{Visani2024-sh,Pun2024-qz}. HERMES has a 3D rotationally equivariant architecture and
+ is trained to predict a residue's amino acid identity from its surrounding atomic environment
+ within a 10 \AA~ of the central residue's C-$\alpha$ in the 3D structure. The input to the neural
+ network is a point cloud of atoms from a given structural neighborhood, in which all atoms
+ associated with the central residue are masked. These point clouds are featurized by atom types,
+ including computationally-added hydrogens, partial charge, and Solvent Accessible Surface Area
+ (SASA). The point clouds are first projected onto the orthonormal Zernike Fourier basis, centered
+ at the position of the (masked) central residue's C-$\alpha$ (Fig.~1A). The resulting
+ \textit{holographic} projections are fed to a stack of SO(3)-equivariant layers, the output of
+ which is SO(3)-invariant, and is then passed through a multi-layer perceptron (MLP) to generate the
+ desired predictions. The MLP's outputs are termed pseudo-energies, associated with the 20 different
+ possible amino acids that can be placed at the masked residue, and act as logits within a softmax
+ function to compute probabilities of each amino acid.
+
+Each HERMES model is an ensemble of 10 individually-trained architectures. In this work, we used
+HERMES models trained on structural data with different levels of added noise: 0.00 noise (the
+original PDB structure), and 0.50 noise, which is obtained by adding Gaussian noise to the 3D
+coordinates of the original structure, with standard deviation of 0.50~\AA. We only use models that
+were trained on the wild-type amino acid classification task~\cite{Visani2024-sh}. Models were
+pre-trained on structures from 30\% similarity split of ProteinNet's CASP12
+set~\cite{alquraishi_proteinnet_2019}, resulting in around $\sim$10k training structures.
+
+We refer the reader to refs.~\cite{Pun2024-qz, Visani2024-sh} for further details on the
+architecture, training procedure, training data preparation, and the mathematical introduction to
+SO(3)-equivariant models in Fourier space.
+
+
+
+
+\section{TCR-pMHC binding affinity and T-cell activity prediction}
+\label{sec:aff_act}
+
+\noindent \textbf{Peptide energy calculation with HERMES.} To predict the affinity of TCR-pMHC
+complexes or the activity of TCRs induced by their interactions with a pMHC complex, we introduce
+the predicted energy for a peptide $\sigma$, given its surrounding TCR and MHC,
+
+\EQ
+E_{\text{peptide}}(\sigma; \text{TCR, MHC}) = \sum_{i=1}^\ell E(\sigma_i ; \text{TCR,
+MHC},\sigma_{/i}).
+\label{eq:pepEn}\EE
+
+\noindent We assume that each peptide residue contributes linearly to the total energy by the amount
+$E(\sigma_i ; \text{TCR, MHC}, \sigma_{/i})$, where $\sigma_i$ is the amino acid at position $i$ of
+the peptide. A residue's energy contribution $E$ is evaluated as its associated logit value from
+HERMES, taking in as input the atomic composition of the surrounding TCR, MHC and the rest of the
+peptide $\sigma_{/i}$ (Fig.~1A).%This method is akin to predicting the effect of a single amino-acid
+substitution on a protein's function by using the difference in logits - or equivalently of
+log-probabilities - corresponding to the mutant and wild-type amino-acids~\cite{Visani2024-sh}.\\
+
+To compute peptide energies, HERMES operates on the structural composition of the protein complex.
+However, data on the impact of substitutions on the TCR-pMHC structure is limited, and computational
+models often fail to capture subtle conformational changes in the structure due to amino acid
+substitutions in a peptide. To address this issue, we adopt two protocols to estimate energy for a
+diverse array of peptides for a given TCR-MHC complex:
+
+\begin{itemize}
+\item HERMES-{\em fixed}: In the simplest approach, we select the TCR-pMHC structure with matching
+TCR and MHC to our query and with the peptide sequence that most closely matches the peptide of
+interest and directly input it into HERMES. The peptide energy is subsequently calculated as
+described in eq.~\ref{eq:pepEn} (Fig.~1B). This method does not modify the underlying structure,
+effectively assuming that any amino acid substitutions do not significantly alter the protein
+conformation.
+
+\item HERMES-{\em relaxed}: Since amino acid substitutions can locally reshape the protein complex,
+we introduce a more involved protocol to account for these structural changes. We begin with the
+available crystal structure of the TCR-pMHC complex that closely matches our query as template. We
+then mutate the original peptide to the desired state and relax the structure using PyRosetta's
+cartesian\_ddg fastrelax protocol~\cite{Chaudhury2010-mo}. During relaxation, side chain and
+backbone atoms of the peptide are allowed to move, while only the side chain atoms of the MHC and
+TCR chains within a 10\AA\, of the peptide are flexible. We then calculate the peptide energy with
+HERMES (eq.\ref{eq:pepEn}), using the relaxed structure of the mutated variant as input (Fig.~1B).
+Since PyRosetta's relaxation procedure is stochastic in nature, we run 100 realizations of the
+relaxation procedure and average the peptide energies across them.
+ For ablation purposes, we also use an alternative protocol, whereby we use the HERMES peptide
+ energy from the conformation with the minimum (most favorable) Rosetta energy computed on the
+ relaxed atoms; we call this protocol {\em relaxed-min\_energy}.
+\end{itemize}
+
+\noindent Overall, we use four protocols for scoring peptides that differ in their restrained
+protocol (HERMES-{\em fixed} or HERMES-{\em relaxed}), and the amount of noise injected during
+training of the underlying HERMES model. Specifically, we train HERMES models with no added noise
+($\sigma =0.00~\AA$) and another with moderate Gaussian noise with standard deviation $\sigma=
+0.50~\AA$~applied to the atomic coordinates of the protein structure data during training. We refer
+to the resulting peptide scoring protocols as HERMES-{\em fixed} 0.00, HERMES-{\em fixed} 0.50,
+HERMES-{\em relaxed} 0.00, HERMES-{\em relaxed} 0.50, specifying both the model and the noise
+amplitude.
+
+
+
+
+\noindent{\bf Evaluation of EC$_{50}$ from dose response measurements against peptide libraries.}
+Ref.~\cite{Luksza2022-gx} presents dose response measurements for fraction of 4-1BB$^+$ CD8$^+$
+T-cells across varying peptide concentrations. These measurements are done for peptide libraries of
+single point mutants from a given wild-type peptide, across 7 different TCR-MHC systems: three TCRs
+recognizing variants of the highly immunogenic HLA-A02:01-restricted human cytomegalovirus (CMV)
+epitope NLVPMVATV (NLV); three TCRs recognizing variants of the {weaker} HLA-A02:01-restricted
+melanoma gp100 self-antigen IMDQVPFSV; and one TCR recognizing variants of the {weakly immunogenic}
+HLA-B*27:05-restricted pancreatic cancer neo-peptide GRLKALCQR~\cite{Luksza2022-gx}.
+
+The half-maximal effective concentration (EC$_{50}$) from the dose response curves of 4-1BB$^+$
+CD8$^+$ T-cell fractions can quantify the level of T-cell activity in response to each peptide. We
+used our own fits to estimate the EC$_{50}$ associated with T-cell responses. Specifically, we
+fitted a Hill function with background to the dose response measurements for each peptide from
+ref.~\cite{Luksza2022-gx},
+\EQ
+f(x) = \frac{(A-A_0) x^n}{x^n + K^n}+ A_0
+\label{eq:EC50}\EE
+where $f(x)$ is the fraction of 4-1BB$^+$ CD8$^+$ T-cells pulsed by a peptide at concentration $x$,
+$A$ is the response amplitude, $A_0$ is the background activation, $n$ is the Hill coefficient, and
+$K$ is the half-maximal effective concentration EC$_{50}$. Similar to ref.~\cite{Luksza2022-gx}, we
+regularized our fitted Hill functions, whereby the deviation of the amplitude $A$ and the Hill
+coefficient $n$ from 1, and the background activation $A_0$ from 0 are penalized. The code to fit
+these curves is available in our github repository.\\
+
+
+\section{De-novo peptide design}
+\label{sec:peptide_design}
+
+\noindent {\bf Peptide design algorithm.}
+Given a TCR and an MHC, we use HERMES to design de novo peptides that can form a stable TCR-pMHC
+complex, and potentially, elicit a T-cell response. Our approach starts with an existing template
+TCR-pMHC structure. We refer to the peptide in the template as wild-type; see
+Table~\ref{table:design_info} for the templates we use in our analyses. Similar to evaluating the
+peptide energy, we use two pipelines to sample novel peptides:
+
+\begin{itemize}
+\item HERMES-{\em fixed}: This is our basic pipeline, in which we generate novel peptide sequences
+by conditioning on the fixed TCR-pMHC template structure.
+Specifically, we sequentially mask the atoms of each amino acid along the peptide and then use
+HERMES to compute the probability $P(\sigma_i|{\bf x}_i)$ of different amino acid types $\sigma_i$
+at the masked residue $i$, conditioned on the surrounding atomic neighborhood ${\bf x}_i$, within a
+10~\AA \, radius of the masked residue's C-$\alpha$. The neighborhood ${\bf x}_i$ can include atoms
+from the TCR, the MHC, and the other amino acids in the peptide. Repeating this procedure for every
+residue along the peptide allows us to construct a Position Weight Matrix (PWM) that represents the
+probabilities of different amino acids at each peptide position, conditioned on the surrounding
+structural neighborhood. We generate peptides using multinomial sampling from the PWM; see the
+schematic in Fig.~1C.
+
+\item HERMES-{\em relaxed}: This pipeline incorporates simulated annealing and Markov chain Monte
+Carlo (MCMC) sampling to account for structural changes resulting from peptide substitutions. We
+start with the template TCR-MHC structure and an initial random peptide sequence $\sigma^{(0)}$,
+which is {\em in-silico} packed via PyRosetta, followed by the Relax protocol, yielding a relaxed
+structure ${\bf x}^{(0)}$. During relaxation, both side chain and backbone atoms of the peptide are
+allowed to move, while only the side chain atoms of the MHC and TCR within 10~\AA~of the peptide are
+flexible. Following the HERMES-{\em fixed} protocol, we then evaluate the PWM associated with this
+relaxed structure and use it to generate a new peptide sequence, $\sigma^{(1)}$. This sequence is
+again packed and relaxed, producing a new structure, ${\bf x}^{(1)}$. Using eq.~\ref{eq:pepEn}, we
+evaluate the energies of the peptides in their respective (relaxed) structures as $E(\sigma^{(0)} ;
+{\bf x}^{(0)})$ and $E(\sigma^{(1)} ; {\bf x}^{(1)})$, and apply the Metropolis-Hastings criterion
+to accept the transition from $\sigma^{(0)}$ to $\sigma^{(1)}$ with probability:
+\EQ P_{\sigma^{(0)}\to \sigma^{(1)}} = \text{min}\left(1, e^{- \frac{ E(\sigma^{(1)} ; {\bf
+x}^{(1)})- E(\sigma^{(0)} ; {\bf x}^{(0)})}{T}}\right)\EE
+where $T$ is the temperature. This process is iterated, incrementally reducing $T$ at each step,
+until convergence. The peptide obtained at the final iteration represents the protocol’s de novo
+design. Repeating this procedure many times produces a diverse set of peptides spanning various
+distances from the wild-type sequence; see the schematic in Fig.~1C and
+Algorithm~\ref{alg:hermes_relaxed_design} for more details, and the the convergence curves in
+Fig.~\ref{fig:joint_design_distributions}C,F,I.\\
+\vspace{1cm}
+
+{
+\begin{algorithm}[H]
+\figcaption{HERMES-{\em relaxed} protocol for generating TCR-MHC-specific peptide sequences.}
+{For brevity, we define ${\bf x}_i \equiv (\text{TCR}, \text{MHC}, \sigma_{/i})$ and drop the arguments
+of $E_{\text{peptide}}$.}
+\label{alg:hermes_relaxed_design}
+\textbf{Input:} TCR-pMHC structure ${\bf x}$, maximum number of iterations N\;
+\textbf{Output:} peptide sequence $\sigma^{(N)}$\;
+$T_0 \gets 10$\;
+$T_f \gets 0$\;
+$a \gets 0.95$\;
+$T^{(0)} \gets T_0$\;
+$\sigma^{(0)} \gets \text{random sequence}$\;
+${\bf x}^{(0)} \gets \text{RosettaMutate}({\bf x}^{(0)}, \sigma^{(0)})$\;
+${\bf x}^{(0)} \gets \text{RosettaFastRelax}({\bf x}^{(0)})$\;
+$E^{(0)}_{\text{peptide}} \gets \sum_{i \in \mathcal{R}_{\text{peptide}}} E(\sigma^{(0)}_i ; {\bf
+x}^{(0)}_i)$\;
+\For{$k = 1, 2, \dots, N$}{
+    \For{$i \in \mathcal{R}_{\text{peptide}}$}{
+        $\sigma^{(\text{temp})}_i \sim \text{Multinomial}(\text{softmax}([E(\text{aa}; {\bf
+        x}^{(k-1)}_i) / T^{(k)}]_{\text{aa} \in \text{amino-acids}}))$\;
+    }
+    ${\bf x}^{(\text{temp})} \gets \text{RosettaMutate}({\bf x}^{(k-1)}, \sigma^{(\text{temp})})$\;
+    ${\bf x}^{(\text{temp})}  \gets \text{RosettaFastRelax}({\bf x}^{(\text{temp})})$\;
+    $E^{(\text{temp})} _{\text{peptide}} \gets \sum_{i \in \mathcal{R}_{\text{peptide}}}
+    E(\sigma^{(\text{temp})}_i ; {\bf x}^{(\text{temp})}_i)$\;
+    $p \sim \text{Uniform}(0, 1)$\;
+    \eIf{$p < \exp(-(E^{(\text{temp})}_{\text{peptide}} - E^{(k-1)}_{\text{peptide}}) / T^{(k)})$}{
+        $E_{\text{peptide}}^{(k)} \gets E^{(\text{temp})} _{\text{peptide}}$\;
+        ${\bf x}^{(k)} \gets {\bf x}^{(\text{temp})}$\;
+        $\sigma^{(k)} \gets \sigma^{(\text{temp})}$\;
+    }{
+        $E_{\text{peptide}}^{(k)} \gets E_{\text{peptide}}^{(k-1)}$\;
+        $x^{(k)} \gets {\bf x}^{(k-1)}$\;
+        $\sigma^{(k)} \gets \sigma^{(k-1)}$\;
+    }
+    $T^{(k+1)} \gets (T_0 - T_f)a^k + T_f$\;
+}
+\end{algorithm}
+}
+\vspace{1cm}
+\end{itemize}
+
+
+\noindent Similar to scoring, we use four protocols for peptide design that differ in their
+restrained protocol (HERMES-{\em fixed} or HERMES-{\em relaxed}), and the amount of noise injected
+during training of the underlying HERMES model. Specifically, we train HERMES models with no added
+noise ($\sigma =0.00~\AA$) and another with moderate Gaussian noise with standard deviation $\sigma=
+0.50~\AA$ applied to the atomic coordinates of the protein structure data during training. We refer
+to the resulting peptide design protocols as HERMES-{\em fixed} 0.00, HERMES-{\em fixed} 0.50,
+HERMES-{\em relaxed} 0.00, HERMES-{\em relaxed} 0.50, specifying both the model and the noise
+amplitude.\\
+
+
+
+
+
+\noindent{\bf Filtering metrics for peptide design with HERMES and benchmarking of different design
+approaches.} For each system, we first selected designs predicted by NetMHCPan to be at least weak
+binders to their target MHCs (EL\_rank $\leq 2.0$)~\cite{reynisson_netmhcpan-41_2020}. We then used
+TCRdock~\cite{Bradley2023-rl} to filter peptides for reactivity. TCRdock is a structure prediction
+algorithm built on top of AlphaFold2~\cite{Jumper2021-hl}, and refined to model TCR-pMHC
+interactions. Its PAE score for the TCR-pMHC interface can be used to distinguish reactive from
+decoy peptides~\cite{Bradley2023-rl}, and therefore, can provide a metric for filtering our designed
+peptides; other work has similarly used the PAE of structure-prediction algorithms to filter
+designed protein binders~\cite{Liu2024-vi}. Using TCRdock, we retained those peptides whose PAE
+scores at the TCR-pMHC interface fell below a threshold, as illustrated in
+Figs.~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},
+and~\ref{fig:design_tcrdock_mage}. The distribution of PAE scores is highly system
+specific~\cite{Liu2024-vi}, so we set each system's threshold near the TCRdock PAE value of its {\em
+wild-type} peptides in complex with the respective TCR-MHC, as the wild types are known binders.
+Among the filtered peptides, we selected 93 for experimental validation, ensuring that designs from
+both HERMES-{\em fixed} and HERMES-{\em relaxed}, as well as from models with 0.0 and 0.5\AA\, noise
+levels were represented. We also enforced a minimum difference of 2-3 amino acids (depending on the
+system) between the designs and the wild-type peptides.
+
+It should be noted that the AF3 PAE score can also discriminate between reactive and decoy peptides
+(Figs.~\ref{fig:design_scatterplots},~\ref{fig:design_roc_curves}), making it also suitable for
+filtering. However, a full-access implementation of AF3 was unavailable before our experimental
+validations. Therefore, we used AF3 only as a secondary filter for designs in the EBV and MAGE
+systems, and for benchmarking against TCRdock's PAE score for the designed peptides
+(Figs.~\ref{fig:design_scatterplots}); see details below.\\
+
+
+\noindent{\bf Design parameters for different TCR-pMHC systems.} Here, we provide the details on the
+specifics of peptide selection for each TCR-MHC system. It should be noted that as we progressed
+from NY-ESO to EBV and MAGE, we chose to explore the sequence space farther from the wild-type
+peptides, leading to more challenging designs.
+
+
+\begin{itemize}
+
+\item {\em NY-ESO:} The wild-type peptides (NYESO: SLLMWITQC and NYESO V9C: SLLMWITQV) have TCRdock
+PAEs of $5.17$ and $5.18$, respectively.
+As positive designs, we selected 58 peptides with the lowest TCRdock PAE values (all below 5.35) and
+a Hamming distance of at least two amino acids from their respective wild-type sequences. For
+negative designs, we uniformly sampled 35 peptides among those designed by HERMES whose TCRdock PAE
+values fell between 5.5 and 7.0. We did not enforce all HERMES models to be represented equally
+among these designs, nor did we enforce equal representation of the template structures. However, we
+note that all models are represented among positive designs
+(Fig.~\ref{fig:design_experimental_nyeso}).
+
+\item {\em EBV:} The wild-type peptides (HPVG: HPVGEADYFEY and HPVG E5Q: HPVGQADYFEY) have TCRdock
+PAEs of $4.90$ and $4.82$, and AF3 PAEs of $1.15$ and $1.13$, respectively. We selected 93 positive
+peptides using a TCRdock's PAE score cutoff of $5.1$ and AF3 PAE score cutoff of $2.0$.
+Specifically, we sampled uniformly below these cutoffs with the following design protocols:
+HERMES-{\em fixed} at both noise levels using the HPVG structure (3MV7) as template (24 peptide),
+HERMES-{\em fixed} at both noise levels, using the HPVG E5Q structure (4PRP) as template (23
+designs); HERMES-{\em relaxed} at both noise levels, using the HPVG structure (3MV7) as template (24
+peptides), and HERMES-{\em relaxed} at both noise levels using the HPVG E5Q structure (4PRP) as
+template (23 designs); see Fig.~\ref{fig:design_experimental_ebv}.
+
+
+\item {\em MAGE:} The wild-type peptides (MAGE-A3: EVDPIGHLY and Titin: ESDPIVAQY) have TCRdock PAEs
+of $5.21$ and $5.03$, and AF3 PAEs of $1.00$ and $0.98$, respectively. We selected 93 positive
+peptides using a TCRdock's PAE score cutoff of 5.2; the AF3 PAE scores for all of these designed
+peptide are comparable to that of the wild-types. For these designs, we sampled uniformly below the
+PAE cutoffs with the following design protocols: HERMES-{\em fixed} at both noise levels using
+MAGE-A3 structure (5BRZ) as template (15 peptides); HERMES-{\em fixed} at both noise levels using
+the MAGE-A3 structure (5BRZ) as template with E$_1$ fixed (15 peptides); HERMES-{\em relaxed} at
+both noise levels using the MAGE-A3 structure (5BRZ) as template (16 peptides); HERMES-{\em relaxed}
+at bothsee Fig.~\ref{fig:design_experimental_ebv} noise levels using the MAGE-A3 structure (5BRZ) as
+template with E$_1$ fixed (15 peptides); HERMES-{\em fixed} at both noise levels and using the Titin
+structure (5BS0) as template (16 peptides); HERMES-{\em relaxed} at both noise levels using the
+Titin structure (5BS0) as template (16 peptides); see Fig.~\ref{fig:design_experimental_mage}.
+\end{itemize}
+
+\noindent{\bf Characterizing the size of the sequence space for design.} The size of the sequence
+space to explore grows exponentially with increasing distance from the wild-type peptide. If no
+restriction is imposed (i.e., all amino acids are permissible with equal probabilities), the size of
+the sequence space follows,
+\EQ
+\Omega_0(d) = {\ell \choose d} 19^d
+\EE
+where $\ell$ is the length of the peptide, and $d$ is the distance from the wild-type sequence.
+
+MHC presentation imposes constraints on amino acid usages in peptides, especially at the anchor
+residues. Let $p_i(a)$ denote the probability of amino acid $a$ at position $i$ of the peptide,
+e.g., set by the sequence-specific preferences of the MHC allele. The probability of introducing a
+mutation at position $i$ depends on the prominence of the wild-type amino acid, and is equal to
+$q_i= 1-p_i(\text{wt})$. The typical number of non-wildtype amino acids realized at position $i$ can
+be estimated by $ n_i = 2^{S_i}$, where $S_i = -\sum_{a \neq \text{wt}} \hat p_i(a) \log_2 \hat
+p_i(a) $ is the entropy associated with the non-wildtype amino acid frequencies, and $\hat p_i(a) =
+\frac{p_i(a)}{1-p_i(\text{wt})}$ is the normalized probability of amino acid $a$, obtained by
+excluding the wild-type from the set. Therefore, the typical size of the sequence space at Hamming
+distance $d$ from the wild-type peptide---subject to constraints imposed by the amino acid
+frequencies $p_i(a)$ (e.g., due to MHC restriction)---is given by,
+\EQ
+\Omega (d) = \sum_{\{i_1,\dots,i_d\}} \left(q_{i_1} n_{i_1} \right)\dots \left(q_{i_d} n_{i_d}
+\right) \equiv \sum_{\{i_i,\dots,i_d\}} 2^{ \hat S_{i_1}+ \dots +\hat S_{i_d} } \label{eq:Omega_d}
+\EE
+where the summation runs over all ${\ell \choose d}$ ways to choose $d$ distinct sites at which
+mutations may occur, and $q_i n_i$ is the expected number of substitutions associated with site
+$i$---evaluated as the likelihood of mutating site $i$ times the typical number of viable amino acid
+replacements at that site---and $\hat S_i =S_i + \log_2 q_i$ is the resulting adjusted entropy at
+site $i$.
+
+In principle, evaluating $\Omega (d) $ in eq.~\ref{eq:Omega_d} involves summation over a
+combinatorially large number of terms, which can become computationally prohibitive. In practice,
+however, many of the sites have the same adjusted entropy, which simplifies the evaluations of
+$\Omega (d) $. For example, the adjusted entropies for mutations away from the 9 amino acid NY-ESO
+peptide restricted by HLA-A*02:01 yield the following (rounded) values: $[4, 2, 4, 4, 4, 3, 4, 4,
+2]$ in bits, indicating six sites with 4 bits of entropy (or $2^4=16$ typical substitutions), one
+site with 3 bits (8 typical substitutions), and two sites with 2 bits (4 typical substitutions). To
+demonstrate, in this case, the number of sequences at distance $d=5$ from the wild-type follows,
+
+\EQA
+\nonumber \Omega_\text{NYESO} (d=5) &=& {6 \choose 5} 16^5 + {6 \choose 4} 16^4\times \left[ {2
+\choose 1} 4^1 + 8^1 \right]+
+{6 \choose 3} 16^3\times \left[  {2 \choose 1} 4^1\times  8^1 + {2 \choose 2}  4^2    \right]+ 
+{6 \choose 2}16^2  \times {2 \choose 2}  4^2\times 8^1  \\
+\nonumber&=& 29,065,216\\
+\EEA
+Similar calculations can be done to characterize the size of the sequence space at varying distances
+from the wild-type, as shown in Fig. 4.
+
+\section{Alternative computational methods for scoring peptides and design}
+\label{sec:AltModel}
+ We compare our approach to alternative methods (listed below), based on which we characterize
+ peptide scores akin to HERMES's peptide energy, and when possible, use them to design novel
+ peptides. A detailed comparison between the accuracy of different methods in predicting the
+ affinity of TCR-pMHC interactions and the peptide-induced activation of T-cells is presented in
+ Tables~\ref{table:spearmanr_affinity} and~\ref{table:spearmanr_activity}. Comparison between the
+ fidelity of the designs--only according to computational metrics--is shown in
+ Figures~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},~and~\ref{fig:design_tcrdock_mage}.
+ All the designed peptides as well as the code to generate samples are available in our github
+ repository.
+
+\begin{itemize}
+\item {\em BLOSUM62 substitution matrix}~\cite{Henikoff1992-jq}: The BLOSUM62 substitution matrix
+characterizes the favorability of substitutions between all pairs of amino acids, and has been used
+widely to characterize the mutational effects in proteins. As our first (and simplest) benchmark, we
+used BLOSUM62 to define a peptide energy (score). Specifically, we score a peptide by summing over
+the BLOSUM62 scores associated with the amino acid substitutions from the wild-type peptide $
+\sigma^{\text{wt}}$ (the one present in the template structure) to the query peptide sequence
+$\sigma$ that we are interested in,
+\EQ
+E^{\rm (B62)}_{\text{peptide}}(\sigma; \sigma^{\text{wt}}) = \sum_{i=1}^\ell
+B62[\sigma^{\text{wt}}_i \to \sigma_i]
+\label{eq:score_blosum}
+\EE
+Notably, the BLOSUM62 predicted peptide energy only depends on the substitutions in the peptide
+relative to the wild-type amino acid, and does not depend on the structural context of these
+substitutions (Fig.~\ref{fig:hsiue_h1_h8}).
+
+For designs with BLOSUM62, we independently sample amino acids along the peptide based on their
+favorability with respect to the wild-type amino acid at each position. Specifically, at a given
+position $i$ we interpret the substitution score $B62[\sigma^{\text{wt}}_i \to \sigma_i]$ from the
+wild-type to any of the other 19 amino acids as the energy difference between the two states, and by
+applying a softmax function with temperature $T$, we evaluate the probability of these possible
+substitutions. We then use multinomial sampling to draw new amino acids from this probability
+distribution at each position,
+\EQ
+\sigma_i \sim \text{Multinomial}\left(\text{softmax}\left[\frac{B62[\sigma_i^\text{wt} \to
+\sigma]}{T}\right]_{{\sigma} \in \text{amino-acids}}\right)
+\EE
+For our analyses, we use temperatures $T=1.0, 2.0, 3.0$ to modulate the variability of the designed
+peptides.\\
+
+
+\item{\em \L uksza et al. $M$ and $d \cdot M$ substitution matrices}~\cite{Luksza2022-gx}: Here, $M$
+is an amino acid substitution matrix, and $d$ is a vector of position-specific scale factors for
+9-mer peptides. Briefly, they were constructed to fit the EC$_{50}$ measurements on seven saturation
+mutagenesis experiments of three different wild-type peptides, against a total of seven TCR-MHC
+pairs--the very same T-cell activity data that we used to test HERMES in Fig.~3. Specifically, $d$
+and $M$ were constructed such that:
+\EQ
+d_i \cdot M[\sigma^{\text{wt}}_i \to \sigma^{\text{mt}}_i] \approx \log
+\frac{\text{EC}_{50}^{\text{mt}}}{\text{EC}_{50}^{\text{wt}}} + R_\text{B62}[\sigma^{\text{wt}}_i
+\to \sigma^{\text{mt}}_i]
+\label{eq:luksza_matrix}
+\EE
+where the mutant and wild-type peptides only differ at position $i$, and $R_\text{B62}$ is a
+regularization term reflecting the BLOSUM62 substitution matrix; we refer the reader to the
+Supplementary Methods of ref.~\cite{Luksza2022-gx} for details. Since all peptides considered when
+constructing $d$ and $M$ are 9-mers, the position scale factors can only be used on 9-mer peptides.
+We use $d$ and $M$ for scoring in a manner analogous to BLOSUM62:
+\EQ
+E^{(d \cdot M)}_{\text{peptide}}(\sigma; \sigma^{\text{wt}}) = \sum_{i=1}^\ell d_i \cdot
+M[\sigma^{\text{wt}}_i \to \sigma_i]
+\label{eq:score_luksza_d_m}
+\EE
+and
+\EQ
+E^{(M)}_{\text{peptide}}(\sigma; \sigma^{\text{wt}}) = \sum_{i=1}^\ell M[\sigma^{\text{wt}}_i \to
+\sigma_i]
+\label{eq:score_luksza_m}
+\EE
+Similar to BLOSUM62, the predicted peptide energies $E^{(d \cdot M)}_{\text{peptide}}$ and
+$E^{(M)}_{\text{peptide}}$ only depend on the type substitutions, and not on their structural
+contexts.\\
+
+
+
+\item {\em MHC position weight matrices}~\cite{Tadros2023-ij}: MHC alleles exhibit distinct
+sequence-specific preferences for peptide presentation, most notably in the peptide's amino acid
+composition at anchor positions. Computational models have characterized these preferences with
+position weight matrices (PWMs) that reflect the
+the probability of different amino acids at each position for peptides presented by a given MHC
+allele~\cite{Lundegaard2008-ao, Lundegaard2008-wz, Andreatta2016-uh,Tadros2023-ij}. As a benchmark
+for our designs, we use the PWMs from the MHC Motif Atlas~\cite{Tadros2023-ij} to independently
+sample amino acids at each site along the peptide. The resulting peptide sequences should reflect
+biases imposed by MHC presentation but not interactions with TCRs.\\
+
+\item {\em ProteinMPNN}~\cite{Dauparas2022-fu}: ProteinMPNN is a commonly used tool for
+inverse-folding (i.e., designing protein sequences consistent with the backbone of a structure). It
+is primarily used to sample amino acid sequences conditioned on a protein's backbone structure, and
+optionally with partial sequence information (i.e., amino acids specified at some of the residues).
+As ProteinMPNN also outputs probability distributions of amino acids at different sites of the
+protein, it can also be used to score peptides (i.e., evaluate peptide energy) in a manner similar
+to HERMES, as
+
+\EQA
+ E^{\rm (MPNN)}_{\text{pep 1-by-1}}(\sigma; TCR, MHC) &=& \sum_{i=1}^\ell \log P^{\rm
+ (MPNN)}(\sigma_i ; {\rm backbone, \sigma_{\text{TCR}}, \sigma_\text{MHC}}, \sigma_{/i})
+\label{eq:peplogp_proteinmpnn}
+\EEA
+where $P^{\rm (MPNN)}(\sigma_i ; {\rm backbone, TCR, MHC}, \sigma_{/i})$ is the ProteinMPNN estimate
+for the probability of amino acid $\sigma_i$ at position $i$ of the peptide, given the backbone
+structure of the whole protein complex, and the amino acid sequence of the MHC $\sigma_\text{MHC}$,
+TCR $\sigma_\text{TCR}$, and the rest of the peptide $\sigma_{/i}$. We term this scoring scheme as
+peptide 1-by-1 since we mask the peptide's residues one at a time.
+
+We explored two additional ProteinMPNN scoring schemes that differ in the residues they mask and
+score. As our second scoring scheme, we simultaneously mask the entire peptide's sequence $\sigma$,
+instead of one amino-acid at a time, and evaluate the score for the whole peptide $E^{\rm
+(MPNN)}_{\text{pep}}(\sigma; TCR, MHC)$:
+\EQA
+ E^{\rm (MPNN)}_{\text{pep}}(\sigma; TCR, MHC) &=& \sum_{i=1}^\ell \log P^{\rm (MPNN)}(\sigma_i ;
+ {\rm backbone, \sigma_{\text{TCR}}, \sigma_\text{MHC}})
+\label{eq:peplogp_proteinmpnn_pep}
+\EEA
+
+For the third scoring scheme, we consider masking and scoring the TCR residues that make contact
+with the peptide--defined as those whose C-$\alpha$ lie within 12~\AA~ of any peptide residue's
+C-$\alpha$. We call this set {\bf TCR-int} and its corresponding amino acid composition as $\sigma
+_\text{TCR-int}$. In this scheme, both the peptide and the interacting TCR residues are masked
+simultaneously and scored together:
+\EQA
+\nonumber E^{\rm (MPNN)}_{\text{pep and tcr}}(\sigma; TCR, MHC) &=& \sum_{i=1}^\ell \log P^{\rm
+(MPNN)}(\sigma_i ; {\rm backbone, \sigma_{\text{TCR / TCR-int}}, \sigma_\text{MHC}}) \\ &+&
+\sum_{j=1}^n \log P^{\rm (MPNN)}(\sigma_{\text{TCR-int}_j} ; {\rm backbone, \sigma_{\text{TCR /
+TCR-int}}, \sigma_\text{MHC}})
+\label{eq:peplogp_proteinmpnn_tcr_and_pep}
+\EEA
+
+Similar to HERMES, we considered ProteinMPNN models trained with two noise levels: 0.02~\AA~(very
+little noise) and 0.20 \AA.
+
+For designs with ProteinMPNN, we use the algorithm's native functionalities, keeping the TCR and MHC
+structures fixed (from the design template) and prompting the model to design only the peptide. We
+use two ProteinMPNN models (trained with 0.02~\AA~and 0.20~\AA~noise), and use a temperature of 0.7
+for all systems. \\
+
+
+\item {\em ESM-IF1}~\cite{Hsu2022-km}: ESM-IF1, like ProteinMPNN, is an inverse-folding model, but
+it lacks native support for scoring or designing proteins when only partial sequence information is
+available.
+
+To access the ESM-IF1 model, we used the code in the esm repository
+at~\url{https://github.com/facebookresearch/esm/tree/main/examples/inverse_folding}.
+
+For scoring a peptide sequence given a TCR-MHC context, we used the script
+\texttt{score\_log\_likelihoods.py} with the \texttt{--multichain-backbone} flag, with the same
+TCR-pMHC structure inputs as for HERMES and ProteinMPNN. This script computes a score for the
+peptide sequence conditioned on the backbone coordinates of the entire TCR-pMHC complex, but {\em
+not} on the sequence of the TCR and the MHC:
+\EQA
+\nonumber E^{\rm (ESM-IF1)}_{\text{peptide}}(\sigma; TCR, MHC) &=& \log P^{\rm
+(ESM-IF1)}_{\text{peptide}}(\sigma ; {\rm backbone})
+\label{eq:peplogp_esmif}
+\EEA
+
+To design peptide sequences given a TCR-MHC context, we used the script
+\texttt{sample\_sequences.py} with the \texttt{--multichain-backbone} flag, and a temperature of 0.7
+for all systems, with the same TCR-pMHC structure inputs as for HERMES and ProteinMPNN. Similar to
+scoring, this script samples peptide sequences conditioned on the backbone coordinates of the entire
+TCR-pMHC complex, but {\em not} on the sequences of the TCR and MHC.\\
+
+
+\item {\em TCRdock}~\cite{Bradley2023-rl}: TCRdock is a structure prediction algorithm built on top
+of AlphaFold2~\cite{Jumper2021-hl}, and refined to predict the structure of TCR-pMHC complexes. The
+algorithm model the structure of TCR-pMHC complexes by leveraging structural templates provided by
+its curated database, as well as the knowledge of TCR-pMHC canonical binding poses. Crucially,
+TCRdock's Predicted Alignment Error (PAE) for TCR-pMHC interfaces was found to well discriminate
+between true peptide binders and random decoys~\cite{Bradley2023-rl}. Thus, to benchmark against
+TCRdock, we interpret this PAE score as peptide energy, and use it to predict TCR-pMHC binding
+affinities and peptide-induced T-cell activities.
+
+TCRdock takes as input sequences of a TCR, MHC, and peptide, and identifies TCR-pMHC structures in
+its database with similar amino acid sequences to the query to serve as templates to model the
+structure of the input TCR-pMHC complex. To examine how template-query sequence similarity
+influences TCRdock's predictive accuracy, we ran the algorithm under two conditions: the default
+mode, which uses any closest-matching templates available, and the {\em benchmark} mode, which
+restricts the maximum sequence similarity of templates with the input TCR-pMHC.
+
+We use TCRdock to characterize peptide energies, and to filter the sequences designed by HERMES.
+However, TCRdock does not provide a natural way to sample peptides for design, and because of its
+high computational cost, we did not include TCRdock PAE calculations in our design pipeline (e.g.,
+for MCMC sampling).\\
+
+\item {\em TULIP}~\cite{Meynard-Piganeau2024-po}: TULIP is a transformer-based model trained to
+generate either TCR or peptide sequences conditioned on the other binding partners in a TCR-pMHC
+complex. The conditional likelihood function learned by TULIP can be used to score peptides within a
+TCR-pMHC context. Specifically, this scoring scheme was used in ref.~\cite{Meynard-Piganeau2024-po}
+to predict the T-cell activity measurements from ref.~\cite{Luksza2022-gx}, and we benchmarked our
+predictions against TULIP's for this data. In Table~\ref{table:spearmanr_activity}, we present the
+Spearman correlations between TULIP predictions and the fitted EC$_{50}$ values as reported in
+ref.~\cite{Luksza2022-gx}, which are the same correlations reported in the TULIP
+paper~\cite{Meynard-Piganeau2024-po}. Additionally, we provide correlations with the fitted
+EC$_{50}$ values obtained using the procedure outlined in Section~\ref{sec:aff_act} and
+eq.~\ref{eq:EC50}, consistent with correlations reported in Fig.~3.\\
+
+
+\item {\em NetTCR2.2}~\cite{Jensen2024-xs}: NetTCR2.2 consists of a Convolutional Neural Network
+classifier to predict TCR-peptide binding from the the amino acid sequences of the peptide and of
+all six CDRs from the $\alpha$ and the $\beta$ chains of a TCR. Because the training set contains
+many examples of different TCRs binding to the same peptide, but far fewer cases of multiple
+peptides tested against a given TCR, the model performs best when ranking candidate TCRs for a fixed
+peptide, as reported in ref.~\cite{Jensen2024-xs}. By contrast, we aim to address the complementary
+task for ranking peptides for a fixed TCR.
+
+We query NetTCR2.2 through the authors' web server
+(\url{https://services.healthtech.dtu.dk/services/NetTCR-2.2/}). CDR boundaries are assigned by
+aligning each TCR sequence to the IMGT reference sequences, using code from the TCRdock
+repository~\cite{Bradley2023-rl}. Of the TCR-pMHC pairs examined in this work, only one system
+(TCR1, Table~\ref{table:affinity_and_activity_info}) appears in the NetTCR2.2 training set, and even
+then with just a single annotated positive peptide. Therefore, this small overlap is unlikely to
+bias our predictions.\\
+
+\item {\em TAPIR}~\cite{Fast2023-tk}: Similar to NetTCR-2.2, TAPIR consists of a Convolutional
+Neural Network trained to predict TCR-peptide-MHC binding. As input, TAPIR considers the CDR3's
+amino acid sequences, the V and J genes, the peptide's amino acid sequence, and the MHC allele. We
+use TAPIR for scoring via the web interface hosted by the authors~\url{https://vcreate.io/tapir/}.
+We extract V/J genes and CDR3 from a TCR sequence by aligning it to the IMGT reference sequences,
+using code from the TCRdock repository~\cite{Bradley2023-rl}. We find that five out of nine of the
+TCR-pMHC systems in this study are present in the training data of TAPIR, but each only with a
+single annotated positive peptide (1G4 TCR, TCR1, TCR4, TCR5, TCR6,
+Table~\ref{table:affinity_and_activity_info}), and therefore, this small overlap is unlikely to bias
+our predictions.
+
+\end{itemize}
+
+
+\noindent \textbf{Computational modeling of TCR-pMHC templates with AlphaFold3.} For six out of
+seven systems with T-cell activity measurements from ref.~\cite{Luksza2022-gx} (TCRs~2-7), no
+experimentally-determined structure is available. For these, we generated structures using the
+AlphaFold3 (AF3) model~\cite{Abramson2024-jp}. Furthermore, to probe how sensitive HERMES is to AF3
+modeled inputs, we produced AF3 predictions for every TCR-pMHC complex we studies in this work--both
+for scoring and design design targets--using the wild-type sequences of all the chains as inputs;
+see Dataset~\ref{dataset:af3_sequences} for these sequences. Each target was folded using both the
+AF3 server's option with template search (with default cutoff date of September 9th 2021), and
+without template, the latter approximating the scenario in which no homologous structures exist. We
+note, however, that several of TCR-pMHC complexes we analyzed here were likely present in the AF3
+training data, so the ``template-free" predictions can only serve as an approximate test of true
+de-novo performance.
+
+We fold TCR-pMHC systems for which we have a structure using restricted amino-acid sequences of the
+TCR and MHC chains that were extracted with functionalities in the TCRdock codebase, and are
+equivalent to the sequences that TCRdock would use to predict the structure~\cite{Bradley2023-rl}.
+Specifically, we first extract the amino-acid sequences from the experimental structure. Then, we
+extract V/J genes, CDR3 and MHC allele from them using `parse\_tcr\_pmhc\_pdbfile.py`, and input
+them to `setup\_for\_alphafold.py' to get the restricted amino-acid sequences. For the bispecific
+Fab antibody-mediated T-cell therapy from ref.~\cite{Hsiue2021-ag}, we used AF3 to fold and dock the
+Fab and the pMHC by extracting the amino-acid sequences from the experimental structure. We found
+that AF3 displayed high uncertainty (as measured by plDDt) only at the Fab-pMHC interface, and not
+in the folds of individual chains. The sequences we used as input to AF3 are listed in
+Dataset~\ref{dataset:af3_sequences}. \\
+\\
+
+
+\noindent \textbf{Benchmarking HERMES predictions for T-cell affinity and activity.} We compared the
+performance of HERMES models at predicting the binding affinity and activity of T-cells against
+substitution matrices (BLOSUM62~\cite{Henikoff1992-jq}, and \L uksza {\em et al}'s TCR-specific $d
+\cdot M$ and $M$ matrices~\cite{Luksza2022-gx}), the TCR-pMHC structure prediction algorithm
+TCRdock~\cite{Bradley2023-rl}, the sequence-based machine learning algorithms for TCRs
+(TAPIR~\cite{Fast2023-tk}, NetTCR~\cite{Jensen2024-xs}, and TULIP~\cite{Meynard-Piganeau2024-po}),
+and the structure-based inverse folding models (ESM-IF1~\cite{Hsu2022-km} and
+ProteinMPNN~\cite{Dauparas2022-fu}). Since all of these models are unsupervised in nature (except
+for \L uksza {\em et al} activity predictions for TCRs 1-7), we do not expect predictions to be in
+the same units as the affinity and activity values, and thus, we use Spearman correlation between
+data and predictions as a metric for model performance.
+
+For predicting TCR-pMHC binding affinities (Table~\ref{table:spearmanr_affinity}), 
+BLOSUM62 leads for the 1G4 TCR system, while template-guided TCRdock tops on the A6 TCR systems.
+HERMES-{\em relaxed} with no noise (0.00) achieves slightly lower Spearman correlation but is
+statistically indistinguishable from these best performers (p-value $>0.05$ associated with the
+difference in the Fisher's z-transformed Spearman correlations). For 1G4, ESM-IF1 and the \L uksza
+{\em et al}'s TCR-specific $d \cdot M$ and $M$ substitution matrices are similarly competitive.
+HERMES-{\em relaxed} 0.00 consistently outperforms the sequence-based models (TAPIR, NetTCR-2.2),
+ProteinMPNN, and TCRdock-{\em no template} (the TCRdock model without using structural templates
+similar to the query data). Lastly, choosing the minimum-Rosetta-energy conformation for HERMES-{\em
+relaxed} yields correlations with the data that are comparable to the baseline HERMES-{\em relaxed}
+model that averages over the energies of 100 different realizations of relaxed peptides (Fisher's
+z-test p-value $>0.05$). Table~\ref{table:spearmanr_affinity} shows these benchmarking results in
+detail.
+
+
+For predicting T-cell activity (Table~\ref{table:spearmanr_activity}), HERMES-{\em fixed} without
+noise (0.00) achieves the best performance for TCR1, TCR2, and TCR3, and proteinMPNN-0.02 shows
+competitive performances for TCR1 and TCR3. ProteinMPNN-0.02 leads for TCR6 and H2-scDb, while
+HERMES-{\em fixed} 0.00 achieves slightly lower but statistically indistinguishable Spearman
+correlations (Fisher's z-test p-value $>0.05$). All models struggle to provide reliable predictions
+for TCR7, with the exception of ProteinMPNN 0.02, which attains a moderate Spearman correlation
+$\rho=0.31$ when scoring one peptide amino acid at a time (eq.~\ref{eq:peplogp_proteinmpnn}), and
+$\rho=0.29$, when scoring the peptide and the TCR together
+(eq.~\ref{eq:peplogp_proteinmpnn_tcr_and_pep}). For TCR4, which has a poor structural model (AF3 PAE
+= 2.07), all structure-based models fail to produce reliable predictions, whereas BLOSUM62 achieves
+a moderate Spearman correlation $\rho=0.33$. The \L uksza {\em et al}'s $d \cdot M$ substitution
+matrix overall performs well on the TCR~1-7 benchmark; however, because it was obtained by fitting
+on these same data, its predictions are not strictly zero-shot. The structure-based models HERMES
+and ProteinMPNN consistently outperform the sequence-based models (TAPIR, NetTCR-2.2, and TULIP), as
+well as the structure-based ESM-IF1. Lastly, choosing the minimum-Rosetta-energy conformation for
+HERMES-{\em relaxed} model yields a similar performance to the baseline HERMES-{\em relaxed} model
+that averages over the energies of 100 different realizations of relaxed peptides.
+Table~\ref{table:spearmanr_activity} shows these benchmarking results in detail.
+
+Our results do not indicate a clear preference between HERMES-{\em fixed} and HERMES-{\em relaxed}:
+HERMES-{\em fixed} predicted T-cell activity better, while HERMES-{\em relaxed} predicted binding
+affinity between TCR and pMHC better. However, it is important to note that in all systems tested
+here, the scored peptides are highly similar to the wild-type peptides, with a maximum Hamming
+distance of just one amino acid from a wild-type peptide found in one of the available structural
+templates. As a result, relaxation may not be essential for achieving high performance.
+Interestingly, noised HERMES models underperform compared to the un-noised counterparts. This is in
+contrast to prior observations, where noised models achieve higher performances in predicting the
+stability effect of mutations in proteins~\cite{Visani2024-sh}.
+ Moreover, we observe that ProteinMPNN predictions are robust to the choice of scoring scheme, i.e.,
+ scoring peptide amino acids one at a time $E^{\rm (MPNN)}_{\text{pep 1-by-1}}$
+ (eq.~\ref{eq:peplogp_proteinmpnn}), the whole peptide simultaneously $E^{\rm (MPNN)}_{\text{pep}}$
+ (eq.~\ref{eq:peplogp_proteinmpnn_pep}), or peptide and the TCR interface together $E^{\rm
+ (MPNN)}_{\text{pep and tcr}}$ (eq.~\ref{eq:peplogp_proteinmpnn_tcr_and_pep}); see
+ Fig.~\ref{fig:proteinmpnn_scoring_schemes_comparison}.
+
+Lastly, we benchmarked all four HERMES models and two ProteinMPNN models (using peptide-scoring
+schemes eq.~\ref{eq:peplogp_proteinmpnn_pep} with different noise levels) on AF3-predicted
+structures, for both activity and affinity predictions (Fig.~\ref{fig:plots_af3_struc_ablation}). We
+generated the AF3 structures both with and without template guidance, and the resulting predictions
+made with these AF3 structures were compared to performances using the corresponding experimental
+structures. AF3 produces accurate models for all complexes except the H2-scDb Fab bound to pMHC, for
+which the docking orientation and conformation were incorrect
+(Table~\ref{table:af3_folding_metrics}). Expectantly, we saw a significant drop in model
+performances for both HERMES and ProteinMPNN when using the inaccurate AF3 predictions for H2-scDb
+(Fig.~\ref{fig:plots_af3_struc_ablation}). For both HERMES and ProteinMPNN, replacing experimental
+structures with AF3 predictions altered predictions for the 1G4 and A6 TCRs binding to pMHC
+variants, but the changes were not statistically significant (p-value$>0.05$ associated with the
+difference in the Fisher's z-transformed Spearman correlations); see
+Fig.~\ref{fig:plots_af3_struc_ablation}. Finally, for TCR1, we observe no differences in performance
+at predicting T-cell activity between using the AF3 structures vs. the experimental structures.
+Comparisons for TCRs~2-7 show insignificant differences between predictions using AF3 models with
+and without templates.
+
+In Table~\ref{table:af3_folding_metrics} we report, where available, the C$_\alpha$ RMSD between
+AF3-predicted and experimentally determined structures, together with AF3 confidence metrics
+computed with and without template guidance. The confidence metrics include the TCR–pMHC interface
+predicted alignment error (PAE), the interchain predicted TM-score (ipTM), and the predicted
+TM-score (pTM; not interface-specific). We found ipTM and pTM to be closely related
+(Table~\ref{table:af3_folding_metrics}). Because structure-based models such as HERMES and
+ProteinMPNN rely on accurate input structures, Fig.~\ref{fig:plots_af3_struc_ablation}B plots their
+best-performing variants against AF3 confidence. The AF3 model for TCR4—on which both HERMES and
+ProteinMPNN perform poorly—exhibits the second-lowest ipTM confidence (after H2-scDb). However, the
+limited range of available AF3 confidence values prevents definitive conclusions about how these
+metrics impact
+the accuracy of predictions for peptide mutation-effects on T-cell responses.
+\\
+
+%\GMV{Finally, we tested whether AF3 confidence metrics could be used as a quantitative estimate of
+performance for the structure-based HERMES and ProteinMPNN models. Specifically, we hypothesized
+that predictions made on low-confidence structures should be expected to be of poor quality, since
+structure-based models assume the use of accurate crystal-structure-like structures. To test this,
+we plotted the models' performance on AF3-folded structures as a function of AF3's confidence
+metrics (Fig.~\ref{fig:plots_af3_struc_ablation}). We considered PAE and interchain predicted
+Template Modeling (ipTM) scores, two functionally different scores describing the models' confidence
+in its prediction of the structure at the interface between chains. While PAE was computed
+specifically on the interface between TCR/Ab and pMHC, we considered the overall ipTM score provided
+by AF3 to increase the amount of complementary information between the two metrics. We also report
+the predicted Template Modeling (pTM) scores - which are not specific to interfaces - in
+Table~\ref{table:af3_folding_metrics}, and find them to be very closely correlated with ipTM scores.
+Unfortunately, lack of datapoints with very low confidence metrics prevents the drawing of any
+significant conclusions. In fact, all systems considered except for the H2-scDb Fab and TCR4 have an
+ipTM score above 0.80 - with TCR4 being right at the boundary - a value that is generally considered
+to be the threshold for high-quality predictions~\cite{Abramson2024-jp}.
+
+
+
+\noindent \textbf{Benchmarking HERMES designs against alternative models.} Although we did not
+experimentally test the designs by the different models, we used both peptide presentation by MHC
+predicted by NetMHCPan and TCRdock’s PAE as benchmarking metrics across different design methods. We
+note that these are only computational metrics and should not be taken as ground truth; this is
+particularly true for results using TCRdock PAE as a proxy for binding, which are much more likely
+farther from the ground truth than the easier-to-predict MHC presentation.
+
+Figs.~\ref{fig:design_tcrdock_nyeso}, \ref{fig:design_tcrdock_ebv}, and
+\ref{fig:design_tcrdock_mage} show the fraction of peptides meeting each criterion for designs
+produced by various HERMES models, ProteinMPNN, BLOSUM62, and the system's MHC peptide preferences.
+Consistently, across the three systems, and for all models, the fraction of designs passing the PAE
+threshold decreases with increasing Hamming distance from the wild-types' sequences
+(Figs.~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},
+and~\ref{fig:design_tcrdock_mage}; panels E, and G). Also consistently, but more surprisingly,
+models trained with Gaussian noise applied to the structure---for both HERMES and
+ProteinMPNN---perform worst than their noise-less counterparts
+(Figs.~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},
+and~\ref{fig:design_tcrdock_mage}; panels E, and G).
+
+HERMES models are consistently the best at designing peptides that are scored well for presentation
+by the respective MHC alleles (panel C of
+Figs.~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},
+and~\ref{fig:design_tcrdock_mage}). No single model stands out as being consistently best across the
+three systems at designing peptides above the TCRdock PAE threshold: HERMES outperforms ProteinMPNN
+in the NY-ESO system (Fig.~\ref{fig:design_tcrdock_nyeso}), performs similarly in the EBV system
+(Fig.~\ref{fig:design_tcrdock_ebv}), and performs worse in the MAGE system
+(Fig.~\ref{fig:design_tcrdock_mage}). BLOSUM62 makes worse designs compared to HERMES and
+ProteinMPNN based on TCRdock PAE scores. Surprisingly, ESM-IF1 designs have the lowest success in
+MHC presentation, but show better TCRdock PAE scores compared to HERMES-{\em relaxed} for the MAGE
+system (Figs.~\ref{fig:design_tcrdock_nyeso},~\ref{fig:design_tcrdock_ebv},
+and~\ref{fig:design_tcrdock_mage}). Designs sampled from the MHC motif, while scoring well on MHC
+presentation, consistently score poorly for TCRdock PAE. We expected HERMES-{\em relaxed} to design
+better binders than HERMES-{\em fixed} at greater sequence distances from the wild-types. However,
+this holds only for the NY-ESO system (Fig.~\ref{fig:design_tcrdock_nyeso}) and not for EBV or MAGE
+(Figs.~\ref{fig:design_tcrdock_ebv},~\ref{fig:design_tcrdock_mage}). Overall, a broader benchmarking
+study, ideally with experimental validation, is needed to rigorously evaluate the effectiveness of
+different peptide design methods.
+
+To assess how using AF3 structures as templates influence design, we ran the HERMES-{\em fixed}
+design protocol using experimental and AF3 structures as templates and compared the resulting
+peptide likelihood matrices (as position weight matrices or PWMs) for the three systems
+(Fig.~\ref{fig:joint_logoplots_for_design}). Across NY-ESO, EBV, and MAGE, the resulting PWMs were
+largely consistent across the two template choices: most peptide positions showed the same
+preferences, and when variability did appear it was typically confined to chemically similar
+residues. There are two noteworthy exceptions: in NY-ESO, the top choice in position 7 of the
+peptide was flipped from Threonine and Aspartic Acid when AF3 template was used
+(Fig.~\ref{fig:joint_logoplots_for_design}A). In MAGE, using the AF3 model introduced a pronounced
+preference for glutamic acid at position 1 (Fig.~\ref{fig:joint_logoplots_for_design}C), a residue
+that we have already shown to be important for eliciting T-cell activity (Fig.~4). Aside from these
+cases, AF3-derived structures preserve the peptide specificity landscape learned by HERMES.
+
+
+\section{Experimental protocol to measure peptide activities}
+\noindent {\bf Artificial antigen-presenting cell lines.} We obtained the full-length coding
+sequences of HLA-A*02:01, HLA-A*01:01, and HLA-B*35:01 from the IMGT/HLA
+database~\cite{Robinson2003-ru}. Gene fragments were synthesized by Genscript and were cloned into
+the lentiviral pLVX-EF1$\alpha$-IRES-Puro (Clontech) vector. We used Lipofectamine 3000 Transfection
+Reagent (Invitrogen) to transduce the 293T packaging cell line (ATCC CRL-3216) with the psPAX2
+packaging plasmid (Addgene plasmid \#12260), the pMD2.G envelope plasmid (Addgene plasmid \#12259),
+and the HLA-encoding lentiviral vector. The lentivirus-containing supernatant was collected after 24
+and 48 hours post-transfection and was filtered through a 0.45um SFCA filter (Thermo Scientific).
+The lentivirus was concentrated using Lenti-X Concentrator (Takara Bio) according to the
+manufacturer’s protocol, resuspended in DPBS (Gibco), and stored at -80C for future use. To generate
+monoallelic HLA cell lines for HLA-A*02:01 and HLA-B*35:01, HLA-deficient K562 cells (ATCC CCL-243)
+were transduced with lentivirus. Since K562 cells have a high expression of both MAGE-A3 and Titin
+antigens, we transduced murine EL4 cell lines (ATCC TIB-39) with HLA-A*01:01 lentivirus to produce
+HLA-A*01:01 presenters lacking the natural expression of the tested antigens. At 48 hours
+post-transduction, K562 cells were transferred to Iscove’s Modified Dulbecco’s Medium containing
+10\% FBS, 2mM L-glutamine, 100 U/mL penicillin/streptomycin, and 2 $\mu$g/mL puromycin (Gibco). EL4
+cells were transferred to RPMI media containing 10\% FBS, 2mM L-glutamine, 100 U/mL
+penicillin/streptomycin, and 2 $\mu$g/mL puromycin (Gibco). The antibiotic selection continued for
+one week before transferring cells to the antibiotic-free media.\\
+
+\noindent {\bf TCR-expressing Jurkat 76.7 cell lines.} Nucleotide sequences of TCRa and TCRb chains
+were generated using stitchr~\cite{Heather2022-nr}. Both chains were modified to incorporate murine
+constant segments (TRAC*01 and TRBC2*01) to enhance TCR surface expression. For NYESO and
+EBV-specific TCRs, the TCRa and TCRb chains were connected through a P2A ribosomal skip motif,
+synthesized as a single bicistronic gene fragment by Genscript, and cloned into the lentiviral
+pLVX-EF1a-P2A-mCherry-IRES-Puro (Clontech). For MAGE-specific TCR, gene fragments for the TCRa and
+TCRb chains were separately synthesized by Genscript and cloned into either the lentiviral
+pLVX-EF1a-P2A-mCherry-IRES-Puro (Clontech) or pLVX-EF1$\alpha$-IRES-G418 (modified in-house from
+pLVX-EF1$\alpha$-IRES-Puro). The 293T packaging cell line (ATCC CRL-3216) was transfected with
+TCR-encoding lentiviral vectors, psPAX2 packaging plasmid (Addgene plasmid \#12260), and pMD2.G
+envelope plasmid (Addgene plasmid \#12259) using Lipofectamine 3000 Transfection Reagent
+(Invitrogen). The lentivirus-containing supernatant was collected after 24 and 48-hours after
+transfection, filtered through a 0.45$\mu$m SFCA filter (Thermo Scientific), concentrated using
+Lenti-X Concentrator (Takara Bio) according to the manufacturer’s protocol, resuspended in DPBS
+(Gibco), and stored at -80C for future use. To generate Jurkat cells expressing the paired TCR,
+TCR-null CD8-positive Jurkat 76.7 cells with NFAT-eGFP reporter were transduced with lentivirus. At
+48 hours post-transduction, cells were transferred to RPMI media containing 10\% FBS, 2mM
+L-glutamine, 100 U/mL penicillin/streptomycin, and 1 $\mu$g/mL puromycin (Gibco). For MAGE-specific
+cell line generation Jurkat cells were co-transduced with lentiviruses encoding TCRa and TCRb chains
+and cultured with both 1 $\mu$g/mL puromycin and 500 $\mu$g/mL Genectin (Gibco). The antibiotic
+selection continued for one week. The abTCR expression on the surface was confirmed by mCherry
+expression and staining with a 1:100 dilution of anti-mouse TCRb APC-Fire750 (clone H57-597, 109246,
+Biolegend).\\
+
+\noindent {\bf Specificity validation of TCR-expressing Jurkat.} Original cognate peptides and their
+variants were synthesized as a crude peptide library with by Genscript, and then diluted to a 4mM
+stock solution in DMSO (Sigma). To examine the specificity of the TCR-expressing Jurkat cell lines,
+we co-cultured 100,000 Jurkat cells with equal amounts of artificial APCs expressing the
+corresponding HLA allele in a 96-well round-bottom tissue culture plate. We tested each
+specificity—MAGE, EBV, NYESO—under 96 different conditions. These included one or two positive
+control original peptides and an unstimulated “no peptide” control. The cells were cultured in RPMI
+media supplemented with 10\% FBS, 2mM L-glutamine, 100 U/mL penicillin/streptomycin, and 1 $\mu$g/ml
+each of anti-human CD28 (BD Biosciences, 555725) and CD49d (BD Biosciences, 555501). The co-cultures
+were pulsed with 1$\mu$M peptide in triplicate. We added DMSO to unstimulated control wells (no
+peptide) at concentrations equivalent to those in the peptide-stimulated wells. After incubating the
+cells for 24 hours at 37$^\circ$C and 5\% CO2, we washed them once in DPBS (Gibco) and resuspended
+them in 150$\mu$l DPBS for flow cytometry analysis using a custom-configured BD Fortessa with
+FACSDiva software (Beckton Dickenson). We determined GFP percentages using FlowJo version 10.8.1
+software (BD Biosciences). Alternatively, we measured the GFP percentage in wells of a 96-well
+round-bottom plate using Cellcyte X (Echo), using 4x objective in spheroid mode, acquisition in
+green channel (800 ms exposure 3dB gain). Image analysis was done with CellCyte Studio software with
+total spheroid area recipe and standard defaults (50 a.u. Contrast Sensitivity, 2 a.u Smoothing, 100
+$\mu$m$^2$ filled hole size 100 $\mu$m Min. object size), relative GFP+ spheroid area was used as
+output. For NY-ESO, we compared the T-cell activity level measured using flow cytometry with
+fluorescence microscopy, and show consistency between the two (Fig.~\ref{fig:flow_vs_microscopy}).
+Given the consistency between the two experimental approaches, we relied on fluorescence microscopy
+only to measure GFP levels induced by different peptides for MAGE and EBV. \\
+
+\noindent {\bf Selecting the GFP expression threshold for T-cell activity.} Experimental
+measurements are done across three replicates, and the reported GFP levels in
+Figs.~4,~\ref{fig:design_scatterplots} for each condition are averaged over the three replicates. We
+consider a peptide to have activated T-cells if its induced replicate-averaged GFP level met two
+criteria: 1) it exceeded $0.5\%$, and 2) it surpassed the mean plus three standard deviations of the
+GFP level negative controls (no-peptide).
+According to these criteria, the GFP activation cutoffs were 0.5\% for the NY-ESO system, 0.64\% for
+the EBV system, and 0.76\% for the MAGE system.
+
+
+
+\section{Experimental activities of the designed peptides}
+\label{sec:exp_analysis}
+
+\noindent {\bf Comparing design success rates across the three TCR-pMHC systems.} Among the designed
+peptides, 50\% in the NY-ESO system (Fig. 4A), 16\% in the EBV system (Fig.~4B), and 26\% in the
+MAGE system induce significant T-cell activities. However, it should be noted that the designed
+NY-ESO peptides were closer in sequence to their wild-type templates (2-7 amino acid differences)
+than the peptides designed for the EBV (3-9 differences) or MAGE (3-8 differences) systems. We find
+that the activity of designs decays with increasing distance from the respective wild-type, with
+almost no designs beyond 5 amino-acid distance from the wild-types activating their respective
+T-cells
+(Fig.~4,~\ref{fig:design_experimental_nyeso},~\ref{fig:design_experimental_ebv},~\ref{fig:design_experimental_mage}).
+This underscores the difficulty of exploring peptide variants far from the wild-type sequences. If
+any positive designs do exist at these greater distances, they represent an exponentially smaller
+fraction of the sequence space, and when in complex with the TCR-MHC, are likely to adopt a
+different binding mode compared to that of the wild-type.
+
+Minor adjustments to the design protocols, aimed at better exploring the design space, may have also
+contributed to the observed differences in performance across the systems. For NY-ESO, which
+achieved the highest design success rate, peptides with highest PAE scores were chosen for
+experimental validation, whereas in EBV and MAGE, peptides were sampled uniformly above the set PAE
+thresholds. In MAGE, fixing the amino-acid at position 1 to a Glutamic Acid (E) for the one-third of
+the designs led to an elevated success rate in this subset
+(Fig.~\ref{fig:design_experimental_mage}D); E$_1$ is shared between the two wild-type peptides and
+this design choice allowed us to assess the importance of this amino acid for function. \\
+
+\noindent{\bf The design potential of different HERMES models.} In panel A of
+Figures~\ref{fig:design_experimental_nyeso}~(NY-ESO),~\ref{fig:design_experimental_ebv}~(EBV),
+and~\ref{fig:design_experimental_mage}~(MAGE), we show the fidelity of designs using the four HERMES
+models: HERMES-{\em fixed} with no noise, HERMES-{\em fixed} with 0.5~\AA~noise, HERMES-{\em
+relaxed} with no noise, and HERMES-{\em relaxed} with 0.5~\AA~noise. Although PyRosetta relaxations
+allows HERMES-{\em relaxed} to explore the sequence space more broadly, the resulting designs that
+are made at greater distances from the wild-types seldom succeed in activating T-cells. This pattern
+is also observed with using models trained with 0.5~\AA~Gaussian noise. Indeed, successful designs
+lie within five amino acid substitutions from the wild-types, and for these designs, the un-noised
+HERMES-{\em fixed} model demonstrates the highest overall fidelity. To better explore the peptide
+energy landscape and to design sequences further from the wild-types, it may be necessary to adopt a
+more specialized relaxation model that accounts for the intricacies of TCR-pMHC poses, while being
+consistent with the neural network's model of protein environments.\\
+
+\noindent{\bf Comparing TCRdock and AF3 as design filters.} Using our T-cell activity measurements
+as the ground truth, we sought to quantify how well the TCRdock and AF3 PAE scores can be used as
+predictors of T-cell activation and filtering mechanisms for peptide design. For this purpose, we
+focus primarily on the NY-ESO system, for which we validated a balanced mix of positive and negative
+designs, chosen based on their TCRdock PAE scores. Here, we found that TCRdock PAE could moderately
+distinguish true positive from true negative designs (AUROCs = 0.91 and 0.88,
+Fig.~\ref{fig:design_roc_curves}A). Notably, using TCRdock PAE resulted in a very low false negative
+rate (0.03\%) but a considerably higher false positive rate (50\%); see
+Fig.~\ref{fig:design_scatterplots}A top. AF3 PAE scores performed equivalently to TCRdock PAE in
+differentiating positives from negatives (AUROCs = 0.89 and 0.94,
+Fig.~\ref{fig:design_roc_curves}A), though they correlated only moderately with TCRdock’s PAE values
+predictions (Spearman correlation $\rho=0.5$, Fig.~\ref{fig:design_scatterplots}C). Indeed, some
+peptides deemed positive by TCRdock were classified as negative by AF3, and vice versa
+(Fig.~\ref{fig:design_scatterplots}C).
+
+When restricting the analysis to peptides that were deemed as positive based on their TCRdock and
+AF3 PAE scores, we did not expect either TCRdock or AF3 PAE to effectively discriminate between
+peptides that did or did not elicit a T-cell response in our experimental assay (i.e., true vs.
+false positives). However, we found that both TCRdock PAE and AF3 PAE scores retained significant
+predictive power in the NY-ESO system (AUROCs = 0.81 and 0.77, and AUROCs = 0.80 and 0.89,
+Fig.~\ref{fig:design_roc_curves}A). In the EBV and MAGE systems, the TCRdock and AF3 PAE values for
+peptides that we classified positive showed lower predictive power in distinguishing true from false
+positives compared to the NY-ESO system (Fig.~\ref{fig:design_roc_curves}B-C). The PAE scores of
+TCRdock and AF3 differed most markedly in the MAGE system (Spearman correlation $\rho = 0.09$ for
+MAGE), with TCRdock assigning relatively unfavorable PAE scores to the wild-type peptides, whereas
+AF3 ranked those same peptides near the top (Fig.~\ref{fig:design_scatterplots}I).
+
+The PAE values reported by the structure prediction algorithms have been shown to be noisy
+indicators of protein folding fidelity and design quality~\cite{Roney2022-am}. While larger
+experimental libraries will be needed to draw definitive conclusions, it appears that PAEs from
+TCRdock and AF3 have some complementary predictive strengths, and therefore, combining their
+information could lead to more robust design decisions.
+Moreover, both of these scores appear to be uncorrelated or only weakly correlated with HERMES
+scores across systems
+(Figs.~\ref{fig:design_scatterplots},~\ref{fig:design_tcrdock_nyeso}H,~\ref{fig:design_tcrdock_ebv}H,~\ref{fig:design_tcrdock_mage}H),
+suggesting that AF3 and TCRdock PAE's can serve as complementary filters to HERMES during design.\\
+
+
+
+
+\noindent {\bf HERMES energy as design filter.} We further sought to assess whether HERMES energy
+score itself could serve as a predictor of T-cell activation and as a filtering criterion for
+design.
+For each of the three systems, we scored all peptides we designed with all four combinations of
+HERMES protocols, regardless of which protocol was originially used for design. For each system, we
+then computed two sets of ROC curves, separately for peptides designed with HERMES-{\em fixed} and
+those designed with HERMES-{\em relaxed}.
+We found that scores from the HERMES-{\em relaxed} models consistently performed poorly in
+predicting T-cell activation, with only one out of six cases achieving an AUROC better than random;
+HERMES-{\em relaxed} 0.00 as scoring criterion on the peptides designed with HERMES-{\em fixed} in
+the EBV system showing AUROC = 0.66 (Fig.~\ref{fig:design_roc_curves}B).
+In contrast, HERMES-{\em fixed} 0.00 was consistently the best filtering criterion, outperforming
+even TCRdock and AF3 PAE score in several cases: in the EBV system, HERMES-{\em fixed} 0.00 scores
+on peptides designed by HERMES-{\em fixed} reached AUROC~$=0.74$; in the MAGE system, AUROC were
+0.65 and 0.89 for and peptides designed with HERMES-{\em fixed} and HERMES-{\em relaxed},
+respectively (Fig.~\ref{fig:design_roc_curves}).
+These results highlight two main takeaways: first, that HERMES-{\em fixed} 0.00 is the most reliable
+model for both scoring and designing peptides to elicit T-cell response; second, selecting
+high-scoring peptides using this model can improve hit rates, though potentially at the cost of
+reduced diversity in the peptide pool.
+
+
+
+\section{T-cell and MHC specificity as the entropy of the associated peptide distribution}
+ We characterize the specificity of a TCR-MHC complex and that of the MHC by the diversity of
+ peptides that they can recognize. For TCR-MHC specificity, we starting with a TCR-pMHC structural
+ template, and use HERMES-{\em fixed} model to generates a peptide position weight matrix (PWM) that
+ captures the ensemble of peptides recognized by the TCR and presented by the MHC. In Figure 5, we
+ analyzed 105 human and 36 mouse MHC class I TCR-pMHC structures---curated by the TCRdock template
+ database \cite{Bradley2023-rl}---which included only MHC alleles represented in at least two
+ structures. For each MHC allele in this set, we then characterized the distribution of peptides
+ that the MHC can present (independently of the TCR) using PWMs inferred by the MHC Motif
+ Atlas \cite{Tadros2023-ij}. In both cases, we use the entropy of these PWMs, $S= -\sum_{\alpha, i}
+ p_i(\alpha) \log_2p_i(\alpha)$, as a proxy for degeneracy of the target (TCR-MHC or MHC), where
+ $\alpha \in \{1,\dots 20\}$ denotes the amino acid types, and $i \in\{ 1, \dots, \ell\}$ are
+ positions along the peptide.
+ 
+\section{Predicting MHC-I peptide presentation preferences with HERMES.} HERMES is designed to be
+broadly applicable to diverse protein-interaction contexts. As such, we attempted to use HERMES-{\em
+fixed} 0.00 model to recapitulate the ensemble of peptides presented by an MHC-I allele. To do so,
+we gathered 416 peptide-MHC-I crystal structures from the TCR3D database~\cite{gowthaman_tcr3d_2019}
+(Table~\ref{table:pmhc_info}). For each structure, we computed a peptide position position weight
+matrix (PWM) with the HERMES-{\em fixed} 0.00 design protocol, conditioning on the surrounding MHC
+structure and the masked wild-type peptide as the template. The resulting PWMs were then averaged
+across complexes that shared the same MHC allele and peptide length to produce an allele-specific
+peptide motif (for a given peptide length).
+
+We compared these HERMES-generated PWMs with the corresponding PWMs from the MHC Motif
+Atlas~\cite{Tadros2023-ij}, which we consider as ground truth; we used relative entropy
+(KL-Divergence), $D_{KL}= \sum_{\alpha, i} p^{\text{motif}}_i(\alpha) \log_2
+\frac{p^{\text{motif}}_i(\alpha)}{p^{\text{HERMES}}_i(\alpha)}$ as well as the entropy difference
+between the two PWMs as metrics; here, $p_i^{(\cdot)}(\alpha)$ is the probability of amino acid
+$\alpha$ at position $i$ of a peptide, given the morel specified in the superscript. When structural
+coverage is extensive (roughly more than 30 structures of distinct peptides with a given MHC
+allele), HERMES-derived motifs align closely with those from MHC Motif Atlas, as quantified by the
+low KL-divergence and comparable entropy values (Fig.~\ref{fig:pmhc_pwm_entropy_comparisons}). Under
+sparse coverage, HERMES motifs begin to underestimate the peptide diversity that can be presented by
+an MHC allele (measured by motif entropy), a limitation we attribute to incomplete sampling of
+peptide backbone conformations by HERMES-{\em fixed} (Fig.~\ref{fig:pmhc_pwm_entropy_comparisons}C).
+Overall, we see a clear pattern that the KL-Divergence increases with decreasing number of
+structural templates for a given MHC allele (Fig.~\ref{fig:pmhc_pwm_entropy_comparisons}B).
+Importantly, even with only a handful of templates, HERMES still captures substantially more
+diversity than a na\"ive baseline PWM generated by simply aligning the template peptides themselves
+(Fig.~\ref{fig:pmhc_pwm_entropy_comparisons}A). Moreover, in almost all cases, HERMES generated PWMs
+are more similar (lower KL-Divergence) to that of the MHC Motif Atlas than the na\"ive baseline PWM
+are (Fig.~\ref{fig:pmhc_pwm_entropy_comparisons}A).
+ 
+These results suggest that accurate modeling of MHC presentation with HERMES-{\em fixed} design
+protocol requires both sufficient structure templates and peptide diversity. It should be noted that
+MHC Motif Atlas's allele‑specific motifs--derived from the large body of peptide binding data
+curated for individual MHC-I alleles--are very reliable, so we continue to use them as the benchmark
+for assessing motif specificity. Developing design protocols that better sample peptide backbone
+conformations remains an important avenue for future work.
+

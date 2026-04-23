@@ -1,0 +1,481 @@
+
+\section{Modeling details}
+
+\subsection{Tuning the hyperparameters of the training objective}
+\label{sec:training_objective_hyperparams}
+We find it practical to scale the reconstruction loss by a dataset-specific scalar $\alpha$ since
+the MSE loss varies in average magnitude across datasets. When training H-VAE, we find it
+beneficial to keep $\beta = 0$ for a few epochs ($E_\text{rec}$) so that the model can learn to
+perform meaningful reconstructions, and then linearly increasing it to the desired value for
+$E_\text{warmup}$ epochs to add structure to the latent space, an approach first used by
+\citet{bowman_generating_2016}.
+
+\subsection{Data normalization}
+\label{sec:data_normalization}
+As per standard machine learning practice~\cite{shanker_effect_1996}, we normalize the data. We do
+this by dividing each tensor by the average square-root total norm of the training tensors,
+analogously to the Signal Norm. This strategy puts the target values on a similar scale as the
+normalized activations learned by the network, which we speculate to favor gradient flow.
+
+\subsection{Implementation details}
+Without loss of generality, we use real spherical harmonics for implementation of H-(V)AE. 
+We leverage \verb|e3nn|~\cite{geiger_e3nn_2022}, using their computation of the real spherical
+harmonics and their Clebsch-Gordan coefficients.\\
+\\
+In our code, we offer the option to use the Full Tensor Product instead of the ETP. Specifically,
+at each block we allow the users to specify whether to compute the Tensor Product element-wise or
+fully-connected within the multiplicity, and whether to compute using efficient or fully connected
+degree mixing.
+
+\subsection{Pairwise invariant reconstruction loss}
+\label{sec:pairwise_inv_rec_loss}
+To reconstruct a signal within an equivariant model it is desirable to have a \textit{pairwise
+invariant} reconstruction loss, i.e., a loss $\mathcal{L}_{rec}$ such that $\mathcal{L}_{rec}(\vx,
+\vy) = \mathcal{L}_{rec}(\mD(\mathfrak{g})\vx, \mD(\mathfrak{g})\vy)$ where $\mD$ is the
+representation of the group element $\mathfrak{g}$ acting on the space that $x$ and $y$ inhabit
+(e.g. a rotation matrix if $\vx$ and $\vy$ are vectors in Euclidean 3D space, or a degree-$\ell$
+wigner-D matrix if $\vx$ and $\vy$ are degree-$\ell$ vectors). This  property is necessary for the
+model to remain equivariant, i.e., given that the network is agnostic to the transformation of the
+input under group operation $\vx \to \mD(\mathfrak{g})\vx$ by producing a similarly transformed
+output $\vy \to \mD(\mathfrak{g})\vy$, we want the reconstruction loss to be agnostic to the same
+kind of transformation as well\\
+\\
+The MSE loss is pairwise invariant for any degree-$\ell$ feature on which SO(3) acts via the
+$\ell$'s Wigner-D matrix. Consider two degree-$\ell$ features $\vx_{\ell}$ and $\vy_{\ell}$ acted
+upon by a Wigner-D matrix $D_{\ell}(\mathfrak{g})$ parameterized by rotation $\mathfrak{g}$ (we
+drop the $\mathfrak{g}$ and $\ell$ indexing for clarity):
+\begin{align}
+ \nonumber    \text{MSE}(\mD\vx, \mD\vy) &= (\mD\vx - \mD\vy)^{T} (\mD\vx - \mD\vy) \\
+  \nonumber                       &= (\mD(\vx - \vy))^{T} (\mD(\vx - \vy)) \\
+  \nonumber                       &= (\vx - \vy)^{T}\mD^{T} \mD(\vx - \vy) \\
+  \nonumber                       &= (\vx - \vy)^{T} (\vx - \vy) \qquad \qquad \text{since Wigner-D matrices are unitary} \\ 
+  \nonumber                       &= \text{MSE}(\vx, \vy)\\
+\end{align}
+Since the MSE loss is pairwise invariant for every pair of degree-$\ell$ features, it is thus
+pairwise invariant for pairs of steerable tensors composed via direct products of steerable
+features.
+
+\subsection{Cosine loss}
+\label{sec:cosine_loss_appendix}
+We use the metric {\em Cosine loss} to measure a model's reconstruction ability. Cosine loss is a
+normalized dot product generalized to operate on pairs of steerable tensors (akin to cosine
+similarity), and modified to be interpreted as a loss (see Sec.~\ref{sec:cosine_loss_appendix} for
+details),
+\begin{equation}
+\begin{split}
+    \text{Cosine}(\vx, \vy) = 1 - \frac{\vx \odot \vy}{\sqrt{(\vx \odot \vx)(\vy \odot \vy)}}, \\
+    \text{with}\quad \vx \odot \vy = \sum_{\ell'} (\vx_{\ell'} \otimes_{cg} \vy_{\ell'})_{\ell = 0}
+\end{split}
+    \label{eqn:cosine_loss}
+\end{equation}
+Importantly, unlike MSE, which depends on the characteristics of the data (e.g., the size of the
+data tensors),  Cosine loss is dimensionless and therefore, interpretable and comparable across
+datasets.  A measure with these characteristics is practically useful for training of a network
+because it provides an estimate for how much better the reconstructions can get if the network’s
+hyperparameters were to be further optimized. For example, looking at the Cosine loss in
+Table~\ref{table:mse_and_cosine}, we see that our model trained on Shrec17 (best Cosine = 0.130) is
+not as well optimized as our model trained on MNIST (best Cosine = 0.017). Using MSE, the trend is
+reversed (1.8$\times 10^{-3}$ vs. 6.7$\times 10^{-3}$), since the scale of MSE depends on the size
+of the irreps of the data (Fig.~\ref{fig:cosine_vs_mse}). Nonetheless, as a measure of a model's
+reconstruction ability, Cosine loss correlates almost perfectly with MSE for a given dataset and
+network, especially in the mid-to-low reconstruction quality regime (SpearmanR~$= 0.99$,
+Fig.~\ref{fig:cosine_vs_mse} and Table~\ref{table:mse_and_cosine}).It should also be noted that 
+since  Cosine loss ignores the relative norms of data features, it is unable to reconstruct norms
+and thus, not suitable as a training objective. \\
+
+
+\noindent \textbf{Proof: Invariance of  Cosine loss.}
+The generalized dot product $\odot$ from Eq.~\ref{eqn:cosine_loss} is pairwise invariant in the
+same way that the dot product between two 3D vectors depends only on their relative orientations
+but not the global orientation of the whole two-vector system. Therefore, the whole Cosine loss
+expression is pairwise invariant, since all of its components are pairwise invariant.\\
+
+
+\section{Using a non-equivariant decoder}
+\label{sec:mlp_decoder_appendix}
+{\em Winter et al}~\cite{winter_unsupervised_2022} propose to construct group-equivariant
+autoencoders by using an equivariant encoder that learns an invariant embedding and a group
+element, and an unconstrained decoder which uses the invariants alone to reconstruct each datapoint
+in the "canonical" form, before applying the learned group action in the output space. By contrast,
+for SO(3) we propose to use an equivariant decoder, whereby the learned group element is fed as
+input to the decoder. Such ``unconstrained decoder" procedure can in principle be merged with our
+equivariant encoder and Fourier-space approach in two ways. For each, we argue in favor of using
+our equivariant decoder.\\
+\\
+\textbf{1) Reconstructing the Fourier coefficients of the data.} To apply the learned group element
+on the decoder’s output, the Wigner-D matrices for the data’s irreps need to be computed from the
+group element. Then, the Wigner-D matrices can be used to “rotate” the tensor. This has to be done
+on-the-fly, and it can be done quickly using functions provided in the e3nn
+package~\cite{geiger_e3nn_2022} and by smartly vectorizing operations. We implemented this
+procedure by using a simple Multi-Layer Perceptron with SiLU non-linearities as a decoder. By using
+e3nn to compute Wigner-D matrices in batches, and by clever construction of tensor multiplications
+such that runtime scales linearly with $\ell_{max}$ and is constant with regards to multiplicity
+and batch size, we achieve models that run with comparable speed to those using our equivariant
+decoder, and have comparable performance on MNIST (Table~\ref{table:mlp_decoder_comparison}). Given
+the empirical similarities we observe, though on a limited use case, we favor the simplicity and
+elegance of our equivariant decoder. “Simplicity” because we construct the decoder to be symmetric
+to the encoder, thus endowing it automatically with similar representational power and without the
+need to tune an architecture made with different base components. Furthermore, we highlight that
+our method generates intermediate equivariant representations in the decoder, rather than
+intermediate invariant representations. These intermediate equivariant representations may be of
+interest to study in and of themselves.\\
+\\
+\textbf{2) Reconstructing the data in real space.} In this case, we do not have to compute Wigner-D
+matrices on-the-fly, since the learned frame can be used directly in the output space as a rotation
+matrix. However, since the encoder only sees a truncated Fourier representation of the data, which
+is by construction lossy, while the loss is computed over fine-grained real-space, this model might
+be too difficult to train. We suspect this would make the model akin to a denoising
+autoencoder~\cite{vincent_extracting_2008} and it might be interesting to analyze, but that would
+be beyond the scope of this paper. To avoid the denoising effect, we could learn to reconstruct
+data in real space after an Inverse Fourier Transform (IFT). However, computing the IFT on-the-fly
+is very expensive and requires a discretization of the input space, to the point of being
+prohibitive for point clouds. This is not a bottleneck for the Forward Fourier Transform if the
+cloud is parameterized by Dirac-Delta distributions, i.e., for point clouds, as the integral can be
+computed exactly (Eq.~\ref{eq:ZFT}).
+
+
+\begin{table}[h]
+\begin{center}
+\resizebox{0.9\textwidth}{!}{
+\begin{tabular}{l c | c | c c | c c | c c}
+    \bf Method & \bf z & \bf Speed & \bf MSE & \bf Cosine & \bf Purity & \bf V-meas. & \bf
+    \newlinecell{LC Class.\\Acc.} & \bf \newlinecell{KNN Class.\\Acc.} \\
+    \hline
+    \hline
+    H-AE NR/R                       & 16 & \textbf{1.0} & $1.2 \times 10^{-3}$ & 0.031 &
+    \textbf{0.66} & \textbf{0.55} & 0.850 & 0.902 \\
+    H-AE unconst. decoder NR/R     & 16 & 1.3 & $\mathbf{1.1 \times 10^{-3}}$ & \textbf{0.028} &
+    0.62 & 0.53 & 0.838 & \textbf{0.907} \\
+    \hline
+    H-VAE NR/R                      & 16 & \textbf{1.0} & $\mathbf{2.8 \times 10^{-3}}$ &
+    \textbf{0.068} & \textbf{0.73} & \textbf{0.60} & \textbf{0.878} & \textbf{0.897} \\
+    H-VAE unconst. decoder NR/R    & 16 & 1.3 & $2.9 \times 10^{-3}$ & 0.073 & 0.68 & 0.56 & 0.850
+    & 0.872 \\
+\end{tabular}
+}
+    \caption{\textbf{Performance comparison between our H-(V)AE and a H-(V)AE with
+    ref.~\cite{winter_unsupervised_2022}'s non-equivariant decoder formulation, on the
+    MNIST-on-the-sphere dataset.}}
+    \medskip
+    \small
+    \justifying
+    The non-equivariant decoders are constructed as simple MLPs with SiLU non-linearities, with the
+    following hidden layer sizes: [32,64,128,160,256]. We keep the number of parameters
+    approximately the same to make model comparison fair, but we do not tune the architecture of
+    the invariant decoders. All other training details are kept the same
+    (Sec.~\ref{sec:exp_details}).
+\label{table:mlp_decoder_comparison}
+\end{center}
+\end{table}
+
+
+\section{Experimental details}
+\label{sec:exp_details}
+
+\subsection{Architecture specification}
+We describe model architectures as follows. We specify the number of blocks $B$, which is the same
+for the encoder and the decoder. We specify two lists, (i) DegreesList which contains the maximum
+degree $\ell_{{max},b}$ of the output of each block $b$, and (ii) MultList, containing the
+multiplicity sizes $C_{b}$, of each block $b$. These lists are in the order as they appear in the
+encoder, and are reversed for the decoder. When it applies, we specify the output multiplicity of
+the initial linear projection $C_\text{init}$. As noted in the main text, we use a fixed formula to
+determine $\ell_{{max},b}$, but we specify it for clarity.
+
+
+\subsection{MNIST on the sphere}
+\label{sec:mnist_details}
+\textbf{Model architectures.}
+For models with invariant latent space size $z = 16$, we use 6 blocks, $\text{DegreesList} = [10,
+10, 8, 4, 2, 1]$ and $\text{MultList} = [16, 16, 16, 16, 16, 16]$, with a total of 227k
+parameters.\\
+For models with invariant latent space size $z = 120$, we use 6 blocks, $\text{DegreesList} = [10,
+10, 8, 4, 2, 1]$ and $\text{MultList} = [16, 16, 16, 32, 64, 120]$, with a total of 453k
+parameters.\\
+\\
+\textbf{Training details.}
+We keep the learning schedule as similar as possible for all models. We use $\alpha = 50$. We train
+VAE models for $80$ epochs using the Adam optimizer~\cite{kingma_adam_2017} with
+default parameters, a batch size of $100$, and an initial learning rate of $0.001$, which we
+decrease exponentially by one order of magnitude over $25$ epochs. We tune $\beta$
+according to the procedure in outlined below, $E_\text{rec} = 25$ and $E_\text{warmup} = 35$.
+We instead train AE models for 50 epochs using the "reduce learning rate on plateau"
+scheme, reducing the learning rate by a factor of 5 if the validation loss has not improved for
+over one epoch. We utilize the model with the lowest loss on validation data, only after the end
+of the warmup epochs for VAE models. Training took ~$\sim 3.3$ minutes per epoch on a
+single NVIDIA A40 GPU for each model.\\
+\\
+
+\textbf{Tuning the regularization strength $\beta$ with the help of conditioning.}
+As outlined in Section~\ref{sec:mnist_results}, we select optimal values of $\beta$ by optimizing
+the expected sample quality of the generated samples. We define samples to be of high quality if
+they 1) can be correctly classified by a classifier trained on real data, and 2) if they are
+diverse enough. We leverage \textit{conditional} models to generate samples of known digit
+identity. Thus, we train an SO(3)-equivariant classifier - with the same architecture as H-(V)AE's
+encoder - to classify the digit identity of real data at 97\% accuracy, as well as
+\textit{conditional} H-VAE models with varying $\beta$. We then sample the conditional models to
+construct synthetic datasets of 10,000 spherical images, balanced across digit identity. Finally,
+we compute 1) the accuracy of the classifier on the synthetic datasets, and 2) the empirical
+variance of generated samples. We find that there is a trade-off between the two metrics: if
+$\beta$ is too low, the generate samples are very diverse but do not resemble real digits, whereas
+if $\beta$ is too high, samples of the same digit start looking more and more alike
+(Figure~\ref{fig:mnist_conditional_samples_VAE_z_16_beta_2pt0}). We empirically select $\beta =
+0.6$ and $\beta = 2.8$ for the $z = 16$ and $z = 120$ models, respectively, based on the trade-off
+between the above two metrics.
+We note that this procedure relies on the assumption that the same regularization strength $\beta$
+has the same effect on conditional vs. un-conditional models on sample quality. We believe this to
+be likely for the following three reasons: 1) the reconstruction loss is similar for same values of
+$\beta$ (Figure~\ref{fig:cosine_loss_mnist_cond_vs_uncond_ablation_in_beta}); 2) the optimal values
+of $\beta$ found using the conditional models approximately optimize the latent space metrics of
+un-conditional models (Figure~\ref{fig:ablation_in_beta_uncond}); 3) visual inspection of the
+conditional vs. unconditional samples across same values of $\beta$
+(Figures~\ref{fig:mnist_conditional_samples_VAE_z_16_beta_0pt6}
+and~\ref{fig:mnist_samples_VAE_z_16_beta_0pt6},~\ref{fig:mnist_conditional_samples_VAE_z_120_beta_2pt8} and~\ref{fig:mnist_samples_VAE_z_120_beta_2pt8},~\ref{fig:mnist_conditional_samples_VAE_z_16_beta_2pt0} and~\ref{fig:mnist_samples_VAE_z_16_beta_2pt0}).
+We perform this procedure only on the NR/R dataset and later use the same selected $\beta$ to train
+models on the R/R dataset.
+
+
+\subsection{Shrec17}
+\label{sec:shrec17_details}
+\textbf{Model architectures.} Both AE and VAE models have $z = 40$, 7 blocks, $\text{DegreesList} =
+[14, 14, 14, 8, 4, 2, 1]$, $\text{MultList} = [12, 12, 12, 20, 24, 32, 40]$, $C_\text{init} = 12$,
+with a total of 518k parameters.\\
+\\
+\textbf{Training details.} We keep the learning schedule as similar as possible for all models. We
+use $\alpha = 1000$. We train all models for $120$ epochs using the Adam optimizer with default
+parameters, a batch size of $100$, and an initial learning rate of $0.0025$, which we decrease
+exponentially by two orders of magnitude over the entire $120$ epochs. For VAE models, we use
+$\beta = 0.2$, $E_\text{rec} = 25$ and $E_\text{warmup} = 10$. We utilize the model with the lowest
+loss on validation data, only after the end of the warmup epochs for VAE models. Training took
+$\sim 11$ hours on a single NVIDIA A40 GPU for each model.
+
+
+\subsection{Embedding of amino acid conformations}
+\label{sec:toy_aminoacids_details}
+
+\noindent \textbf{Pre-processing of protein structures.} We sample residues from the set of
+training structures pre-processed as described in Sec.~\ref{sec:protein_neighborhoods_details}.\\
+
+\noindent \textbf{Fourier projection.} We set the maximum radial frequency to $N = 20$ as  it
+corresponds to a radial resolution matching the minimum inter-atomic distances after rescaling the
+atomic neighborhoods of radius  $10.0\AA$ to fit within a sphere of radius 1.0, necessary for
+Zernike transform.\\
+The multiplicity composition of the data tensors can be described  in a notation - analogous to
+that used by e3nn but without parity specifications - which specifies the multiplicity $C_{\ell}$
+for each feature of degree $\ell$ in single units $C_{\ell}\text{x}\ell$: 44x0 + 40x1 + 40x2 + 36x3
++ 36x4.\\
+\\
+\textbf{Model architectures.} All models have $z = 2$, 6 blocks, $\text{DegreesList} = [4, 4, 4, 4,
+2, 1]$, $\text{MultList} = [60, 40, 24, 16, 16, 8]$, $C_\text{init} = 48$, with a total of 495k
+parameters. We note that the initial projection is necessary since the multiplicity differs across
+feature degrees in the data tensors.\\
+\\
+\textbf{Training details.} We keep the learning schedule as similar as possible for all models. We
+use $\alpha = 400$. We train all models for $80$ epochs using the Adam optimizer with default
+parameters and an initial learning rate of $0.005$, which we decrease exponentially by by one order
+of magnitude over $25$ epochs. For VAE models, we use $E_\text{rec} = 25$ and $E_\text{warmup} =
+10$. We utilize the model with the lowest loss on validation data, only after the end of the warmup
+epochs for VAE models.\\
+We vary the batch size according to the size of the training and the validation datasets. We use
+the following (dataset\_size-batch\_size) pairs: (400-4), (1,000-10), (2,000-20), (5,000-50),
+(20,000-20). Training took $\sim 45$ minutes on a single NVIDIA A40 GPU for each model.\\
+\\
+\textbf{Evaluation.} We perform our data ablations by considering training and validation datasets
+of the following sizes: 400, 1,000, 2,000, 5,000 and 20,000. We keep relative proportions of
+residue types even in all datasets. We perform the data ablation with H-AE as well as H-VAE models
+with $\beta = 0.025$ and $0.1$.\\
+We further perform a $\beta$ ablation using the full (20,000) dataset, over the following choices
+of $\beta$: $[0 \text{(AE)}, 0.025, 0.05, 0.1, 0.25, 0.5]$.\\
+\\
+For robust results, we train 3 versions of each model and compute averages of quantitative metrics
+of reconstruction loss and classification accuracy.\\
+\\
+For a fair comparison across models with varying amounts of training and validation data, we
+perform a 5-fold cross-validation-like procedure over the 10k test residues, where the classifier
+is trained over 4 folds of the test data and evaluated on the fifth one. If validation data is
+needed for model selection (e.g. for LC), we use 10\% of the training data.
+
+\subsection{Embedding of protein structure neighborhoods}
+\label{sec:protein_neighborhoods_details}
+\noindent \textbf{Pre-processing of protein structures}.
+We model protein neighborhoods extracted from tertiary protein structures from the Protein Data
+Bank (PDB)~\cite{berman_protein_2000}. 
+We use ProteinNet’s splittings for training and validation sets to avoid redundancy, e.g. due to
+similarities in homologous protein domains~\cite{alquraishi_proteinnet_2019}. Since PDB ids were
+only provided for the training and validation sets, we used ProteinNet’s training set as both our
+training and validation set and ProteinNet’s validation set as our testing set. Specifically, we
+make a $[80\%, \, 20\%]$ split in the ProteinNet's training data to define our training and
+validation sets. This splitting resulted in 10,957 training structures, 2,730 validation
+structures, and 212 testing structures. \\ %
+\\
+\textbf{Projection details.} 
+We set the maximum radial frequency to $N = 20$ as it corresponds to a radial resolution matching
+the minimum inter-atomic distances after rescaling the atomic neighborhoods of radius  $10.0$ \AA\,
+to fit within a sphere of radius 1.0, necessary for Zernike transform. We vary $L$ and construct
+models tailored to each one (Table~\ref{table:NBs_model_architectures}). \\
+\\
+\textbf{Model architectures.} See Table~\ref{table:NBs_model_architectures}. We note that the
+initial projection ($C_{\text{init}}$) is necessary since the multiplicity differs across feature
+degrees in the data tensors, and the ETP necessitates equal multiplicity for all degrees.\\
+\\
+\textbf{Training details.} We keep the learning schedule the same for all models. We use $\alpha =
+1000$. We train all models for $8$ epochs using the Adam optimizer with default parameters, a batch
+size of 512, and a constant learning rate of $0.001$. We utilize the model with the lowest loss on
+validation data.\\
+
+\begin{table}[h!]
+\begin{center}
+\resizebox{1.0\textwidth}{!}{
+\begin{tabular}{c c c c c c c c}
+    \bf $z$ & \bf $L$ & \bf Tensor size & $\mathbf{C_{init}}$ & \bf MultList & \bf DegreesList &
+    \bf \# Params & \bf Training Speed (hours) \\
+    \hline
+     64 & 3 &  616 & 44 &    [50,50,50,64,64,64] & [3,3,3,3,2,1] & 631k &  3.0 \\
+     64 & 4 &  940 & 44 &    [50,50,50,64,64,64] & [4,4,4,4,2,1] & 950k &  3.8 \\
+     64 & 6 & 1708 & 44 &    [50,50,50,64,64,64] & [6,6,6,4,2,1] & 1.6M &  5.9 \\
+     64 & 8 & 2604 & 44 &    [50,50,50,64,64,64] & [8,8,8,4,2,1] & 2.4M &  9.3 \\
+    \hline
+    128 & 3 &  616 & 44 &  [60,60,60,90,128,128] & [3,3,3,3,2,1] & 1.2M &  3.8 \\
+    128 & 4 &  940 & 44 &  [60,60,60,90,128,128] & [4,4,4,4,2,1] & 1.7M &  4.4 \\
+    128 & 6 & 1708 & 44 &  [60,60,60,90,128,128] & [6,6,6,4,2,1] & 2.6M &  6.0 \\
+    128 & 8 & 2604 & 44 &  [60,60,60,90,128,128] & [8,8,8,4,2,1] & 3.8M & 10.1 \\
+    \hline
+    256 & 3 &  616 & 44 & [90,90,90,120,200,256] & [3,3,3,3,2,1] & 2.8M &  4.9 \\
+    256 & 4 &  940 & 44 & [90,90,90,120,200,256] & [4,4,4,4,2,1] & 3.8M &  5.6 \\
+    256 & 6 & 1708 & 44 & [90,90,90,120,200,256] & [6,6,6,4,2,1] & 4.4M &  6.0 \\
+    256 & 8 & 2604 & 44 & [90,90,90,120,200,256] & [8,8,8,4,2,1] & 7.9M & 14.5
+\end{tabular}
+}
+\end{center}
+\caption{{\bf Model architecture hyperparameters and training time for each H-AE trained on protein
+neighborhoods.}}
+\label{table:NBs_model_architectures}
+\end{table}
+
+
+
+
+\subsection{Latent space classification}
+\label{sec:latent_space_classification}
+\noindent \textbf{Linear classifier.}
+We implement the linear classifier as a one-layer fully connected neural network with input size
+equal to the invariant embedding of size $z$, and output size equal to the number of desired
+classes. We use cross entropy loss with logits as training objective, which we minimize for 250
+epochs using the Adam optimizer with batch size 100, and initial learning rate of 0.01. We reduce
+the learning rate by one order of magnitude every time the loss on validation data stops improving
+for 10 epochs (if validation data is not provided, the training data is used). At evaluation time,
+we select the class with the highest probability value. We use PyTorch for our implementation.
+
+\noindent\textbf{KNN Classifier}
+We use the \texttt{sklearn}~\cite{pedregosa_scikit-learn_2011} implementation with default
+parameters. At evaluation time, we select the class with the highest probability value.
+
+
+\subsection{Clustering metrics}
+\label{sec:clustering_metrics}
+\noindent\textbf{Purity~\cite{aldenderfer_cluster_1984}.} We first assign a class to each cluster
+based on the most prevalent class in it. Purity is computed as the sum of correctly classified
+items divided by the total number of items. Purity measures classification accuracy, and ranges
+between $0$ (worst) and $1$ (best).\\
+\\
+\textbf{V-measure~\cite{rosenberg_v-measure_2007}.} This common clustering metric strikes a balance
+between favoring homogeneous (high homogeneity score) and complete (high completeness score)
+clusters. Clusters are defined as homogeneous when all elements in the same cluster belong to the
+same class (akin to a precision). Clusters are   defined as  complete when all elements belonging
+to the same class are put in the same cluster (akin to a recall). The V-measure is  computed as the
+harmonic mean of homogeneity and completeness in a given clustering.
+
+\subsection{On the complementary nature of classification accuracy and clustering metrics}
+The clustering metrics ``purity" and ``V-measure” and the supervised metric  ``classification
+accuracy” characterize different qualities of the latent space, and, while partly correlated, they
+are complementary to each other.\\
+\\
+Both classes of metrics are computed by comparing the ground truth labels to the predicted labels,
+and they mainly differ by how the predicted labels are assigned; the clustering metrics use  an
+unsupervised clustering algorithm, while the classification metric uses a supervised classification
+algorithm to do so. As a result, these metrics focus on different features of the latent space. For
+example, the clustering metrics are largest when the test data naturally forms clusters with all
+data points of the same label.  While this case can result in a high supervised classification
+accuracy, clustering is not a necessary condition for high classification accuracy. Indeed, the
+supervised signal could make the predicted labels depend more heavily on a subset of the latent
+space features, instead of relying on all of them equally, which is what the clustering algorithm
+naturally does. Therefore, it is reasonable to conclude that having higher clustering metrics and a
+lower classification accuracy is a sign that class-related information is more evenly distributed
+across the latent space dimensions. Overall, the complementary aspect of these metrics makes it
+necessary to use all of them when comparing the performance of different models in each task.
+
+
+\section{Protein-Ligand Binding Affinity Prediction}
+\label{sec:lba_details}
+\subsection{Data Preprocessing Details}
+We leverage the H-AE models trained on Protein Neighborhoods
+(Sec.~\ref{sec:protein_neighborhoods_details}) to predict the binding affinity between a protein
+and a ligand, given their  structure complex-- an important task in structural biology. For this
+task, we use the data from the ``refined-set" of PDBBind~\cite{su_comparative_2019}, containing
+$\sim 5,000$ structures. We use the dataset splits provided by ATOM3D~\cite{townshend_atom3d_2021}
+to benchmark our predictions. ATOM3D provides two splits based on the maximum sequence similarity
+between proteins in the training set and the validation / test sets. We use the most challenging
+split for our benchmarking in which the sequences of the two sets have at most 30\% similarity.
+
+For each complex, we first identify residues in the binding pocket, which we define as residues for
+which the C$\alpha$ is within 10\AA\, of any of the ligand's atoms. We then extract the 10\AA\,
+neighborhood for each of the pocket residues that can contain atoms from both the protein and the
+ligand. We compute the ZFT (Eq.~\ref{eq:ZFT}) for each neighborhood with maximum degree $L$
+matching the degree used by the H-AE of interest. We then compute residue-level SO(3)-invariant
+embeddings by running the pre-trained H-AE encoder on the neighborhoods surrounding each of the
+residues in the pocket. We sum over the residue-level embeddings to compute a single pocket-level
+embedding, which is SE(3)-invariant by construction. Each pocket embedding is used as a feature
+vector within a standard Machine Learning Regression model to predict protein-ligand binding
+affinity, provided by PDBBind either in the form of a \textit{dissociation constant} $K_d$, or an
+\textit{inhibition constant} $K_i$. Due to data limitations, and consistent with other studies on
+LBA, we do not distinguish between $K_d$ and $K_i$ and regress over  the negative log of either of
+the constants that is provided by PDBBind; the transformed quantity is closely related to the
+binding free energy of protein-ligand interactions. 
+
+The protein-ligand binding free energy is an extensive quantity, meaning that its magnitude depends
+on the number of residues in the binding pocket. In other words, a larger protein-ligand complex
+can establish a stronger binding. The pocket embedding, which we define as the sum of the
+residue-level embeddings, is a simple quantity that is extensive and SE(3)-invariant, and
+therefore, suitable for regressing over protein-ligand binding free energy. Nonetheless, this map
+is not unique and other extensive transformations to pool together residue-level embeddings into a
+pocket-level embedding can be used for this purpose.
+
+It should be noted that in the protein-ligand structural neighborhoods we only include the ligand
+atoms that are found in proteins and were used in the training of the H-AE models (i.e., C, N, O,
+and S). About 31\% of the ligands contain other kinds of atoms, and since our model does not ``see"
+these atoms, we hypothesize that our predictions are worse in these cases. In fact, for H-AE+R.F.
+(Table~\ref{table:lba_results}), the Spearman's correlation over the ligands containing only
+protein atoms is higher than for the ligands containing other kinds of atoms by about 0.03 points.
+Therefore, we expect training H-(V)AE to recognize more atom types - or at  least making it aware
+that some other unspecified non-protein atom is present - would yield even better results; as
+protein structures are often found in complex with other non-protein entities, e.g. ligands and
+ions, there is training data available for constructing such models.
+
+
+\subsection{Machine Learning models used for prediction}
+\noindent \textbf{Linear Regression.} We implement a linear regression model as a one-layer fully
+connected neural network with one output layer. We use MSE loss as training objective, which we
+minimize for 250 epochs using the Adam optimizer with batch size 32, and initial learning rate of
+0.01. We reduce the learning rate by one order of magnitude every time the loss on validation data
+stops improving for 10 epochs. We use PyTorch for our implementation.\\
+
+\noindent \textbf{Random Forest Regression.} We use the
+\texttt{sklearn}~\cite{pedregosa_scikit-learn_2011} implementation. We tune hyperparameters via
+grid search, choosing the combination minimizing RMSD on validation data. We consider the following
+grid of hyperparameter values:
+
+\begin{itemize}
+    \item max\_features: [$1.0$, $0.333$, sqrt]
+    \item min\_samples\_leaf: [$2$, $5$, $10$, $15$]
+    \item n\_estimators: [$32$, $64$, $100$]
+\end{itemize}
+
+\subsection{Extended Discussion of Results}
+
+Table~\ref{table:lba_results_appendix} shows benchmarking results on the split of ATOM3D with 30\%
+sequence similarity, extending Table~\ref{table:lba_results} in the main text with more baselines.
+Notably, we show the prediction results for the models that only use the SO(3)-invariant ($\ell =
+0$) component of each neighborhood's Zernike transform (our Zernike inv. baseline), instead of the
+complete embeddings learned by H-AE. Using H-AE consistently outperforms this baseline, implying
+that invariant information encoded in higher spherical degrees, and extracted by H-AE, can lead to
+more expressive models for downstream regression tasks.
+

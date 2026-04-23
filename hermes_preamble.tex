@@ -1,0 +1,107 @@
+
+% \usepackage{array}
+
+\newcommand{\mt}{{\text{mt}}}
+\newcommand{\wt}{{\text{wt}}}
+\newcommand{\model}{\text{model}}
+\newcommand{\prop}{\text{prop}}
+\newcommand{\from}{{\text{from}}}
+\newcommand{\tto}{{\text{to}}}
+
+\newcommand{\train}{\mathcal{D}}
+\newcommand{\valid}{\mathcal{D_{\mathrm{valid}}}}
+\newcommand{\test}{\mathcal{D_{\mathrm{test}}}}
+
+\newcommand{\rasp}{RaSP + Ros}
+\newcommand{\stabilityoracle}{Stability-Oracle + cDNA117k}
+\newcommand{\proteinmpnn}{ProteinMPNN 0.02}
+\newcommand{\proteinmpnnNoise}{ProteinMPNN 0.30}
+\newcommand{\esmOnev}{ESM-1v}
+\newcommand{\deepsequence}{DeepSequence}
+\newcommand{\HERMESBp}{HERMES-{\em fixed} Bp 0.00}
+\newcommand{\HERMESPy}{HERMES-{\em fixed} 0.00}
+\newcommand{\HERMESBpFtRelaxed}{HERMES-{\em amortized} Bp 0.00}
+\newcommand{\HERMESPyFtRelaxed}{HERMES-{\em amortized} 0.00}
+\newcommand{\HERMESPyRelaxed}{HERMES-{\em relaxed} 0.00}
+\newcommand{\HERMESBpNoise}{HERMES-{\em fixed} Bp 0.50}
+\newcommand{\HERMESPyNoise}{HERMES-{\em fixed} 0.50}
+\newcommand{\HERMESBpNoiseFtRelaxed}{HERMES-{\em amortized} Bp 0.50}
+\newcommand{\HERMESPyNoiseFtRelaxed}{HERMES-{\em amortized} 0.50}
+\newcommand{\HERMESPyNoiseRelaxed}{HERMES-{\em relaxed} 0.50}
+\newcommand{\HERMESBpFtRos}{HERMES-{\em fixed} Bp 0.00 + Ros}
+\newcommand{\HERMESPyFtRos}{HERMES-{\em fixed} 0.00 + Ros}
+\newcommand{\HERMESBpNoiseFtRos}{HERMES-{\em fixed} Bp 0.50 + Ros}
+\newcommand{\HERMESPyNoiseFtRos}{HERMES-{\em fixed} 0.50 + Ros}
+\newcommand{\HERMESBpFtCdna}{HERMES-{\em fixed} Bp 0.00 + cDNA117k}
+\newcommand{\HERMESPyFtCdna}{HERMES-{\em fixed} 0.00 + cDNA117k}
+\newcommand{\HERMESBpFtRelaxedFtCdna}{HERMES-{\em amortized} Bp 0.00 + cDNA117k}
+\newcommand{\HERMESPyFtRelaxedFtCdna}{HERMES-{\em amortized} 0.00 + cDNA117k}
+\newcommand{\HERMESBpNoiseFtCdna}{HERMES-{\em fixed} Bp 0.50 + cDNA117k}
+\newcommand{\HERMESPyNoiseFtCdna}{HERMES-{\em fixed} 0.50 + cDNA117k}
+\newcommand{\HERMESBpNoiseFtRelaxedFtCdna}{HERMES-{\em amortized} Bp 0.50 + cDNA117k}
+\newcommand{\HERMESPyNoiseFtRelaxedFtCdna}{HERMES-{\em amortized} 0.50 + cDNA117k}
+\newcommand{\HERMESBpFtCdnaESM}{HERMES-{\em fixed} Bp 0.00 + cDNA117k train ESMFold}
+\newcommand{\HERMESPyFtCdnaESM}{HERMES-{\em fixed} 0.00 + cDNA117k train ESMFold}
+\newcommand{\HERMESBpNoiseFtCdnaESM}{HERMES-{\em fixed} Bp 0.50 + cDNA117k train ESMFold}
+\newcommand{\HERMESPyNoiseFtCdnaESM}{HERMES-{\em fixed} 0.50 + cDNA117k train ESMFold}
+\newcommand{\HERMESPyUntrainedFtCdna}{HERMES-{\em fixed} Untr. 0.00 + cDNA117k}
+\newcommand{\HERMESPyNoiseUntrainedFtCdna}{HERMES-{\em fixed} Untr. 0.50 + cDNA117k}
+\newcommand{\HERMESPyUntrainedSmallFtCdna}{HERMES-{\em fixed} Untr. Small 0.00 + cDNA117k}
+\newcommand{\HERMESPyNoiseUntrainedSmallFtCdnA}{HERMES-{\em fixed} Untr. Small 0.50 + cDNA117k}
+\newcommand{\HERMESPyFtCdnaESMEval}{HERMES-{\em fixed} 0.00 + cDNA117k eval ESMFold}
+\newcommand{\HERMESPyNoiseFtCdnaESMEval}{HERMES-{\em fixed} 0.50 + cDNA117k eval ESMFold}
+\newcommand{\HERMESBpFtCdnaESMEval}{HERMES-{\em fixed} Bp 0.00 + cDNA117k eval ESMFold}
+\newcommand{\HERMESBpNoiseFtCdnaESMEval}{HERMES-{\em fixed} Bp 0.50 + cDNA117k eval ESMFold}
+\newcommand{\HERMESBpFtSkempiEasy}{HERMES-{\em fixed} Bp 0.00 + SKEMPI Easy}
+\newcommand{\HERMESBpNoiseFtSkempiEasy}{HERMES-{\em fixed} Bp 0.50 + SKEMPI Easy}
+\newcommand{\HERMESBpFtSkempiMedium}{HERMES-{\em fixed} Bp 0.00 + SKEMPI Medium}
+\newcommand{\HERMESBpNoiseFtSkempiMedium}{HERMES-{\em fixed} Bp 0.50 + SKEMPI Medium}
+\newcommand{\HERMESBpFtSkempiHard}{HERMES-{\em fixed} Bp 0.00 + SKEMPI Difficult}
+\newcommand{\HERMESBpNoiseFtSkempiHard}{HERMES-{\em fixed} Bp 0.50 + SKEMPI Difficult}
+\newcommand{\HERMESPyFtSkempiEasy}{HERMES-{\em fixed} 0.00 + SKEMPI Easy}
+\newcommand{\HERMESPyNoiseFtSkempiEasy}{HERMES-{\em fixed} 0.50 + SKEMPI Easy}
+\newcommand{\HERMESPyFtSkempiMedium}{HERMES-{\em fixed} 0.00 + SKEMPI Medium}
+\newcommand{\HERMESPyNoiseFtSkempiMedium}{HERMES-{\em fixed} 0.50 + SKEMPI Medium}
+\newcommand{\HERMESPyFtSkempiHard}{HERMES-{\em fixed} 0.00 + SKEMPI Difficult}
+\newcommand{\HERMESPyNoiseFtSkempiHard}{HERMES-{\em fixed} 0.50 + SKEMPI Difficult}
+
+
+\newcommand{\HERMESPyNoiseFtCdnaNewline}{\makecell{HERMES-{\em noise} 0.50\\+ cDNA117k}}
+\newcommand{\HERMESPyNoiseFtRelaxedFtCdnaNewline}{\makecell{HERMES-{\em amortized} 0.50\\+ cDNA117k}}
+
+
+\newcommand{\AffActInfoTable}{\ref{table:affinity_and_activity_info}}
+\newcommand{\SpearmanrAffinityTable}{\ref{table:spearmanr_affinity}}
+\newcommand{\SpearmanrActivityTable}{\ref{table:spearmanr_activity}}
+\newcommand{\AfMetricsTable}{\ref{table:af3_folding_metrics}}
+\newcommand{\DesignInfoTable}{\ref{table:design_info}}
+\newcommand{\AllPdbsTable}{\ref{table:specificity_info}}
+\newcommand{\pMHCPWMsTInfoable}{\ref{table:pmhc_info}}
+
+\newcommand{\ProteinMPNNScoringSchemesFigure}{\ref{fig:proteinmpnn_scoring_schemes_comparison}} 
+\newcommand{\HsiueHisFigure}{\ref{fig:hsiue_h1_h8}}
+\newcommand{\ActivityHeatmapsFigure}{\ref{fig:activity_heatmaps}}  
+\newcommand{\AfScoringResultsFigure}{\ref{fig:plots_af3_struc_ablation}} 
+\newcommand{\AfExamplesFigure}{\ref{fig:af3_folded_structures_example}} 
+\newcommand{\HermesDesignsEnergiesFigure}{\ref{fig:joint_design_distributions}} 
+\newcommand{\FlowMicroscopyFigure}{\ref{fig:flow_vs_microscopy}} 
+\newcommand{\DesignTCRDockAFScatterFigure}{\ref{fig:design_scatterplots}} 
+\newcommand{\DesignExpNyesoFigure}{\ref{fig:design_experimental_nyeso}} 
+\newcommand{\DesignExpEbvFigure}{\ref{fig:design_experimental_ebv}} 
+\newcommand{\DesignExpMageFigure}{\ref{fig:design_experimental_mage}}  
+\newcommand{\DesignPWMsWithAf}{\ref{fig:joint_logoplots_for_design}} 
+\newcommand{\DesignTcrdockNyesoFigure}{\ref{fig:design_tcrdock_nyeso}} 
+\newcommand{\DesignTcrdockEbvFigure}{\ref{fig:design_tcrdock_ebv}} 
+\newcommand{\DesignTcrdockMageFigure}{\ref{fig:design_tcrdock_mage}} 
+\newcommand{\DesignAUCFigure}{\ref{fig:design_roc_curves}} 
+\newcommand{\pMHCPWMsFigure}{\ref{fig:pmhc_pwm_entropy_comparisons}}
+
+\newcommand{\AfInfoDataset}{\ref{}}
+\newcommand{\experimentalMeasurementsDataset}{\ref{}}
+
+\newcommand{\yellowl}{\cellcolor{yellow!25}}
+\newcommand{\greenll}{\cellcolor{green!10}}
+\newcommand{\greenl}{\cellcolor{green!20}}
+\newcommand{\green}{\cellcolor{green!50}}
+
+  

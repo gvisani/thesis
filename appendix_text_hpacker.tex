@@ -1,0 +1,38 @@
+
+\section{Proof of equivalence between MSE and cosine loss in predicting Sine and Cosine of $\chi$
+angles}
+Let ${\chi_i}$ and $\hat\chi_i$ be the true and the predicted angle values for a residue's $i^{th}$
+$\chi$ angle, respectively. Let ${{\bf v}_i\equiv~[\sin {\chi_i},\cos {\chi_i}]}$ and ${\hat{\bf
+v}_i\equiv[\sin { \hat \chi_i},\cos  {\hat \chi_i}]}$ denote their respective 2D vectors on the
+unit circle, whose two components are the sine and cosine of the angles themselves. Then we have:
+\begin{align}
+ \nonumber    \text{MSE}_{\text{sin-cos}}(\hat\chi_i, \chi_i)
+    \nonumber                                &= \frac{1}{2}(\cos \hat \chi_i - \cos \chi_i)^2 + \frac{1}{2}(\sin\hat \chi_i - \sin \chi_i)^2 \\
+                                    % &= \frac{\cos(\hat{y}_{\chi})^2}{2} + \frac{\cos(y_{\chi})^2}{2} - \cos(\hat{y}_{\chi})\cos(y_{\chi}) + \frac{\sin(\hat{y}_{\chi})^2}{2} + \frac{\sin(y_{\chi})^2}{2} - \sin(x)\sin(y_{\chi}) \\
+             \nonumber                       &= 1 - \cos \hat \chi_i  \cos {\chi_i} - \sin \hat \chi_i  \sin {\chi_i} \\
+               \nonumber                     &= 1 - \langle \hat{\bf v}_{i},{\bf v}_i \rangle \\
+                                    &= \text{CosineLoss}(\hat{\bf v}_{i}, {\bf v}_i)
+    \label{eqn:proof_of_equivalence_sin_cos}
+\end{align}
+where the jump from step 1 to step 2 is granted by the trigonometric identity $\sin^2 \theta +
+\cos^2 \theta = 1$.
+
+
+\section{Training Details}
+\label{sec:training_details}
+
+\subsection{Toy Task}
+All models were constructed with 5 equivariant blocks and no invariant feed-forward neural network
+(FFNN) for the two models predicting invariant quantities. All models were trained using
+Adam~\citep{kingma_adam_2017} for 30 epochs with learning rate 0.001 and a batch size of 32. The
+model exhibiting lowest validation loss was used.
+
+\subsection{Side-chain Packing}
+Models with $\ell_{\text{max}} = 4$ have five equivariant blocks with a per-$\ell$ hidden feature
+side of 128. For models with $\ell_{\text{max}} = 5$ we use 5 blocks with per-$\ell$ size 96. In
+doing so, the two models have comparable number of parameters (3M). All models have a 3-layer FFNN
+with silu nonlinearity and dropout normalization rate of 0.1. We found it useful to tune he dropout
+rate to prevent overfitting. We train all models for 10 epochs, keeping the model with lowest
+validation loss at the end of an epoch (convergence usually happened by epoch $\sim$8); models with
+$\ell_{\text{max}} = 5$ took roughly 50 minutes per epoch to train on a single NVIDIA A40 GPU,
+while models with $\ell_{\text{max}} = 4$ took 35 minutes.

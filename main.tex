@@ -1,0 +1,206 @@
+%%%%%%%%%%%%
+%% Please rename this main.tex file and the output PDF to
+%% [lastname_firstname_graduationyear]
+%% before submission.
+%%
+%% This .tex file is for use with BibLaTeX. Please use
+%% main-bibtex.tex instead if you prefer BibTeX.
+%%%%%%%%%%%%
+
+\documentclass[12pt, english]{uw_thesis}
+
+\renewcommand{\baselinestretch}{1.0}
+
+
+%% Tentative: newtx for better-looking Times
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}
+
+\usepackage[hyphens]{url}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{subcaption}
+\usepackage{todonotes}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{colortbl}
+\usepackage{gensymb}
+\usepackage{ragged2e}
+\usepackage{mathtools}
+% \usepackage{amsthm}
+\usepackage{babel}
+\usepackage{csquotes}
+\usepackage{bm}
+\usepackage[hidelinks]{hyperref}
+
+\input{math_symbols.tex}
+\input{hermes_preamble.tex}
+
+\usepackage[export]{adjustbox} % for valign
+\usepackage[ruled]{algorithm2e}
+% Must use biblatex to produce the Published Contents and Contributions, per-chapter bibliography (if desired), etc.
+\usepackage[
+    backend=biber,natbib,
+    % IMPORTANT: load a style suitable for your discipline
+    % style=authoryear-comp
+    style=numeric
+]{biblatex}
+
+% Name of your .bib file(s)
+\addbibresource{protholo.bib}
+\addbibresource{bib_armita.bib}
+\addbibresource{armita_bib_safe.bib}
+\addbibresource{tcr_antigen_design_gm_safe.bib}
+\addbibresource{quals.bib}
+
+\newcommand{\newlinecell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\newcommand{\red}[1]{{\color{red} #1}}
+\newcommand{\AN}[1]{{\color{blue} #1}}
+\newcommand{\GM}[1]{{\color{purple} #1}}
+
+
+\newcommand{\EQ}{\begin{equation}}
+\newcommand{\EE}{\end{equation}}
+\newcommand{\EQA}{\begin{eqnarray}}
+\newcommand{\EEA}{\end{eqnarray}}
+\renewcommand{\d}{{\text{d}}}
+
+
+\begin{document}
+
+% \titleformat{\subsection}[runin]{\bfseries}{}{}{}[.\space\space]
+\titleformat{\subsubsection}[runin]{\itshape}{}{}{}
+
+
+% Do remember to remove the square bracket!
+\title{Rational and data-driven protein modeling and design with local and rotation-equivariant neural networks}
+
+
+\author{Gian Marco Visani}
+
+\university{University of Washington}    % Institution name
+\address{Seattle, Washington}                     % Institution address
+\unilogo{uwlogo.pdf}                                 % Institution logo
+% \copyyear{[Year Degree Conferred]}  % Year (of graduation) on diploma
+\defenddate{2026}          % Date of defense
+
+\readingcommitteechair{Prof. Armita Nourmohammad}
+\readingcommitteemembera{Prof. William Stafford Noble}
+\readingcommitteememberb{Prof. David Beck}
+\gsrname{Prof. Alexander Meeske, Microbiology}
+\programname{Paul G. Allen School of Computer Science \& Engineering}
+
+
+%% IMPORTANT: Select ONE of the rights statement below.
+\rightsstatement{All rights reserved\todo[size=\footnotesize]{Choose one from the choices in the source code!! And delete this \texttt{todo} when you're done that. :-)}}
+% \rightsstatement{All rights reserved except where otherwise noted}
+% \rightsstatement{Some rights reserved. This thesis is distributed under a [name license, e.g., ``Creative Commons Attribution-NonCommercial-ShareAlike License'']}
+
+%%  If you'd like to remove the uw logo from your title page, simply remove the "[logo]" text from the maketitle command
+% \maketitle[logo]
+\maketitle
+
+\begin{acknowledgements} 	 
+   [Add acknowledgements here. If you do not wish to add any to your thesis, you may simply add a
+   blank titled Acknowledgements page.]
+\end{acknowledgements}
+
+
+
+
+%% Uncomment the `iknowhattodo' option to dismiss the instruction in the PDF.
+% \begin{publishedcontent}%[iknowwhattodo]
+% % List your publications and contributions here.
+% \nocite{Cahn:etal:2015,Cahn:etal:2016}
+% \end{publishedcontent}
+
+\tableofcontents
+\listoffigures
+% \listoftables
+% \printnomenclature
+
+\mainmatter
+
+\chapter{Introduction}
+\label{sec:overall_introduction}
+% \input{introduction.tex}
+
+\chapter{SO(3)-Equivariant Framework}
+\label{sec:background}
+\input{background.tex}
+
+\chapter{H-(V)AE: Holographic (Variational) Autoencoder}
+\label{sec:overall_hvae}
+\input{hvae.tex}
+
+\chapter{H-Packer: Holographic Packer}
+\label{sec:overall_hpacker}
+\input{hpacker.tex}
+
+\chapter{HERMES}
+\label{sec:overall_hermes}
+\input{hermes.tex}
+
+\chapter{Mapping the T-cell receptor specificity landscape with HERMES}
+\label{sec:overall_tcrpmhc}
+\input{tcrpmhc.tex}
+
+\chapter{Discussion}
+\label{sec:overall_discussion}
+% \input{discussion.tex}
+
+
+\printbibliography[title=References,heading=bibintoc]
+
+
+\newpage
+
+\appendix
+\counterwithin{table}{section}
+\setcounter{table}{0}
+\counterwithin{figure}{section}
+\setcounter{figure}{0}
+\counterwithin{equation}{section}
+\setcounter{equation}{0}
+
+
+\chapter{Supplement for chapter~\ref{sec:overall_hvae}}
+\label{sec:hvae_appendix}
+\input{appendix_text_hvae.tex}
+\clearpage
+\input{appendix_tables_and_figures_hvae.tex}
+
+\chapter{Supplement for chapter~\ref{sec:overall_hpacker}}
+\label{sec:hpacker_appendix}
+\input{appendix_text_hpacker.tex}
+\clearpage
+\input{appendix_tables_and_figures_hpacker.tex}
+
+\chapter{Supplement for chapter~\ref{sec:overall_hermes}}
+\label{sec:hermes_appendix}
+\input{appendix_text_hermes.tex}
+\clearpage
+\input{appendix_tables_and_figures_hermes.tex}
+
+\chapter{Supplement for chapter~\ref{sec:overall_tcrpmhc}}
+\label{sec:tcrpmhc_appendix}
+\input{appendix_text_tcrpmhc.tex}
+\clearpage
+\input{appendix_tables_and_figures_tcrpmhc.tex}
+
+
+
+\end{document}
+

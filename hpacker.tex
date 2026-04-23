@@ -1,0 +1,593 @@
+
+The contents of this chapter are published in~\citet{visani_h-packer_2024}, under the title
+\textit{H-Packer: Holographic Rotationally Equivariant Convolutional Neural Network for Protein
+Side-Chain Packing}.
+
+Determining amino acid side-chain conformations in a protein, known as Protein Side-Chain Packing
+(or Rotamer Packing), is an essential step in protein folding and the de-novo design of proteins.
+Computational approaches to protein folding often divide the structure inference problem into two
+steps: first, they characterize the rigid backbone structure, and then they pack the side-chains
+associated with the amino acids at each residue. The flexibility of the side-chain makes the search
+in the space of possible conformations inevitably complex and computationally expensive. The
+de-novo protein design protocols also rely on similar logical steps: often an amino acid sequence
+compatible with a desirable backbone structure is to be inferred
+(designed)~\citep{dauparas_robust_2022} and then the associated side-chains should be packed to
+form the full atomic composition of a protein. Furthermore, it has been suggested that models
+trained to learn \textit{distributions} of side-chain conformations can be used to predict
+mutational effects in a zero-shot fashion~\citep{luo_rotamer_2023}, thereby making rotamer packing
+a valuable proxy problem for resolving structure-to-function maps.
+
+Many of the conventional methods for side-chain packing rely on physical models through which they
+find a rotamer that minimizes a physically-reasoned heuristic energy of the protein
+fold~\citep{alford_rosetta_2017, huang_faspr_2020, krivov_improved_2009,
+cao_improved_2011, liang_fast_2011}. Popular algorithms include RosettaPacker from the rosetta
+suite~\citep{alford_rosetta_2017}, FASPR~\citep{huang_faspr_2020}, and
+SCWRL~\citep{krivov_improved_2009}.
+However, these computational methods often lack accuracy and speed in their predictions.
+As deep learning makes
+strides in protein science, there is a growing effort in developing machine learning methods for
+rotamer packing. Among these methods is DLPacker~\citep{misiura_dlpacker_2022}, which treats the
+packing problem as an image transformation. This algorithm characterizes the local environment of a
+given amino acid backbone within a structure as a 3D image, and uses this model to predict the
+atomic coordinates of the side chain. It then compares the predicted side-chain to a pre-set
+library of rotamers to select the closest conformation. AttnPacker~\citep{mcpartlon_end--end_2023},
+a more recently developed method, uses a deep graph attention network to model the local geometry
+of a residue within a structure and is trained to predict the coordinates of the side-chain atoms.
+Recently, diffusion models over side-chain torsional angles have also being applied, such as
+DiffPack~\citep{zhang_diffpack_2023}.
+
+The specific conformation - or the ensemble of conformations - adopted by a side-chain is fundamentally
+determined by the physical forces acting upon it, among which those coming from local sources are the
+most prominent. Therefore, modeling a side-chain's conformation as a function of its local atomic environment
+is a physics-appropriate approximation. Furthermore, the conformation can be described unambiguously by 
+SO(3)-invariant or SO(3)-equivariant variables. Thus, side-chain packing fits nicely within our framework of
+rotationally equivariant modeling of residue-centered protein neighborhoods.
+
+Here, we tackle the problem of side-chain packing by learning to directly regress over $\chi$
+(torsional) angles, which are main degrees of freedom determining side-chain conformations. We
+derive and discuss three possible parameterizations of the $\chi$ angles, ultimately settling on
+regressing over the Sine and Cosine transforms of the angles, which are rotationally invariant. We
+introduce Holographic-Packer (H-Packer), a deep learning method that packs rotamers by first
+predicting candidate $\chi$ angles from backbone and sequence, and then refines the predictions
+with a model trained on full-atom structures.
+
+By directly predicting the side-chain $\chi$-angles, H-packer does not rely on comparing its output
+with a pre-set library of rotamers, making it computationally more efficient than methods like
+DLPacker. Furthermore, H-Packer is light-weight (2$\times$3M parameters vs. 208M of AttnPacker) and
+requires few resources to train (single vs. multiple GPUs for diffusion models like DiffPack). We
+evaluate the packing performance of H-Packer on standard datasets, and show that it has generally
+better performance than conventional physics-based methods, and competitive against machine
+learning solutions. In general, our results suggest that H-Packer has learned complementary
+features to alternative methods.
+Code for H-Packer is freely available at \texttt{https://github.com/gvisani/hpacker}.
+
+
+
+\section{Methods}
+
+\subsection{Modeling side-chain conformations with $\chi$ Angles}
+
+While amino acids are composed of a maximum of 10 heavy atoms (in the case of Tryptophan), their 3D
+conformations can be uniquely described by the value of at most 4 dihedral angles, referred to as
+the $\chi$ angles (Figure~\ref{fig:hpacker}A). This reduction in the number of degrees of freedom
+is granted due to the physical constraints posed on the remaining internal coordinates (bond
+angles, bond lengths, and dihedral angles - \textit{redundant internal coordinates}). Specifically,
+the inter-atomic physical interactions within amino acids often constrain these redundant
+coordinates to a constant, or a well-defined function of the residue's $\chi$ angles. Therefore,
+predicting $\chi$ angles is the key step in side-chain packing.
+
+H-packer addresses the side-chain packing problem in two steps: (i) it predicts the value of $\chi$
+angles, and (ii) it reconstructs the atomic coordinates using the predicted $\chi$ angles and the
+constrained values of the redundant internal coordinates. Specifically, we evaluate the redundant
+internal coordinates from a subset of training data (1,700 structures) by leveraging the
+\texttt{internal\_coords} feature of the \texttt{biopython} package. We empirically verified that
+the distributions of values were Gaussian with low variance, and resolved to take their
+\textit{medians} as the ground truth. Substituting these values for the original ones yields a
+negligible Null Reconstruction error of approximately
+0.127\AA\,(Figure~\ref{fig:null_reconstruction}). Notably, this error remains unchanged even when
+using only 100 reference structures instead of 1,700
+(Figure~\ref{fig:null_reconstruction_comparison}).
+
+\subsection{Predicting $\chi$ angles using H-Packer}
+We aim to predict the $\chi$ angles associated with a side-chain conformation from the
+configuration of atoms surrounding a given residue. This atomic neighborhood is associated with the
+backbone and the side-chain of the neighboring residues in the structure.
+
+During inference only the coordinates of the backbone atoms are known a priori - alongside the
+identity of the amino acids they belong to. However, physical interactions with the atoms of
+neighboring side-chains are the true determinants of a residue's conformation. Therefore, we
+develop H-Packer into a two-step solution (Figure~\ref{fig:hpacker}C). Specifically, we two train
+models: one to predict $\chi$ angles from the backbone atoms and amino-acid identity alone, the
+another to predict $\chi$ angles from full neighborhoods, i.e., by including the true side-chain
+atoms of the surrounding residues (minus the residue of interest). At inference time, we use the
+first model to make an \textit{initial guess} of the side-chain conformations, and then a second
+model to iteratively \textit{refine} the predictions.
+
+To build the individual models that predict $\chi$ angles, we start by considering their
+symmetries. Notably, $\chi$ angles are \textit{invariant} to rigid-body transformations
+(translations and rotations) of the protein (i.e., they are SE(3) invariant). Translation
+invariance can be satisfied by choosing a well-defined center for a residue of interest (e.g. the
+residue's C$\alpha$), leaving rotational (i.e. SO(3) invariance) about the chosen center to be
+accounted for. The rotational symmetry and the dependence on local interaction make this problem
+fall neatly within our framework of SO(3)-equivariant modeling of protein neighborhoods. Thus we
+build two SO(3)-equivariant models - using the components described in Chapter~\ref{sec:background}
+- to predict a residue's $\chi$ angles, considering as input the point cloud of atoms within a
+radius $r=10\AA$ of the residue's C-$\alpha$ (with or without the neighboring side-chains).
+
+
+\begin{figure}[t]
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \includegraphics{Quals/figures/hpacker.pdf}
+    }
+    \figcaption{Overview of H-Packer.}{}
+    \medskip
+    \small
+    \justifying
+    \textbf{A:} Illustration of Glutamine's $\chi$ angles, of which there are three. \textbf{B:}
+    Schematic shows the SO(3)-Equivariant network for side-chain packing by first predicting the
+    missing residue's $\chi$ angles from its surrounding atomic environment, and then using the
+    $\chi$ angles to reconstruct the residue's side-chain. As illustrated in \textbf{C}, H-Packer
+    consists of two networks, one trained on backbone atoms only and used to make an initial guess,
+    and one trained on full side-chain neighborhoods and used to refine the predictions.
+    \label{fig:hpacker}
+    % \vspace{-4mm}
+\end{figure}
+
+
+\textbf{Holographic Encoding.}
+We encode neighborhoods into holograms as described in Sec.~\ref{sec:encoding}. We incorporate
+atom-level input features by dividing the holographic encoding into different \textit{channels}
+(see Figure~\ref{fig:hpacker}). We consider the following two sets: (i) \textbf{Atomic channels}:
+C, N, O, S, wildcard element excluding hydrogens, partial charge from the Amber99sb force
+field~\citep{ponder_force_2003}, and (ii)  \textbf{Amino-Acid channels}: one for each of the 20
+canonical amino-acids, plus a wildcard channel. We include the charge value in its dedicated
+channel as the weights $\omega_{i}$ coupled to the point cloud's density function.
+While we train the \textit{initial guess} model using both sets of channels (atomic and amino-acid)
+as input, we only consider the atomic channels for the \textit{refinement} model. We do this in an
+effort to make the model's predictions more grounded in physical interactions. We condition both
+models with the identity of the residue of interest by concatenating a linear embedding of its
+one-hot encoding to the input's invariant ($\ell=0$) features. This is particularly necessary for
+the refinement model - which is trained only with atomic channels - since it wouldn't otherwise
+know about the identity of the residue of interest.
+
+\textbf{SO(3)-Equivariant neural network architecture.}
+We use the resulting holograms as inputs to an SO(3)-Equivariant Convolutional Neural Network
+(Figure~\ref{fig:hpacker}B). Our model is conceptually divided into three parts:\\
+\textbf{First,} a linear layer that projects data and conditioning to a hidden representation with
+same number of features per $\ell$.\\
+\textbf{Second,} a stack of equivariant blocks connected via additive skip connections, each
+composed of: (i) feature-wise tensor product nonlinearity, (ii) layer norm with silu nonlinearity,
+and (iii) a linear layer whose output dimensions are the same as the input's (see
+Sec.~\ref{sec:layers}). After the final block, we retain only the features of type $\ell = 0$ or
+$\ell = 1$ depending on the training objective (Section~\ref{sec:training_objective}). It should be
+noted that features of type $\ell=0$ are rotationally invariant scalars, whereas those associated
+with $\ell=1$ are equivariant vectors that transform consistently with the input under rotation. We
+use $\ell=1$ features to directly learn the orientation of the intersecting planes that define a
+side-chain's dihedral angles $\chi$ (see Section~\ref{sec:training_objective}).\\
+\textbf{Third,} optionally and only for the models with invariant ($\ell = 0$ output), we apply a
+standard feed-forward neural network with dropout regularization and SiLU nonlinearity.
+
+
+
+\subsection{Training objectives to infer $\chi$ angles}
+\label{sec:training_objective}
+
+We consider three alternative parameterizations of $\chi$ angles, i.e. three possible objective
+functions:
+
+{\bf  (i) The angle itself.} $\chi$ angles are defined between $-180\degree$ and $180\degree$ with
+a periodicity such that the angles $-179\degree$ and $179\degree$ are to be considered $2\degree$
+apart, not $358\degree$. Thus, plain MSE loss would pose strong and unnatural constraints on the
+model. To account for this, we mod the predictions to fall in the valid range, and compute the loss
+between two angles as the minimum between the computed error and $360\degree$ minus the error,
+resulting in the following loss function:
+\EQ
+    \mathcal{L}_{\text{angles}}(\{\hat{\chi_i}\}_{i=1}^{N_{\chi}}, \{\chi_i\}_{i=1}^{N_{\chi}}) =
+    \frac{1}{N_\chi} \sum_{i=1}^{N_{\chi}} \min(E_{\chi_i}, \, 2\pi - E_{\chi_i}) \quad
+    \text{where} \quad E_{\chi_i} = (\text{mod}(\hat{\chi_i}, 2\pi) - \chi_i)^2
+\EE
+where $\hat{\chi_i}$ and $\chi_i$ are  the predicted and the true values of the $i^{th}$ $\chi$,
+respectively, and $N_\chi$ is the number of $\chi$ angles associated with the residue of interest.
+In our implementation, the $\chi$ angle domain is scaled and shifted to fall in $[0, 2]$ to make
+the scale of the loss functions comparable between the three representations of the angles.
+
+{\bf (ii) Sine and Cosine transforms of the angle.} A pair of sine and cosine transformation
+provides an alternative representation for a $\chi$ angle that accounts for its periodicity and is
+also rotationally invariant; a similar approach is also considered in concurrent
+work~\citep{mukhopadhyay_zymepacknet_2023}. We directly predict sine and cosine values by feeding 8
+outputs from the network to a tanh activation function, which then form the arguments of  a MSE
+loss function:
+\EQ
+\mathcal{L}_{\text{sin-cos}}(\{\hat{\chi_i}\}_{i=1}^{N_{\chi}}, \{\chi_i\}_{i=1}^{N_{\chi}}) =
+\frac{1}{2 N_\chi} \sum_{i=1}^{N_{\chi}} (\cos \hat{\chi_i}  - \cos \chi_i )^2 +(\sin \hat{\chi_i}
+- \sin \chi_i)^2
+\label{sincosLoss}
+\EE
+Notably, this loss function is justified by a nice geometric interpretation, whereby it is
+equivalent to computing the cosine loss between the 2D vectors that describe the $\chi$ angles on
+the unit circle (proof in Eq.~\ref{eqn:proof_of_equivalence_sin_cos}).
+
+
+{\bf (iii) Normal vectors to the dihedral plane.} $\chi$ angles are examples of dihedral angles,
+meaning that they are defined as the angle between two planes. For $\chi$ angles, the two planes
+are described by subsequent triplets of atoms along the side-chains. Any two subsequent $\chi$
+angles share one plane. Therefore, any conformation with $N_{\chi}$ angles can be alternatively
+described by $N_{\chi}+1$ planes (or their normal vectors); one of these normal vectors is a
+redundant internal coordinate (defined by backbone + C$\beta$ atoms), while others specify the
+$N_\chi$ independent degrees of freedom.
+
+We consider training models to predict the dihedral planes' normal vectors:
+$\vn_{\chi_1}\,...\,\vn_{\chi_4}$. It should be noted that unlike the sine/cosine transformation,
+the vectors are not invariant to rotations, but \textit{equivariant} of type $\ell = 1$ (geometric
+vectors) which  can be extracted from the H-Packer equivariant network. We use a cosine loss over
+the true and predicted vectors:
+\EQ
+\mathcal{L}_{\text{norms}}(\{\hat{\vn}_{\chi_i}\}_{i=1}^{N_{\chi}},
+\{\vn_{\chi_i}\}_{i=1}^{N_{\chi}}) = \frac{1}{N_\chi} \sum_{i=1}^{N_{\chi}} 1 - \langle
+\hat{\vn}_{\chi_i}, \vn_{\chi_i} \rangle
+\label{planeloss}
+\EE
+
+{\bf Relevant symmetries in computing loss functions.}
+Some amino acid conformations exhibit a rotation symmetry by $\pi$ in some of their $\chi$ angles.
+For example, $\chi_2$ of Phenylalanine and Tyrosine indicates the torsion of their benzene rings,
+thus a rotation by $\pi$ leaves the conformation physically unchanged. However, as $\chi$ angles
+are formally defined by internal atom names, these equivalent conformations are associated with
+different $\chi$ angle values. We correct for this degeneracy by considering the minimum loss value
+between considering $\chi$ and $\pi - \chi$ as targets during training and evaluation. When
+computing the error on the atomic coordinates (generally via Root Mean Square Deviation, RMSD) for
+the full side-chain, we need to consider other such symmetries between non-$\chi$ atoms, as listed
+in Table~\ref{table:symmetric_conformations}.
+
+
+\section{Results}
+
+\begin{figure}
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{c c}
+        \includegraphics[valign=m,width=0.85\textwidth]{Quals/figures/simple_task/simple_task_fixed_symmetries__test_predictions_by_model_type.pdf}
+        &
+        \includegraphics[valign=m,width=0.15\textwidth]{Quals/figures/simple_task/lmax_legend.pdf}
+    \end{tabular}
+    }
+    \figcaption{Test MAE for the simple task of predicting $\chi$ angles from atomic
+    conformation.}{Panels show reconstruction accuracies using three loss functions: the angle $\chi$ itself
+    (left), the sin/cos transform of the angle (center), and the normal vectors to the dihedral
+    planes (right), for different maximum angular degrees $\ell_\text{max}$ (colors).}
+    \label{fig:simple_task_performance_by_model_type}
+    \vspace{-4mm} % reduces whitespace after the table by desired amount!!!
+\end{figure}
+
+\subsection{Toy task: inferring $\chi$ angles from atomic coordinates}
+\label{sec:simple_task}
+We start by studying the behavior of our model on a simple task: predicting (or rather,
+calculating) $\chi$ angles from the true atomic coordinates of the conformation. We found this to
+be a useful benchmark to study our model's behavior.
+
+\textbf{Setup.} We randomly select 160 structures from our real task's training set (see below) and
+split them into 100/30/30 for training/validation/testing, respectively. We collect conformations
+of all residues presenting $\chi$ angles, and consider only their heavy atoms (C, N, O, S). We then
+apply the Zernike encoding varying $\ell_{\text{max}}$ from $1$ to $5$ and train models with
+varying $\ell_{\text{max}}$ consistent with that of the input, as well as with different prediction
+objectives (angles, sin-cos of angles, plane norms). Crucially, we vary the number of hidden
+channels (decreasing it with higher $\ell_{\text{max}}$) to keep the number of parameters constant
+around 330k, and thus, removing differences in model capacity as a contributing factor to
+performance. We do not condition the models with amino-acid identity to make the problem more
+challenging, and therefore more interesting. We refer to Section~\ref{sec:training_details} for
+more details.
+
+\textbf{Results.} Test Mean Absolute Error (MAE) per $\chi$ angle for all models is shown in
+Figure~\ref{fig:simple_task_performance_by_model_type}, and training curves are shown in the
+Appendix (Figure~\ref{fig:simple_task_training_curves}). Notably, the Angle model performs the
+worst, and is unable to recover the true $\chi$ angle with negligible error. The Sin-Cos and Plane
+Norm models instead recover all $\chi$ angles with very low error (< 5 \AA) with $\ell_{\text{max}}
+> 1$. 
+ It appears that $\ell_{\text{max}}=2$ is the minimum sufficient degree nedded to solve this task
+ with high accuracy. We note that error is higher for later $\chi$ angles. We hypothesise that this
+ is expected for two reasons: (i) later $\chi$ angles depend on atoms that are farther way from the
+ center of the neighborhood, thus having lower angular resolution within the Zernike
+ representation, and (ii) there is simply less training data for them.  Weighting $\chi$ angles in
+ the loss function according to their average frequency partially mitigates the second issue
+ (Figure~\ref{fig:simple_task_performance_by_model_type_with_weighted_loss}). 
+ Notably, the fact that the model performs well without explicit knowledge of amino acid identities
+ implies that it can easily infer the amino acid type from the  the number and the relative
+ location of the atoms.
+
+% \textbf{Takeaways.} Based on these results, we 
+
+\begin{table}[t]
+    \centering
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{l c c c c | c c c | c c c}
+     \multicolumn{1}{l|}{\bf CASP13} & \multicolumn{4}{c}{Angle MAE $\degree$ $\downarrow$} &
+     \multicolumn{3}{c}{Angle Accuracy \% $\uparrow$} & \multicolumn{3}{c}{Atom RMSD \AA
+     $\downarrow$} \\
+     % \hline
+     \cline{1-1}
+     \textbf{Method} & $\chi_1$ & $\chi_2$ & $\chi_3$ & $\chi_4$ & All & Core & Surface & All &
+     Core & Surface \\
+     \hline
+     \hline
+     SCWRL         & 27.64 & 28.97 & 49.75 & 61.54  &  56.2 & 71.3 & 43.4  &  0.934 & 0.495 & 1.027
+     \\
+     FASPR         & 27.04 & 28.41 & 50.30 & 60.89  &  56.4 & 70.3 & 43.6  &  0.910 & 0.502 & 1.002
+     \\
+     RosettaPacker & 25.88 & 28.25 & 48.13 & 59.82  &  58.6 & 75.3 & 35.7  &  0.872 & 0.422 & 1.001
+     \\
+     DLPacker      & 22.18 & 27.00 & 51.22 & 70.04  &  58.8 & \underline{73.9} & 45.4  &  0.772 &
+     0.402 & 0.876 \\
+     AttnPacker    & \underline{18.92} & \underline{23.17} & \underline{44.89} & 58.98  & 
+     \underline{62.1} & 73.7 & \underline{47.6}  &  \underline{0.669} & \underline{0.366} &
+     \underline{0.775} \\
+     DiffPack      & \textbf{15.35} & \textbf{19.19} & \textbf{37.30} & \textbf{50.19}  & 
+     \textbf{69.5} & \textbf{82.7} & \textbf{57.3}  &  \textbf{0.579} & \textbf{0.298} &
+     \textbf{0.696} \\
+     \hline
+     \hline
+     % H-Packer$_0$ $\ell_{\text{max}} = 4$ & 27.60 & 32.31 & 47.87 & 52.77 & 48.3 & 59.1 & 40.5 & 0.979 & 0.771 & 1.136 \\
+     % H-Packer$_2$ $\ell_{\text{max}} = 4$ & 24.36 & 29.94 & 46.01 & 52.89 & 53.0 & 67.7 & 42.5 & 0.884 & 0.610 & 1.083 \\
+     % H-Packer$_5$ $\ell_{\text{max}} = 4$ & 24.27 & 29.76 & 46.32 & 52.56 & 53.5 & 68.8 & 43.0 & 0.878 & 0.594 & 1.081 \\
+     % H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & \textit{20.78} & \textit{27.48} & \textit{44.58} & \textit{51.97} & \textit{56.8} & \textit{72.7} & \textit{45.6} & \textit{0.790} & \textit{0.514} & \textit{0.999} \\
+     H-Packer$_0^{\ell_{\text{max}}=5}$    & 26.89 & 31.95 & 47.51 & 52.75  &  49.3 & 61.5 & 40.4 
+     &  0.961 & 0.726 & 1.131 \\[1.4pt]
+     H-Packer$_2^{\ell_{\text{max}}=5}$     & 23.64 & 29.47 & 45.17 & 53.26  &  54.4 & 69.9 & 43.6 
+     &  0.863 & 0.575 & 1.070 \\[1.4pt]
+     H-Packer$_5^{\ell_{\text{max}}=5}$     & 23.60 & 29.40 & \underline{44.91} & \underline{52.91}
+      &  54.7 & 70.7 & 43.7  &  0.858 & 0.564 & 1.067 \\[1.4pt]
+     \hline
+     H-Packer$_{up}^{\ell_{\text{max}}=5}$  & \textit{20.03} & \textit{26.88} & \textit{42.74} &
+     \textit{52.07}  &  \textit{58.4} & \textit{75.4} & \textit{46.4}  &  \textit{0.765} &
+     \textit{0.483 }& \textit{0.980} \\
+     \hline
+    \end{tabular}
+    }
+    \vspace{6mm}
+
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{l c c c c | c c c | c c c}
+     \multicolumn{1}{l|}{\bf CASP14} & \multicolumn{4}{c}{Angle MAE $\degree$ $\downarrow$} &
+     \multicolumn{3}{c}{Angle Accuracy \% $\uparrow$} & \multicolumn{3}{c}{Atom RMSD \AA
+     $\downarrow$} \\
+     % \hline
+     \cline{1-1}
+     \textbf{Method} & $\chi_1$ & $\chi_2$ & $\chi_3$ & $\chi_4$ & All & Core & Surface & All &
+     Core & Surface \\
+     \hline
+     \hline
+     SCWRL         & 33.50 & 33.05 & 51.61 & 55.28  &  45.4 & 62.5 & 33.2  &  1.062 & 0.567 & 1.216
+     \\
+     FASPR         & 33.04 & 32.49 & 50.15 & 54.82  &  46.3 & 62.4 & 34.0  &  1.048 & 0.594 & 1.205
+     \\
+     RosettaPacker & 31.79 & 28.25 & 50.54 & 56.16  &  47.5 & \underline{67.2} & 33.5  &  1.006 &
+     0.501 & 1.183 \\
+     DLPacker      & 29.01 & 33.00 & 53.98 & 72.88  &  48.0 & 66.9 & 33.9  &  0.929 & 0.476 & 1.107
+     \\
+     AttnPacker    & \underline{25.34} & \underline{28.19} & 48.77 & \underline{51.92}  & 
+     \underline{50.9} & 66.2 & 36.3  &  \underline{0.823} & \underline{0.438} & \underline{1.001} \\
+     DiffPack      & \textbf{21.91} & \textbf{25.54} & \textbf{44.27} & 55.03  &  \textbf{57.5} &
+     \textbf{77.8} & \textbf{43.5}  &  \textbf{0.770} & \textbf{0.356} & \textbf{0.956} \\
+     \hline
+     % \hline
+     % H-Packer$_0$ $\ell_{\text{max}} = 4$ & 33.14 & 36.10 & 49.30 & 50.22 & 39.8 & 55.9 & 30.7 & 1.102 & 0.780 & 1.307 \\
+     % H-Packer$_2$ $\ell_{\text{max}} = 4$ & 30.43 & 34.49 & 48.13 & 50.39 & 43.3 & 63.0 & 32.7 & 1.027 & 0.658 & 1.265 \\
+     % H-Packer$_5$ $\ell_{\text{max}} = 4$ & 30.36 & 34.38 & 48.76 & 50.62 & 43.5 & 64.1 & 32.5 & 1.024 & 0.648 & 1.260 \\
+     % H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & \textit{26.84} & \textit{32.10} & \textit{46.90} & \textit{50.03} & \textit{46.7} & \textit{68.1} & \textit{35.0} & \textit{0.934} & \textit{0.557} & \textit{1.178} \\
+     % \hline
+     H-Packer$_0^{\ell_{\text{max}}=5}$    & 32.31 & 35.90 & 49.05 & 50.34 & 40.8 & 57.0 & 31.6 &
+     1.087 & 0.762 & 1.297 \\[1.4pt]
+     H-Packer$_2^{\ell_{\text{max}}=5}$    & 29.96 & 34.32 & 47.46 & 50.50 & 45.0 & 65.1 & 34.1 &
+     1.011 & 0.629 & 1.250 \\[1.4pt]
+     H-Packer$_5^{\ell_{\text{max}}=5}$    & 29.61 & 34.03 & \underline{46.72} & \textbf{50.35} &
+     45.2 & 65.5 & 34.0 & 1.002 & 0.626 & 1.244 \\[1.4pt]
+     \hline
+     H-Packer$_{up}^{\ell_{\text{max}}=5}$ & \textit{26.58} & \textit{31.54} & \textit{45.67} &
+     \textit{49.46} & \textit{48.1} & \textit{69.5} & \textit{36.2} & \textit{0.915} &
+     \textit{0.534 }& \textit{1.160} \\
+     \hline
+    \end{tabular}
+    }
+    \figcaption{Comparative assessment of H-Packer on CASP13 and CASP14.}{
+    We present best results in \textbf{bold} and second-best \underline{underlined}.
+    \textit{Italicized} results represent an upper bound to our algorithm's performance.
+    Performance of models other than H-Packer is taken from~\citep{zhang_diffpack_2023}.}
+    \label{tab:results_casp13_and_14}
+\vspace{-6mm} % reduces whitespace after the table by desired amount!!!
+\end{table}
+
+
+\subsection{Side-Chain Packing}
+
+\textbf{Dataset.} We consider the training and validation datasets used in 
+DLpacker~\citep{misiura_dlpacker_2022}, consisting of 19,436 structures with a maximum
+inter-protein sequence similarity of 50\%. Unlike DLPacker, we do not remodel structures with
+PDB-redo~\citep{joosten_pdb_redo_2009} and do not convert selenomethionine residues into
+methionine. For testing our model, we use the CASP13 and CASP14 targets (82 and 64 structures,
+respectively). We remove from the training and validation sets any protein that has sequence
+similarity above 50\% with any of the proteins in the test set.
+
+\textbf{H-Packer training.} We used the Sin/Cos loss function (Eq.~\ref{sincosLoss}) as it was the
+best-performing loss in our toy-task; while the Plane Norms loss (Eq.~\ref{planeloss}) also
+performed well in the toy-task, we found that models trained with the Sin/Cos objective were easier
+to regularize via dropout in the final invariant feed-forward neural network. The {\em initial
+guess} and the {\em refinement} networks were trained with the same $\ell_{\text{max}}$ of 5 and
+$n_{\text{max}}=12$; the latter was chosen such that it included at least one radial function with
+wavelength lower than the minimum interatomic distance. We also considered models trained with
+$\ell_{\text{max}} = 4$, tuning the number of hidden features to keep the number of trainable
+parameters the same as the $\ell_{\text{max}} = 5$ models, and equal to $\sim$3M. All models were
+trained for 10 epochs, keeping the model with lowest validation loss at the end of an epoch; see
+further details in Section~\ref{sec:training_details}. %In preliminary experiments, we briefly
+experimented with up-weighting higher-index $\chi$ angles in the loss function
+(Section~\ref{sec:simple_task}), but ultimately decided against it in an effort to promote more
+accurate learning of the lower-index ones $\chi_1$ and $\chi_2$.
+Throughout our experiments, we consider the performance of H-Packer models with different number of
+rounds of refinement. For example, H-Packer$_0$ denotes the model with {\em no} refinement. For
+each model, we also compute an {\em upper bound} in performance of the refinement process by
+tasking the \textit{refinement} model to predict $\chi$ angles from the ground truth neighboring
+structures (i.e., the toy task); we denote this by H-Packer$_{up}$.
+
+\textbf{Metrics.} In line with previous work~\citep{mcpartlon_end--end_2023, zhang_diffpack_2023},
+we evaluate our models on three main metrics. (i) Angle-specific Mean Absolute Error (MAE), (ii)
+residue-level angle accuracy, defined as the proportion of residues for which the prediction of all
+$\chi$ angles is within $20\degree$ of the true value, and (iii) average atomic Root Mean Square
+Deviation (RMSD) of side-chain atoms across residues. We further distinguish between
+\textit{Surface} and  \textit{Core} residues, as conformations occurring on the surface of proteins
+are notoriously harder to predict. Surface residues are defined as having at most 15 $\beta$-C
+within 10~\AA\, of their $\beta$-C, whereas core residues must have at least 20 $\beta$-C's in this
+range.
+
+
+\begin{table}[t]
+    \begin{center}
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{l c c c c | c c c c}
+     % & \multicolumn{8}{c}{Atom RMSD (All) \AA $\downarrow$} \\
+     & \multicolumn{4}{c}{CASP13} & \multicolumn{4}{c}{CASP14} \\
+     % \hline
+     \textbf{Method} & base & Std. & Sym. & Std.+Sym. & base & Std. & Sym. & Std.+Sym. \\
+     \hline
+     \hline
+     % H-Packer$_0$ $\ell_{\text{max}} = 4$    & 0.979 & 0.946 & 0.943 & 0.927  &  1.102 & 1.086 & 1.065 & 1.049 \\
+     % H-Packer$_2$ $\ell_{\text{max}} = 4$    & 0.884 & 0.863 & 0.848 & 0.828  &  1.027 & 1.010 & 0.989 & 0.973 \\
+     % H-Packer$_5$ $\ell_{\text{max}} = 4$    & 0.878 & 0.858 & 0.841 & 0.821  &  1.024 & 1.007 & 0.986 & 0.969 \\
+     % H-Packer$_{up}$ $\ell_{\text{max}} = 4$ & 0.790 & 0.767 & 0.755 & 0.733  &  0.934 & 0.915 & 0.899 & 0.881 \\
+     % \hline
+     H-Packer$_0^{\ell_{\text{max}} = 5}$    & 0.961 & 0.943 & 0.923 & 0.906  &  1.087 & 1.070 &
+     1.050 & 1.034 \\[1.4pt]
+     H-Packer$_2^{\ell_{\text{max}} = 5}$    & 0.863 & 0.842 & 0.826 & 0.805  &  1.011 & 0.992 &
+     0.972 & 0.953 \\[1.4pt]
+     H-Packer$_5^{\ell_{\text{max}} = 5}$    & 0.858 & 0.837 & 0.821 & 0.800  &  1.002 & 0.984 &
+     0.964 & 0.945 \\[1.4pt]
+     \hline
+     H-Packer$_{up}^{\ell_{\text{max}} = 5}$ & 0.765 & 0.741 & 0.730 & 0.706  &  0.915 & 0.895 &
+     0.880 & 0.860 \\
+     \hline
+    \end{tabular}
+    }
+    \end{center}
+    \figcaption{Atom RMSD (\AA $\downarrow$) for H-Packer across all residues with different
+    treatments of the true structure.}{\textbf{Std:} standardizing the true structure by reconstructing
+    it with our data-derived redundant internal coordinates and the real $\chi$ angles. \textbf{Sym:} 
+    considering the additional non-natural symmetries used by AttnPacker.}
+    \label{tab:rmsd_inflation}
+    \vspace{2mm} % adds/reduces whitespace after the table by desired amount!!!
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l l c c c c | c c c | c c c}
+     & & \multicolumn{4}{c}{Angle MAE $\degree$ $\downarrow$} & \multicolumn{3}{c}{Angle Accuracy
+     \% $\uparrow$} & \multicolumn{3}{c}{Atom RMSD \AA $\downarrow$} \\
+     % \hline
+     & \textbf{H-Packer$_5$} & $\chi_1$ & $\chi_2$ & $\chi_3$ & $\chi_4$ & All & Core & Surface &
+     All & Core & Surface \\
+     \hline
+     \hline
+     \multirow{2}{*}{CASP13}
+     & $\ell_{\text{max}} = 4$ & 24.27 & 29.76 & 46.32 & \textbf{52.56} & 53.5 & 68.8 & 43.0 &
+     0.878 & 0.594 & 1.081 \\
+     & $\ell_{\text{max}} = 5$ & \textbf{23.60} & \textbf{29.40} & \textbf{44.91} & 52.91 &
+     \textbf{54.7} & \textbf{70.7} & \textbf{43.7} & \textbf{0.858} & \textbf{0.564} &
+     \textbf{1.067} \\
+     \hline
+     \multirow{2}{*}{CASP14}
+     & $\ell_{\text{max}} = 4$ & 30.36 & 34.38 & 48.76 & 50.62 & 43.5 & 64.1 & 32.5 & 1.024 & 0.648
+     & 1.260 \\
+     & $\ell_{\text{max}} = 5$ & \textbf{29.61} & \textbf{34.03} & \textbf{46.72} & \textbf{50.35}
+     & \textbf{45.2} & \textbf{65.5} & \textbf{34.0} & \textbf{1.002} & \textbf{0.626} &
+     \textbf{1.244} \\
+     \hline
+    \end{tabular}
+    }
+    \figcaption{Ablation in $\ell_{\text{max}}$ of H-Packer.}{Metrics for the other H-packer models 
+    can be found in Table~\ref{tab:full_ablation_in_lmax}.}
+    \label{tab:lmax_ablation}
+% \vspace{-4mm} % reduces whitespace after the table by desired amount!!!
+\end{table}
+
+
+\textbf{Comparative Evaluation on CASP13 and CASP14 targets.}
+Table~\ref{tab:results_casp13_and_14} compare H-Packer's performance in side-chain packing with
+other computational methods~\citep{mcpartlon_end--end_2023, zhang_diffpack_2023,
+misiura_dlpacker_2022, krivov_improved_2009, alford_rosetta_2017, huang_faspr_2020}. Despite its
+simplicity, H-Packer$_5$ is competitive against the state-of-the-art at predicting $\chi_3$ and
+$\chi_4$, but falls behind on $\chi_1$ and $\chi_2$ predictions. This discrepancy indicates that
+H-Packer has likely learned complementary features to the other models. Moreover, H-Packer mostly
+outperforms the physics-based computational algorithms~\citep{krivov_improved_2009,
+alford_rosetta_2017, huang_faspr_2020} and is competitive with
+DLPacker~\citep{misiura_dlpacker_2022} in all our performance metrics. Interestingly, H-Packer is
+consistently better than physics-based approaches in terms of overall Atom RMSD, but tends to fall
+shorter on Angle Accuracy. We present error distrubtions for H-Packer in
+Figures~\ref{fig:casp13_error_distributions_part_1},~\ref{fig:casp13_error_distributions_part_2},~\ref{fig:casp14_error_distributions_part_1}, and~\ref{fig:casp14_error_distributions_part_2}.
+ 
+Interestingly, while H-Packer predictions are improved upon using refinement networks, the
+performance saturates after 2 steps of refinement; the accuracies after 5 iterations of refinement
+are comparable to those after only 2 steps (Table~\ref{tab:results_casp13_and_14}). Therefore, it
+is unlikely that further refinement could improve H-Packer's performance to reach its upper bound
+performance. We hypothesise that training H-Packer to produce confidence scores might help in
+developing site-specific convergence criteria to help bridge the
+gap~\citep{mcpartlon_end--end_2023, zhang_diffpack_2023}.
+
+Our experiments show that H-packer is competitive against physics-based methods and some
+machine-learning solutions, but its performance still lags behind the state-of-the-art at
+predicting $\chi$ angles closer to the backbone. Overall, the lack of consistent comparative
+patterns in performance metrics suggests that H-Packer learns features complementary to other
+approaches.
+
+\textbf{Ablation in $\ell_{\text{max}}$.} Table~\ref{tab:lmax_ablation} shows how changing
+$\ell_{\text{max}}$ (from 4 to 5) impacts  the performance of H-Packer. For the same model
+capacity, using higher $\ell_{\text{max}}$ consistently yields better performance, indicating that
+higher angular resolutions of the input can be beneficial for learning this task. This performance
+improvement comes with a trade-off in  training and inference time, which scale superlinearly with
+$\ell_{\text{max}}$ unless the Tensor Product computation is adequately
+constrained~\citep{cobb_efficient_2021}. For reference, training  our models with
+$\ell_{\text{max}} = 5$ takes $\sim$40\% longer than those with $\ell_{\text{max}} = 4$. We leave
+the hyperparameter optimization of   $\ell_{\text{max}}$ to future work. 
+
+\textbf{On computing RMSD fairly.} In Table~\ref{tab:results_casp13_and_14} we report RMSD computed
+by measuring the distance between the coordinates of true and predicted atoms, modulo the
+symmetries we report in~\ref{table:symmetric_conformations}. However, other algorithms such as
+AttnPacker~\citep{mcpartlon_end--end_2023} consider other symmetries as well, sometimes even
+between atoms of differing chemical elements. Though these symmetries reflect spatially similar
+conformations (such as a flip of the Histidine ring), they result in inflated RMSD scores. We show
+the effect of this inflation on H-Packer predictions in Table~\ref{tab:rmsd_inflation}. In the same
+table, we also show the RMSD computed against true structures that have been "reconstructed" using
+the true $\chi$ angles and the constant values that we use for redundant internal coordinate within
+H-Packer; we do this in an effort to disentangle the Null Reconstruction Error
+(Figure~\ref{fig:null_reconstruction}) from the error given by mistakes in $\chi$ angle prediction.
+
+\textbf{Speed.} Table~\ref{tab:speed} shows relative reconstruction speeds for several packing
+algorithms. Using the current implementation of the reconstruction algorithm, the best-performing
+H-Packer model is about 7x faster than the popular algorithm RosettaPacker and 6x faster than
+DLPacker; however, it is considerably slower than AttnPacker. Speed can be considerably cut down by
+half at the expense of minor performance degradation using two refinement iterations instead of
+five. However, more considerable speed gains may be achieved by CPU parallelization, when computing
+ holographic encodings of structural neighborhood during initial data processing. Indeed, each
+initial guessing and refinement step of H-Packer predicts all $\chi$ angles at once, but in the
+current implementation holographic encodings are computed in series, creating a bottleneck that
+currently accounts for ~88\% of the inference time (10\% is atom placement, and only 2\% is making
+the actual predictions on GPU). We plan on optimizing this aspect in future iterations of the model.
+
+\begin{table}[t]
+    \centering
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l c c c c c c c c}
+        \textbf{Method} & HPacker$_{5}^{\ell_{\text{max}}=5}$ & HPacker$_{2}^{\ell_{\text{max}}=5}$
+        & HPacker$_{0}^{\ell_{\text{max}}=5}$ & AttnPack & DLPack & RosPack & FASPR & SCWRL4 \\
+        \hline
+        \textbf{Rel. Time} & 1.00 & 0.51 & 0.18 & 0.05 & 5.70 & 6.96 & 0.02 & 0.67 \\
+        \hline
+    \end{tabular}
+    }
+    \figcaption{Relative times to undertake full atomic reconstruction.}{In our current (unoptimized)
+    implementation, HPacker$_{5}^{\ell_{\text{max}}=5}$ takes 1,482s
+    to reconstruct the 82 CASP13 targets on a single NVIDIA A40 GPU. Times for the other methods
+    were taken from ~\citep{mcpartlon_end--end_2023}.}
+    \label{tab:speed}
+\vspace{-6mm} % reduces whitespace after the table by desired amount!!!
+\end{table}
+
+
+

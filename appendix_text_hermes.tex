@@ -1,0 +1,729 @@
+
+\section{Methods}
+
+
+\subsection{HERMES architecture}
+The HERMES architecture closely follows our recent developments of SO(3)-equivariant neural network
+models for protein
+structures~\citep{pun_learning_2024,visani_holographic-vae_2024,visani_h-packer_2024}. For
+completeness, we summarize here the main methodological components and refer the reader to those
+works for additional details.
+
+
+The input to HERMES is a point cloud of atoms in a protein structure, which we term a
+\textit{neighborhood}. Each neighborhood is centered at the C-$\alpha$ atom of a focal residue and
+includes all atoms within a 10~\AA~radius of this center. Optionally, we add Gaussian noise with
+standard deviation 0.50~\AA~to the atomic coordinates to achieve further model robustness. The
+output of HERMES is a 20-dimensional representation of the neighborhood that is invariant to 3D
+rotations about its center (i.e., SO(3)-invariant). To obtain SO(3) invariance, HERMES is
+constructed from SO(3)-equivariant layers that progressively compute higher-level SO(3)-invariant
+features, which are then passed to a final multilayer perceptron (MLP) with a 20-dimensional output.
+Conceptually, symmetry awareness in HERMES is achieved through two main components: (i) a
+(holographic) encoding of the neighborhood into a basis suitable for SO(3)-equivariant operations,
+and (ii) processing of the input via a stack of SO(3)-equivariant neural network layers to learn an
+expressive and SO(3)-invariant representation of the neighborhood.\\
+
+\noindent{\bf Holographic encoding of atomic protein structure neighborhoods.} We first represent
+the atomic point cloud of each structural neighborhood as a density function obtained by superposing
+(weighted) Dirac-$\delta$ functions, indicating the presence of atoms at a given position in space:
+$\rho(\mathbf{r}) = \sum_{i\in \text{points}} \omega_i \delta(\mathbf{r}_{i} - \mathbf{r})$; here,
+$\omega_i$ indicates the weight associated with point $i$ at position $\mathbf{r}_i$, and
+$\mathbf{r}_i$ can be decomposed in its constituents spherical components $(r_i, \theta_i,
+\varphi_i)$.
+We then use 3D Zernike Fourier Transform (ZFT)~\citep{pun_learning_2024} of the density function to
+encode the neighborhood into a convenient SO(3) equivariant basis,
+\begin{equation}
+    \hat{Z}_{\ell m}^{n} = \sum_{i\in \text{points}} \omega_i R_{n}^{\ell}(r_i) Y_{\ell m}(\theta_i,
+    \varphi_i)
+   \label{eqn:spherical_and_radial_with_dirac_ft}
+\end{equation}
+where $Y_{\ell m}(\theta,\phi) $ is the spherical harmonics of integer degree $\ell \geq 0$ and
+integer order $m \leq |\ell|$, and $R^{n}_{\ell}(r)$ is the radial Zernike polynomial in 3D with
+integer radial frequency $n \geq 0$ and degree $\ell$. $R^{n}_{\ell}(r)$ is non-zero only when $n -
+\ell$ is even and $\geq 0$. We keep coefficients of up to and including $\ell = 5$, and, for every
+$\ell$, we keep the first 11 non-zero radial frequencies.
+
+Notably, the spherical harmonics that describe the angular component of ZFT arise from the
+irreducible representations of the 3D rotation group SO(3), and form a convenient basis under
+rotation in 3D (see the Appendix of~\citep{visani_h-packer_2024} for a formal mathematical
+introduction). Zernike projections in spherical Fourier space can be understood as a superposition
+of spherical holograms of an input point cloud, and thus, we term this operation an {\em holographic
+encoding} of the data~\cite{visani_holographic-vae_2024, pun_learning_2024}. The resulting holograms
+are primarily indexed by the degree $\ell$: different values of $\ell$ encode components that
+transform in specific ways under 3D rotations. For example, the $\ell = 0$ component is
+rotation-invariant.
+
+Following~\citep{pun_learning_2024,visani_holographic-vae_2024}, we incorporate atom-level features
+by partitioning the holographic encoding into multiple \textit{channels} (Fig.~\ref{fig:HERMES}A).
+Specifically, we use separate channels for C, N, O, S, computationally added hydrogens, partial
+charge, and solvent-accessible surface area (SASA). Partial charge and SASA are defined for all
+atoms, and their values are incorporated through the weights $\omega_i$.\\
+
+\noindent{\bf SO(3)-equivariant neural network architecture.}
+The neighborhood holograms are then processed by a stack of SO(3)-equivariant layers
+(Fig.~\ref{fig:HERMES}A). The final SO(3)-invariant representation is obtained by reading out the
+$\ell = 0$ component of the last layer and passing it through an MLP to produce a 20-dimensional
+embedding. We employ three types of SO(3)-equivariant building blocks, inspired by the H-CNN
+architecture~\citep{pun_learning_2024} and also detailed in ref.~\citep{visani_h-packer_2024}: (i)
+SO(3)-equivariant linear layers (Lin), which mix channels while preserving the SO(3) transformation
+properties; (ii) tensor-product nonlinearities (TP), which couple different irreducible components;
+and (iii) SO(3)-equivariant layer normalization (LN).
+
+All SO(3)-equivariant components are implemented using \texttt{e3nn}
+primitives~\citep{geiger_e3nn_2022}. Within the same framework, we re-implemented the H-CNN
+architecture described in~\citep{pun_learning_2024} for comparison. HERMES achieves a forward pass
+that is approximately $2.75\times$ faster than H-CNN, while using a similar number of parameters
+($\sim 3.5$M).
+
+
+\subsection{Pre-processing of protein structure data}
+To pre-process protein structure data, we developed two distinct pipelines based on either (i)
+PyRosetta~\citep{chaudhury_pyrosetta_2010} or (ii) Biopython~\citep{cock_biopython_2009} together
+with other open-source tools, with code adapted from~\citep{blaabjerg_rapid_2023}. The
+PyRosetta-based pipeline is considerably faster but requires a license, whereas the Biopython-based
+pipeline is fully open source. We train models using data generated by both pipelines, with the
+constraint that the Pre-processing pipeline used at inference must match that used during training.
+Performance differences between the two pipelines are minor (Fig.~\ref{fig:rasp_exp}
+and~\ref{fig:t2837_py_vs_bp}, and Table~\ref{table:aa_wt_cls}); unless otherwise stated, we report
+results obtained with the PyRosetta pipeline, which yields slightly better performance and has
+faster Pre-processing runtime.
+
+For the PyRosetta workflow, we use PyRosetta functionalities for all Pre-processing steps: repairing
+PDB files by adding missing residues, adding hydrogen atoms, assigning partial atomic charges,
+computing solvent-accessible surface areas (SASA); we ignore non-canonical amino acids.
+For the open-source Pre-processing workflow (``Biopython" pipeline), we proceed as follows. First,
+we use OpenMM~\citep{eastman_openmm_2013} to repair PDB files by adding missing residues and
+substituting non-canonical residues with their canonical counterparts. Hydrogen atoms are then added
+using the \texttt{reduce} program~\citep{word_asparagine_1999}. Partial atomic charges are assigned
+from the AMBER99sb force field~\citep{ponder_force_2003}, and SASA are computed using
+Biopython~\citep{cock_biopython_2009}.
+
+Both pre-processing pipelines retain atoms belonging to non-protein residues and ions, in contrast
+to the RaSP pre-processing procedure~\citep{blaabjerg_rapid_2023}. Notably, the PyRosetta-based
+pipeline does not replace non-canonical residues.
+
+
+\subsection{HERMES pre-training}
+We pre-trained HERMES using an inverse folding objective, in which the model predicts the identity
+of a masked focal amino acid (i.e., the native residue in the structure) given its surrounding
+atomic neighborhood. This training task is analogous to that used for
+H-CNN~\citep{pun_learning_2024}. We adopted the same data splits as in H-CNN: 10,957 structures for
+training, 2,730 for validation, and 212 for testing. These splits are derived from
+ProteinNet's~\citep{alquraishi_proteinnet_2019} 30\% sequence-identity clustering of PDB structures
+available at the time of CASP12.
+
+Model parameters were optimized for 10 epochs using the Adam optimizer~\citep{kingma_adam_2015} with
+a learning rate of $10^{-3}$. We selected the model checkpoint with the lowest validation loss at
+the end of each epoch. A single HERMES model is implemented as an ensemble of 10 independently
+trained neural network instances, whose predictions are averaged at inference time. Pre-training a
+single network instance required approximately 40 minutes per epoch on a single NVIDIA A40 GPU.
+
+
+
+\subsection{Rosetta relaxation of mutant structures for the HERMES-{\em relaxed} protocol}
+For the HERMES-{\em relaxed} protocol, we use PyRosetta~\citep{chaudhury_pyrosetta_2010} to generate
+and locally refine mutant protein structures. Specifically, the focal residue is first substituted
+with the desired mutant amino acid, after which all side-chain atoms within 12~\AA~of the focal
+residue's C-$\alpha$ atom are relaxed using the FastRelax protocol with the \texttt{ref2015\_cart}
+energy function and a single relaxation cycle.
+
+We performed a targeted ablation study to select the relaxation parameters. These experiments
+indicate that allowing backbone atoms to relax slightly degrades performance, and that ensembling
+over multiple independent relaxation runs does not improve accuracy
+(Fig.~\ref{fig:relaxations_ablation}A), while substantially increasing computational cost
+(Fig.~\ref{fig:relaxations_ablation}B). Thus, all results for the HERMES-{\em relaxed} protocol are
+reported using side-chain–only relaxation with a single FastRelax cycle.
+
+\subsection{Training HERMES-\emph{amortized} to implicitly learn about relaxation}
+We fine-tuned HERMES to align HERMES-\emph{fixed} predictions to those of HERMES-\emph{relaxed}, on
+a subset of the pre-training protein sites. Specifically, we uniformly sampled 10\% of the proteins
+pre-training training set (1,284), and from those we uniformly sampled 5\% of the sites. We
+similarly sampled 1\% of the sites from the proteins of the pre-training validation set, and 5\% of
+the pre-training testing set.
+
+\subsection{HERMES fine-tuning for downstream tasks}
+\label{sec:finetuning_details}
+In all analyses, we fine-tuned HERMES models under a Huber Loss objective with hyperparameter
+$\delta = 1.0$, for 15 epochs using the Adam optimizer~\citep{kingma_adam_2015} with a learning rate
+of $10^{-3}$ and a batch size of 128 mutations, selecting the model checkpoint with the lowest
+validation loss at the end of each epoch. The only exception is the models without pre-training,
+which are trained for 25 epochs.
+
+By convention, we define model outputs such that higher predicted values correspond to more
+favorable mutation effects. Accordingly, when fine-tuning on experimental $\Delta\Delta G$
+measurements--where lower values indicate greater stability--we trained the model to predict
+$-\Delta\Delta G$. This sign convention ensures consistent interpretation of model outputs across
+tasks and is fixed throughout all reported analyses.
+
+To speed-up convergence during fine-tuning, we first rescale the weight matrix and bias vector of
+the network's output layer so that the mean and variance of the output logits match those of the
+validation scores. This initialization step requires a forward pass through the validation data to
+estimate the mean and variance, but it makes the model outputs immediately on the same scale as the
+experimental scores. Thus, fine-tuning avoids spending early epochs merely adjusting output
+magnitudes.
+
+Overall, fine-tuning is computationally efficient. Training a single neural network instance
+requires approximately 2.5 minutes per epoch on the cDNA117k dataset ($\sim$117,000 mutations) and
+about 4 minutes per epoch on the Megascale training dataset ($\sim$217,000 mutations) on a single
+NVIDIA A40 GPU.
+
+
+
+
+
+
+\subsection{Fine-tuning datasets}
+\label{sec:datasets}
+
+
+\noindent {\bf Stability effect prediction.} For protein stability prediction, we fine-tuned and
+evaluated the performance of HERMES on the same datasets of three recent structure-based predictors
+of mutational stability effects--RaSP~\citep{blaabjerg_rapid_2023},
+Stability-Oracle~\citep{diaz_stability_2024}, and ThermoMPNN~\citep{dieckhaus_transfer_2024}--so
+results are comparable. The data from these models are used in following way:
+
+
+
+
+\begin{itemize}
+\item {\em RaSP dataset.} We used the RaSP dataset~\citep{blaabjerg_rapid_2023} as provided by the
+authors on their github repository (\url{https://github.com/KULL-Centre/_2022_ML-ddG-Blaabjerg}). As
+in the original RaSP paper, the target values are Rosetta-computed stability changes ($\Delta\Delta
+G$), which are known to be reliable primarily within the range [-7, 1] kcal/mol. To account for
+this, RaSP applies a sigmoid transformation to the raw $\Delta\Delta G$ values prior to training,
+effectively saturating the targets outside this interval.
+
+We adopt the same sigmoid transformation, with one modification: we center the transformed values
+such that $\Delta\Delta G = 0$ maps to zero after transformation. This centering is required by the
+HERMES output parameterization, in which the predicted stability change for a mutation to the same
+amino acid is constrained to be zero (i.e., $\Delta\Delta G_{aa_i \rightarrow aa_i} = 0$). While
+this property holds for physical $\Delta\Delta G$ values, it is not preserved by the uncentered
+sigmoid transform used in RaSP. Our centered transformation therefore ensures consistency between
+the model's output space and the physical interpretation of stability changes, and it follows,
+
+\begin{equation}
+    F(\Delta\Delta G) = \frac{1}{1 + e^{-\beta(\Delta\Delta G - \alpha)}} - \frac{1}{1 + e^{\beta
+    \alpha}}
+    \label{eq:centered_fermi_transform}
+\end{equation}\\
+
+\item {\em Stability-Oracle datasets.} Stability-Oracle introduces two curated datasets that we use
+in this work~\citep{diaz_stability_2024}:\\
+
+(i) {cDNA117k} (training set): derived from the Megascale cDNA display proteolysis dataset \#
+1~\citep{tsuboyama_mega-scale_2023}. The original Megascale dataset reports approximately 850,000
+thermodynamic folding stability measurements ($\Delta G$) across 354 natural and 188 de novo
+mini-protein domains (40–72 amino acids in length). Following the Stability-Oracle protocol,
+mutations are filtered to enforce at most 30\% sequence identity with the test set, yielding a
+reduced set of approximately 117,000 mutation-induced stability changes ($\Delta\Delta G$), referred
+to as cDNA117k.\\
+
+(ii) {T2837} (test set): assembled by combining several commonly used benchmarking datasets of
+experimentally measured $\Delta\Delta G$ values, including S669~\citep{pancotti_predicting_2022},
+myoglobin~\citep{li_predicting_2020}, ssym~\citep{pucci_quantification_2018}, and
+p53~\citep{caldararu_base_2021}. The resulting test set comprises 2,837 mutations.
+
+
+We obtained the cDNA117k and T2837 datasets from the Stability-Oracle~\citep{diaz_stability_2024}
+github repository (\url{https://github.com/danny305/StabilityOracle/tree/master}). At the time of
+access, the residue indices provided in the dataset did not correspond to the residue numbering in
+the original PDB files, but instead to an intermediate, post-processed representation that was not
+documented in sufficient detail to allow straightforward recovery of the original numbering. To
+ensure consistency with structural data, we manually corrected the residue numbers in the CSV files
+to match those in the corresponding PDB structures. The corrected versions of these datasets are
+included in our repository.\\
+
+
+
+\item {\em ThermoMPNN dataset.} 
+ThermoMPNN also leveraged Megascale~\citep{tsuboyama_mega-scale_2023}, but used datasets \# 2 and \#
+3, curated and split by the authors at a 25\% sequence-identity cutoff into 216k training and 28k
+test mutation effects~\citep{dieckhaus_transfer_2024}. We used the train, valid, and test splits of
+the Megascale dataset as curated in ThermoMPNN, and provided on their github repository
+(\url{https://github.com/Kuhlman-Lab/ThermoMPNN}). Throughout the text, we refer to these datasets
+as the Megascale training (train + valid) and testing sets. We downloaded the structures'
+\texttt{.pdb} files from \url{https://zenodo.org/records/7992926}. We note that the Megascale
+training set was not controlled for maximum similarity with the T2837 dataset, and six of the T2837
+proteins ($\sim 5\%$) have sequence homologs in the Megascale training set with sequence similarity
+above 90\%.
+\\\\
+\end{itemize}
+
+\noindent {\bf Binding effect prediction.} For predicting mutational effects on binding affinity, we
+fine-tuned HERMES on the SKEMPI v2.0 dataset~\citep{jankauskaite_skempi_2019}, using 3-fold
+cross-validation.
+
+\begin{itemize} 
+\item{\em SKEMPI dataset:}
+After removing duplicate experimental entries, SKEMPI v2.0 contains 5,713 measurements of binding
+free-energy changes ($\Delta\Delta G^{\text{binding}}$) spanning 331 protein–protein complex
+structures. We further restrict the dataset to complexes with at least 10 annotated mutations,
+resulting in 116 structures and 5,025 mutations. Finally, we retain only single-point mutations,
+yielding 93 structures and 3,485 mutations.
+
+SKEMPI provides metadata explicitly designed to support leakage-aware evaluation via two fields:
+\emph{hold-out type} and \emph{hold-out proteins} (see SKEMPI documentation:
+\url{https://life.bsc.es/pid/skempi2/info/faq_and_help}). Briefly, {\em hold-out type} groups
+complexes into broad categories (e.g., protease-inhibitor, antibody-antigen, and pMHC-TCR), while
+{\em hold-out proteins} lists PDB identifiers and/or hold-out types that should be co-held-out to
+avoid training on closely related binding sites. Using this information, we define three split
+strategies:\\
+
+
+(i) \textit{Easy:} random splitting without using hold-out metadata.\\
+
+(ii) \textit{Medium:} we enforce that all entries linked via a mutation's \emph{hold-out proteins}
+annotation are assigned to the same split (but we do not additionally group by \emph{hold-out
+type}).\\
+
+(iii) \textit{Difficult:} we enforce that all complexes sharing the same \emph{hold-out type} are
+assigned to the same split, producing a stringent evaluation of generalization across interaction
+classes.\\
+
+In cases where a complex is associated with multiple hold-out types, we assign it to a single type
+by randomly selecting one of the available labels.
+
+\end{itemize}
+
+\subsection{Baseline models}
+Here, we describe the baseline models used to benchmark HERMES on mutational effect prediction.\\
+
+\noindent \textbf{ProteinMPNN \citep{dauparas_robust_2022}.} ProteinMPNN is an inverse-folding model
+that samples amino-acid sequences conditioned on a protein backbone (optionally with a partial
+sequence fixed). Because it also outputs per-site amino-acid probabilities, we used it to score
+mutational effects via the log-likelihood ratio in Eq.~\ref{eq:log_ratio_wt_and_mt}. As for HERMES,
+we evaluate ProteinMPNN models trained with two noise levels: 0.02 \AA (virtually no noise) and 0.30
+\AA. We used, and provide, scripts to infer mutation effects built upon a public fork of the
+ProteinMPNN repository (\url{https://github.com/gvisani/ProteinMPNN-copy}).\\
+\\
+\noindent\textbf{ThermoMPNN~\citep{dieckhaus_transfer_2024}.} ThermoMPNN is a thermodynamic
+stability predictor built on top of ProteinMPNN. For a given structure, it extracts the final
+ProteinMPNN residue embedding at the site of interest and feeds it to a separate head that predicts
+per–amino-acid $\Delta G$ values, from which $\Delta\Delta G$ is computed. Similar to HERMES, this
+formulation enforces the permutation symmetry of mutational effects by construction, without
+requiring data augmentation. For our experiments, we used native functionalities in the ThermoMPNN
+repository (\url{https://github.com/Kuhlman-Lab/ThermoMPNN}). \\
+\\
+\noindent \textbf{Stability-Oracle~\citep{diaz_stability_2024}.} Similar to HERMES, Stability-Oracle
+is trained in two stages. First, a graph-attention network is pre-trained to predict masked amino
+acids from their local atomic environment (``neighborhood"). Next, the embeddings from the
+pre-trained model is used to regress over mutation-effect. Specifically, For a target site on a
+structure, the masked-neighborhood embedding $h$ is extracted from the pre-trained network and
+concatenated separately with embeddings of the ``from" and ``to" amino acids. Each concatenated
+input is passed through a transformer to produce amino-acid–specific embeddings $e_{aa_{\from}}$ and
+$e_{aa_{\tto}}$, whose difference $(e_{aa_{\tto}}-e_{aa_{\from}})$ is fed to a two-layer MLP to
+predict $\Delta\Delta G_{aa_{\from}\rightarrow aa_{\tto}}$. This construction is
+permutation-symmetric up to the final MLP, since each $e_{aa}$ is computed independently; symmetry
+is broken only by the MLP, and would have been preserved by a bias-free linear layer. The original
+method enforces symmetry during training via $19\times$ data augmentation. We report performance
+scores calculated using predictions provided in the Stability-Oracale's repository
+(\url{https://github.com/danny305/StabilityOracle}).\\
+\\
+\noindent \textbf{RaSP \citep{blaabjerg_rapid_2023}.} Similar to HERMES, RaSP is trained in two
+steps. First, a 3D CNN is pre-trained to predict masked amino acids from their local atomic
+environment (``neighborhood"). Then, a small fully-connected neural network with a single output is
+trained to regress over mutation effects, using as input neighborhoods' embeddings from the 3DCNN,
+the one-hot encodings of wildtype and mutant amino-acids, and the wildtype and mutant amino-acids'
+frequencies in the pre-training data.
+RaSP is fine-tuned on the stability effect of mutations $\Delta\Delta G$, computationally determined
+with Rosetta~\citep{chaudhury_pyrosetta_2010}. We report performance scores calculated using
+predictions provided in the authors' repository
+(\url{https://github.com/KULL-Centre/_2022_ML-ddG-Blaabjerg}).\\
+\\
+\textbf{RDE-Network~\citep{luo_rotamer_2022}.} RDE stands for Rotamer Density Estimator. This model
+consists of first a graph neural network encoder that is trained via a normalizing flow objective to
+predict distributions of side-chain conformations. Then, a prediction head is added, and it is
+trained on $\Delta\Delta G_{\text{binding}}$ effects from the SKEMPI dataset. We report performance
+scores as provided in ref.~\citep{luo_rotamer_2022}.
+\\
+\\
+\textbf{MIF-Network~\citep{luo_rotamer_2022}.} This model's architecture is the same as the encoder
+in RDE-Network. It is first pre-trained on the task of wild-type amino acid classification. Then, a
+prediction head is added to the encoder, and it is trained on $\Delta\Delta G_{\text{binding}}$
+effects from the SKEMPI dataset~\citep{jankauskaite_skempi_2019} in the same manner as RDE-Network.
+We report performance scores as provided in Ref.~\citep{luo_rotamer_2022}.\\
+\\
+\textbf{Pythia-PPI~\citep{tao_reliable_2025}.} Pythia-PPI uses a graph neural network encoder
+pre-trained for wild-type amino acid classification, followed by a $\Delta\Delta G$ prediction
+module with two heads: one for $\Delta\Delta G_{\text{stability}}$ and one for $\Delta\Delta
+G_{\text{binding}}$. The model is fine-tuned jointly on stability labels from
+FireProtDB~\citep{stourac_fireprotdb_2021} and binding labels from
+SKEMPI~\citep{jankauskaite_skempi_2019}, using a validation selected 20:80 stability:binding mixing
+ratio. The resulting checkpoint (``Vanilla Pythia-PPI") is then further trained via
+self-distillation by fine-tuning on its own predictions over all SKEMPI complex structures to obtain
+the final model (Pythia-PPI). We should note that these two procedures (i.e., joint fine-tuning on
+stability and binding with a validation selected mixing ratio and self-distillation) could also be
+applied to HERMES to potentially improve performance. We report performance scores as provided in
+ref.~\citep{tao_reliable_2025}.
+
+
+\subsection{ESMFold for computational modeling of protein structures}
+For the analysis in Fig.~\ref{fig:radial_plots__esmfold}, we used the ESM Metagenomic Atlas API to
+fold each sequence individually (\url{https://esmatlas.com/resources?action=fold}).
+
+\subsection{Structure-conditioned reversibility analysis}
+
+In Figs.~\ref{fig:ssym_figure}~and~\ref{fig:ssym_antisymmetry_reversibility_score_results}, we
+characterized structure-conditioned reversibility on the SSym
+dataset~\cite{pucci_quantification_2018}, which contains wild-type and single-mutant structures for
+352 mutations across 19 proteins~\citep{pancotti_predicting_2022}.
+
+We assess structure-conditioned reversibility by whether the effects of forward $\alpha\to \beta$
+and reverse $\beta\to \alpha$ mutations are equal, using the outgoing structural context to compute
+mutational effects. Specifically, the forward mutational effect $\Delta \hat
+F^{(\text{model})}_{\alpha\to \beta}$ is computed by conditioning on the structure $X_\alpha$, and
+the reverse effect $\Delta \hat F^{(\text{model})}_{\beta\to \alpha}$ is computed using $X_\beta$,
+\begin{equation}
+\begin{aligned}
+    \Delta \hat F^{(\text{model})}_{\alpha\to \beta} = \log P(\beta | X_{\alpha}) - \log P(\alpha
+    |X_{\alpha}) \\
+    \Delta \hat F^{(\text{model})}_{\beta\to \alpha} = \log P(\alpha | X_{\beta}) - \log P(\beta
+    |X_{\beta})
+\end{aligned}
+\end{equation}
+With this definition, we do not expect reversibility, as forward and reverse transitions are
+conditioned on different structures.\\
+
+
+
+\noindent{\bf Reversibility score.} For the analysis in
+Figs.~\ref{fig:ssym_figure}~and~\ref{fig:ssym_antisymmetry_reversibility_score_results} we construct
+a reversibility score as a mean squared error normalized to be between -1 and 1,
+\EQ
+\text{rev. score} = 1 - \frac{\text{mean}((\Delta\log p_{fwd}+\Delta\log
+p_{rev})^2)}{\text{mean}({\Delta\log p_{fwd}}^2)+\text{mean}({\Delta\log p_{rev}}^2)}
+\label{eq:rev_score}
+\EE
+where $\Delta \log p_{fwd} = \log p(\mt | X_\wt) - \log p(\wt | X_\wt)$ is the forward mutational
+effect computed by conditioning on the wild type structure, and $\Delta \log p_{rev} = \log p(\wt |
+X_\mt) - \log p(\mt | X_\mt)$ is the reverse mutational effect computed by conditioning on the
+mutants structure. The averages (mean) are computed over the 352 mutations in the SSym dataset, or
+stratified as needed by the desired criteria.
+With this definition, a larger value of {\bf rev. score} implies more degree of reversibility
+between forward and reverse mutations. \\
+
+
+
+
+\noindent{\bf Sequence similarity calculation between the Ssym dataset and pre-training proteins.}
+We stratified the data based on their similarity to the training data. To do so, we used BLASTp via
+NCBI BLAST+~\cite{camacho_blast_2009} with individual chains in the SSym structures as
+queries~\cite{pucci_quantification_2018}, and individual chains in the pre-training set as the
+database; for each SSym chain, we then considered its maximum similarity to any sequence in the
+pre-training set. We found that 9 Ssym proteins have similarity below 70\% to the pre-training
+proteins (only 5 are below 50\%, none are below 40\%), and 10 proteins have similarity above 70\%
+(comprising the two panels in Fig.~\ref{fig:ssym_figure}B).\\
+
+
+
+
+\subsection{Statistical comparison of model performances on classification metrics}
+
+\noindent{\bf Comparing models' performances on the same tasks.}
+Figures~\ref{fig:radial_plots__noise}~and~\ref{fig:megascale_precision_recall_f1_by_size_cutoff_0p0}
+report classification performance (precision, recall, F1, etc.) for predicting the stability effects
+of mutations across models.
+Figures~\ref{fig:t2837_and_megascale_pairwise_pvalues_permutation}~and~\ref{fig:pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1}
+report pairwise significance tests (p-values) for differences in these metrics using permutation
+tests, with the null hypothesis that two models' predictions are exchangeable. To compute these
+p-values, for each model pair, we generated permuted prediction sets by swapping paired prediction
+between models with probability 0.5, and repeat this procedure for 1000 random seeds. The p-value is
+the fraction of permutations in which the metric difference between the permuted sets is at least as
+large ($\geq$) as the observed difference. We correct the computed p-values for multiple comparisons
+using Holm–Bonferroni across all model pairs within each metric (i.e., within each panel in
+Figs.~\ref{fig:t2837_and_megascale_pairwise_pvalues_permutation},~\ref{fig:pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1}).\\
+
+
+\noindent{\bf Comparing a model's performance across tasks.}
+Figure~\ref{fig:megascale_precision_recall_f1_by_size_cutoff_0p0} reports classification performance
+(precision, recall, F1, etc.) for predicting mutation stability effects across mutation size
+categories (tasks).
+Figure~\ref{fig:pvalues__bucketed_by_size__between_small_large_buckets__vertical} reports, for each
+model, pairwise significance tests for differences in these metrics between tasks. We estimate
+p-values via bootstrap resampling: for each task pair, we repeatedly (1000 seeds) draw bootstrap
+samples of predictions within each task, recompute the metric difference, and define the p-value as
+the fraction of bootstrap replicates in which the resampled metric difference is at least as large
+($\geq$) as the observed metric difference. We apply Holm–Bonferroni correction across all task
+pairs within each metric.\\
+
+
+
+\noindent{\bf Significance of the number of retrieved antigen-stabilizing mutations by different
+models.}
+In
+Figures~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations}
+and Table~\ref{table:antigen_results}, we report, for each model, the number of antigen-stabilizing
+mutations retrieved ($x$) out of a total of $N=33$ experimentally verified such mutations. Retrieval
+is based on amino-acid ranking: a mutation is counted as retrieved if (i) the mutant amino acid is
+ranked better than the wild type ($r_\mt<r_\wt$), and (ii) that its rank is below or equal to a
+certain threshold $R$, with $R=3$ for ``strongly suggested" and $R=6$ for ``moderately suggested."
+We assess significance in the number of retrieved antigen-stabilizing mutations by a given model
+with a one-sided binomial test: for each model, the p-value is the probability under a null model of
+recovering at least $x$ successes in $N$ trials with per-mutation success probability
+$p_{\text{null}}$, i.e., $p = 1-\text{BinomCDF}(x-1, N, p_{\text{null}})$. We adjust p-values for
+multiple testing using Holm–Bonferroni, and report the resulting p-values in
+Figs.~\ref{fig:antigen_pvalues_vs_random}~and~\ref{fig:antigen_pvalues_vs_blosum62}.\\
+To compute the p-values, we consider two null models:
+\begin{enumerate}[(i)]
+    \item \textbf{Random null.} For each mutation, we sample ranks for the mutant and wild type
+    uniformly without replacement: $r_{\mathrm{mt}}\sim \mathrm{Unif}\{1,\dots,20\}$ and
+    $r_{\mathrm{wt}}\sim \mathrm{Unif}\{1,\dots,20\}\setminus{r_{\mathrm{mt}}}$. A mutation is a
+    ``success" if $r_{\mathrm{mt}}<r_{\mathrm{wt}}$ and $r_{\mathrm{mt}}\leq R$, which occurs with
+    probability $p_{null} = \frac{1}{19 \times 20}\sum_{i=1}^{R} (20 - i)$.\\
+    \item \textbf{BLOSUM62 null.} We simply set $p_{null} = x_{B62} / N$, where $x_{B62}$ is the
+    number of mutations with BLOSUM62 rank $r^{B62}_\mt \leq R$. We note that the rank of the
+    wild-type is always 1 for BLOSUM62, so we omit the condition that the rank of the mutant has to
+    be lower than the rank of the wild-type, which is instead applied to all other models, including
+    the random null model.
+\end{enumerate}
+
+
+
+
+\subsection{Using Rosetta to score antigen-stabilizing mutations}
+In
+Figures~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations},~\ref{fig:antigen_heatmap}
+and Tables~\ref{table:antigen_results},~\ref{table:speed_on_antigens}, we reported the Rosetta
+scores for the verified antigen-stabilizing mutations. To compute these scores, we used the
+PyRosetta software~\citep{chaudhury_pyrosetta_2010} to model protein structures, with wild-type
+structures serving as template.
+For each target sequence containing a single point mutation, we threaded the mutant sequence onto
+all chains of the oligomeric template. Each resulting model was then subjected to a high-resolution
+refinement protocol using Rosetta's FastRelax application. This protocol involved five cycles of
+side-chain rotamer repacking followed by gradient-based energy minimization of backbone ($\phi$,
+$\psi$) and side-chain ($\chi$) torsion angles, guided by the \texttt{ref2015\_cart} all-atom energy
+function. To improve conformational sampling, we repeated the threading-and-relaxation procedure 20
+times per mutation. For each mutant, we report the mean Rosetta Energy Unit (REU) score of the five
+lowest-energy (most favorable) relaxed models.
+
+
+
+
+\section*{Supplementary Information}
+
+
+
+
+\subsection*{Extended analysis of antigen stabilization}
+
+Here, we present a more detailed analysis of our antigen stabilization predictions from
+Figures~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations}
+and Table~\ref{table:antigen_results}. For each antigen, we contextualize the candidate mutations by
+their local structural environment and examine the characteristics and physico-chemical features of
+the HERMES-predicted top-ranked antigen-stabilizing substitutions (Fig.~\ref{fig:antigen_heatmap}).
+This analysis is intended to help practitioners incorporate these models into design workflows and
+to motivate quantitative, context-dependent success criteria for real-world stabilization tasks. As
+demonstrated in the main text
+(Figs.~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations}),
+we find that comparing the rank of the wild-type residue to that of putative stabilizing
+substitutions is an informative diagnostic of model behavior and performance.\\\\
+\noindent\textbf{RSV-F.} 
+RSV-F Cav1 stabilitizing mutations S190F and V207L are well-predicted by different HERMES models
+(the stability-fine-tuned models trained on +cDNA117k and +Megascale, and
+HERMES-\textit{amortized}), whereas Rosetta and ProteinMPNN struggle to identify these mutations. We
+therefore focus on these two residues to analyze, post hoc, the structural context underlying
+HERMES' predictions, with the goal of clarifying which classes of stabilizing mutations HERMES is
+best suited to characterize.
+
+
+Both S190F and V207L enhance hydrophobic packing in an underpacked region near the trimer apex
+(Fig.~\ref{fig:rsvf_si_figure}). V207L is a significantly more anticipated mutation than S190F,
+indicated by a positive BLOSUM62 score; this is reflected in HERMES assigning a higher rank to the
+wild-type Val207 relative to the mutant Leu (Fig.~\ref{fig:antigen_heatmap} and
+Table~\ref{table:antigen_results}). Notably, the highest-ranking residue predicted by HERMES models
+at position 207 is Ile (Fig.~\ref{fig:antigen_heatmap}). Inspection of the native wild-type
+structure (PDB ID: 4JHW~\citep{mclellan_structure-based_2013}) suggests that an Ile mutation would
+pack exceptionally well in the hydrophobic pocket surrounding residue 207, suggesting V207I might
+outperform the identified V207L mutation (Fig.~\ref{fig:rsvf_si_figure}A).
+
+At position 190, the top-ranked substitutions from the wild-type Ser are Val or Ile. Structural
+examination suggests both residues can be accommodated within the existing 4JHW structure pocket
+without requiring the repacking of surrounding residues (Fig.~\ref{fig:rsvf_si_figure}B).
+Conversely, the known stabilizing mutation, Phe, appears to slightly overpack the region in the 4JHW
+crystal structure (Fig.~\ref{fig:rsvf_si_figure}B). While the HERMES-\textit{fixed} model does not
+strongly prioritize Phe, both HERMES stability-fine-tuned models rank Phe third, behind the smaller
+Val and Ile.
+ This indicates that fine-tuning on $\Delta\Delta G$ datasets enhances implicit reasoning regarding
+ local repacking and structural relation possibilities, particularly for larger residues. The
+ HERMES-\textit{amortized} model also outperforms the HERMES-\textit{fixed} model, likely due to the
+ model's de-emphasis on strict steric constraints (Table~\ref{table:antigen_results}).\\
+\\
+\textbf{Universal-HA.} 
+We observe robust performance in recovering Universal-HA pH switch mutations across all tested
+models. All three mutations carry ``unanticipated" BLOSUM62 scores.
+
+    
+The mutational-effect heatmaps (Fig.~\ref{fig:antigen_heatmap}) show that, for HA, ProteinMPNN's
+preferences are narrowly concentrated, strongly favoring the reported stabilizing substitutions,
+whereas HERMES-\textit{amortized}, HERMES-\textit{fixed} (0.50 + Megascale), and Rosetta yield
+substantially broader preference profiles. For H355W, all HERMES models correctly indicate that the
+wild-type His is disfavored, but they rank other bulky aromatics (Tyr or Phe) above the stabilizing
+Trp.
+ Despite being a known stabilizing mutation, Trp does not appear to fit in the 7VDF crystal
+ structure without clashes (Fig.~\ref{fig:ha_si_figure}). This discrepancy may stem from the
+ limitations of rigid-body mutagenesis (e.g., PyMOL's wizard), as subtle backbone movements are
+ likely required to accommodate the mutation. This finding cautions against over-interpreting
+ apparent clashes in a single experimentally determined static crystal structure, especially for
+ bulky substitutions, and motivates follow-up evaluation with relaxation-aware structure prediction
+ models or physics-based repacking/scoring tools to capture local flexibility and repacking that may
+ render seemingly sterically forbidden mutations feasible.\\\\
+\noindent \textbf{hMPV-F.} 
+We first analyze stabilizing mutations in the M-104 hMPV variant~\citep{gonzalez_general_2024}.
+The A159L substitution requires the nearby Ile-137 to adopt an alternative
+rotamer~\citep{gonzalez_general_2024}. The two $\Delta\Delta G$-fine-tuned HERMES models prioritize
+Val (V) and Ile (I) over Leu (L) at position 159. We note that mutation to either Val or Ile at
+position 159 would require both Ile-137 and Leu-141 to adopt different rotamers to accommodate their
+beta-branched side chains (Fig.~\ref{fig:hmpvf_si_figure}C). Nonetheless, A159V and A159I remain
+plausible stabilizing mutations and therefore, warrant experimental screening.
+ProteinMPNN identifies Ala as the most favorable residue at this position, indicating limited
+sensitivity to larger hydrophobic substitutions. By comparison, the $\Delta\Delta G$-fine-tuned
+HERMES models rank the wild-type Ala substantially lower (ordinal rank 5--7), while consistently
+favoring larger hydrophobic residues. Low rankings for buried hydrophobic positions may therefore
+indicate suboptimal core packing, particularly when alternative residues with greater side-chain
+volume are predicted. Although Leu is not the top-ranked substitution, the $\Delta\Delta
+G$-fine-tuned HERMES models correctly capture the preference for a residue larger than Ala to
+improve packing within this pocket.
+
+The V203I substitution was recovered by nearly all models. A Val to Ile substitution is highly
+anticipated, with a BLOSUM62 score of 3. Notably, the $\Delta\Delta G$-fine-tuned HERMES models rank
+Ile as more favorable than the wild-type Val, whereas ProteinMPNN, ThermoMPNN,
+HERMES-\textit{fixed}, and HERMES-\textit{amortized} prefer the wild-type Val. In accordance with
+this mutation being more highly anticipated, it is likely that the pocket occupied by V203 is less
+underpacked relative to A159L in the M-104 variant, with the wild-type residue still being quite
+highly-favored. The subtle nature of Val to Ile mutations may result in less signal overall when
+comparing amino acid ranks as we do in this work.
+
+
+The V449D substitution replaces a surface-exposed hydrophobic residue with a polar side chain and
+introduces hydrogen-bonding contacts to Asn298 (Fig.~\ref{fig:hmpvf_si_figure}A). ProteinMPNN,
+ThermoMPNN, and all HERMES variants instead rank Glu as the top substitution; structural inspection
+suggests that Glu could form similar hydrogen bonds, and may therefore also be stabilizing
+(Fig.~\ref{fig:hmpvf_si_figure}A). Overall, the models performed well in identifying mutations that
+enable additional hydrogen bonding.
+
+
+For V430Q, the predicted $\Delta\Delta G$ reported in the original study is small in magnitude
+(albeit negative), suggesting that it should not be classified as strongly stabilizing, as suggested
+in the original study~\citep{gonzalez_general_2024}. Consistent with this, neither of the
+$\Delta\Delta G$–fine-tuned HERMES models prioritize V430Q. Interestingly, the only model that ranks
+V430Q as the top substitution is HERMES-\textit{fixed}.
+
+
+In the MPV-2c variant~\citep{bakkers_efficacious_2024}, recovery of V112R depends on providing the
+model with the trimeric PDB. The introduced Arg forms interprotomer van der Waals contacts and
+intraprotomer hydrogen bonds that stabilize the prefusion trimer (Fig.~\ref{fig:hmpvf_si_figure}B).
+Because this mechanism is inherently multimeric and not captured by a strictly local energetic
+proxy, it may explain why the $\Delta\Delta G$-fine-tuned HERMES models do not prioritize V112R. In
+contrast, HERMES-\textit{amortized} ranks Arg second, slightly favoring the more conservative Leu,
+which could plausibly adjust hydrophobic interprotomer contacts.
+
+
+D209E is correctly predicted by ProteinMPNN, HERMES-\textit{fixed}, and HERMES-\textit{amortized},
+whereas the $\Delta\Delta G$-fine-tuned HERMES models perform poorly in proposing this mutation. In
+particular, the $\Delta\Delta G$-fine-tuned models rank bulky hydrophobics (Leu, Met, Ile, Val)
+ahead of the charge-conserving Glu. Although the charged substitution D209E plausibly stabilizes the
+prefusion state via favorable polar interactions, the stabilizing potential of these alternative
+hydrophobic substitutions remains untested.
+
+
+
+E453P replaces a glutamate with proline, a substitution that can be strongly stabilizing by
+rigidifying locally flexible regions. Among the evaluated methods, only HERMES-\textit{amortized}
+predicts this mutation. ProteinMPNN ranks the wild-type Glu as most favored and Pro as most
+disfavored (rank 1 vs. 20), while ThermoMPNN partially recovers the substitution but still favors
+the native Glu. Consistent with these mixed signals, the original
+study~\citep{bakkers_efficacious_2024} reports that E453P improves stability but reduces expression,
+and that E453Q yields weaker stabilization with improved expression. This highlights the poorly
+understood coupling between stability and expression and suggests that some models may
+systematically downweigh proline substitutions, potentially because prolines are underrepresented in
+natural sequences, and they appropriately learned to rarely recommend them.
+The fact that HERMES-\textit{amortized}—but not HERMES-\textit{fixed}—recovers E453P suggests that
+modeling relaxed neighborhoods helps identify sites that can accommodate Pro's constrained
+Ramachandran geometry. Finally, we suspect that the utility and stabilizing ability of proline
+substitutions in antigen design is not fully captured by HERMES when fine-tuned with the cDNA117k or
+Megascale datasets, as the proteins represented in those datasets are much smaller, and lack the
+interplay of conformational switching between prefusion and post-fusion.\\\\
+\textbf{DENV-E.} 
+We observe mixed performance on DENV-E stabilizing mutations. S29K is recovered only by ProteinMPNN
+and ThermoMPNN. Although S29K, T33V, and A35M (``PM4" mutations as a group) are spatially proximal
+and may act synergistically, they were originally identified by Rosetta site-saturation mutagenesis,
+suggesting they should be accessible to single point-mutation scoring
+schemes~\citep{phan_conserved_2022}. In the 1OAN structure~\citep{modis_ligand-binding_2003},
+introducing Lys at position 29 appears to create substantial steric clashes across rotamers
+(Fig.~\ref{fig:denve_si_figure}A). S29K and A35M are not anticipated by BLOSUM62, whereas T33V is
+neutral according to BLOSUM62 (score of $0$, Table~\ref{table:antigen_results}) but is strongly
+preferred by all models tested (Fig.~\ref{fig:antigen_figure_main_results} and
+Table~\ref{table:antigen_results}). Structurally, T33 lines a hydrophobic pocket, making the
+isosteric Val substitution easier to predict. Notably, the PM4 mutations are not present in the
+best-available SC12 structure (PDB: 6WY1)~\citep{kudlacek_designed_2021}.
+
+
+A major challenge in stabilizing DENV-E is strengthening homodimer interactions. A259W and T262R
+were mutations made at the dimer interface with the intention of enhancing the strength of the
+homodimer. A259W is highly unanticipated (BLOSUM62 = $-3$) but, together with T262R, can form a
+favorable cation--$\pi$ interaction while improving packing against the neighboring protomer
+(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.4). Notably, the HERMES model
+fine-tuned on Megascale favors A259W despite its apparent synergy with T262R; this could reflect
+sensitivity to the interprotomer packing geometry, although a chance effect cannot be excluded. We
+also expect the generally weak recovery of T262R across models to improve when Trp is present at
+position 259, consistent with the coupled nature of this interface motif.
+
+
+
+Like E453P in hMPV-F, the proline substitution T280P is recovered only by HERMES-\textit{amortized},
+further highlighting the model's ability to reason about proline accommodation. F279W fills an
+underpacked region. However, comparison of the stabilized 6WY1 structure with the native 1OAN
+crystal structure suggests that backbone movement (residues 269--281) is required to optimally fit
+Trp, potentially aided by T280P (Fig.~\ref{fig:denve_si_figure}B). ThermoMPNN correctly reasons
+regarding the Trp introduction, and HERMES-\textit{fixed} $+$ Megascale ranks Trp second. Other
+stability-fine-tuned HERMES models prefer Phe, Ile, or Leu, likely adhering more strictly to the
+steric limitations of the 1OAN backbone.
+
+We observe strong reasoning across almost all HERMES models, ProteinMPNN, and Rosetta in identifying
+G106D, which introduces stabilizing polar and electrostatic contacts
+(Fig.~\ref{fig:denve_si_figure}C). Curiously, ThermoMPNN struggles with this specific mutation.\\
+\\
+\textbf{SARS-CoV-2 Spike.} 
+The spike protein of SARS-CoV-2 was initially stabilized through the introduction of two proline
+mutations (``S-2P"), and subsequent work identified four additional prolines that further improve
+stability and expression of the full-length spike~\citep{hsieh_structure-based_2020}. Here we
+evaluate recovery of these four additional proline sites (excluding the original S-2P mutations).
+Consistent with its strong performance on proline substitutions, HERMES-\textit{amortized} ranks Pro
+as the top choice at all four positions. ProteinMPNN also performs well, recovering Pro at 3/4
+sites. \\\\
+\textbf{Summary.} 
+Our analysis across multiple antigens reveals several consistent themes regarding model performance
+and decision-making logic.
+
+First, we observe distinct behaviors regarding hydrophobic packing. The HERMES models fine-tuned on
+stability datasets consistently demonstrate enhanced reasoning for hydrophobic core packing. These
+models frequently suggest larger hydrophobic residues (e.g., Ile or Phe) to fill underpacked
+cavities where models without explicit stability training might prefer the native residue or smaller
+conservative substitutions. However, this sensitivity can sometimes lead to ``confusion" among
+similar hydrophobic amino acids (e.g., Val vs. Ile vs. Leu), where the models correctly identify the
+chemical property needed but may rank several hydrophobic options similarly.
+
+Second, the interplay between structural rigidity and model flexibility is evident in the prediction
+of proline mutations. HERMES-\textit{amortized} consistently outperforms other models in identifying
+stabilizing proline substitutions. This suggests that the model's training, which incorporates
+relaxed neighborhoods, allows it to better identify backbone locations capable of accommodating the
+steric constraints of proline, whereas other methods more often penalize these stabilizing mutations
+due to perceived steric incompatibilities of the provided protein structure.
+
+Third, we note differences in the mutational landscape profiles predicted by different architectures
+(Fig.~\ref{fig:antigen_heatmap}. ProteinMPNN tends to produce narrow substitution profiles, often
+assigning very low probabilities to non-native residues unless the signal is overwhelmingly strong.
+In contrast, HERMES models--particularly HERMES-\textit{amortized} and those fine-tuned on Megascale
+stability data--exhibit broader mutational profiles. This broader landscape may be more advantageous
+for design applications, as it provides a richer set of plausible candidate hypotheses for
+experimental validation and may guide a practitioner's intuition regarding the nature or predicted
+effects of various substitutions in a more granular manner.
+
+Finally, while ProteinMPNN and Rosetta remain powerful tools for sequence recovery, the
+HERMES-\textit{amortized} and stability-fine-tuned models demonstrate a unique capacity to
+prioritize mutations that improve local packing density even when such mutations appear sterically
+challenging in the provided structure. This highlights the utility of using an ensemble of models to
+capture different modes of stabilization, from electrostatic optimization to hydrophobic core
+repacking and backbone rigidification.
+
+

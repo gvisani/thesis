@@ -1,0 +1,331 @@
+
+
+We describe here a general framework for building neural networks that are equivariant to 3D rotations 
+of their input. 3D-rotations are described by the Special Orthogonal of degree 3, aka SO(3), 
+hence we speak of SO(3)-equivariant neural networks.
+This framework is applicable to any input data within a spherical volume that has a semantically-meaningful
+center, such as spherical images~\citep{visani_holographic-vae_2024}, directional acoustic signals~\citep{miotello_analysis_2025}
+and finally atomic point clouds, the main subject of this thesis.
+
+We first introduce group equivariance, discuss why and how to incorporate it in machine learning, and finally
+introduce SO(3)-equivariant neural networks. The contents of this chapter are largely adapted from
+previous works, including~\citep{pun_learning_2024, thomas_tensor_2018, kondor_clebsch_2018, bronstein_geometric_2021}.
+
+\section{Background}
+
+\textbf{Group Invariance and Equivariance.} Starting with an intuitive explanation, a \textit{function}
+is said to be \textit{invariant} to a certain group of transformations (e.g. 3D rotations) if applying one 
+such transformation to the function's input does not change its output. \textit{Equivariance} is then a
+generalization of invariance whereby, when the input is transformed by the action of a certain group
+element (or rather by a matrix representation parameterized by the group element), the output of the
+function is transformed by the same group element (i.e., by a matrix representation parameterized
+by the same group element, but that can be different from the input's representation). In short,
+equivariant functions transform the input in the same way regardless of its coordinate frame, but
+do not necessarily discard the coordinate frame information, whereas invariant functions also do
+the latter. We note that both of these concepts can be extended to \textit{properties} as well, 
+since the property of an object can be seen as the output of a function applied to the object.
+For example, the mass of a molecule remains constant when rotating it (i.e. it is invariant to 3D rotations),
+whereas its dipole moment rotates alongside it (i.e. it is equivariant to 3D rotations).
+Switching now to a more formal treatment, a function between two vector spaces $f: X \rightarrow Y$
+is said to be equivariant to a group of transformations $\mathfrak{G}$ iff applying
+any group transformation to the input space of $f$ corresponds to applying the same transformation
+to the output space (i.e., via a \textit{representation} parametrized by the same group element).
+Formally: $f(\mD_{X}(\mathfrak{g})\vx) = \mD_{Y}(\mathfrak{g})f(\vx) \,, \forall \vx \in X \land
+\forall \mathfrak{g} \in \mathfrak{G}$. The group acts on the input and output vector spaces with
+via matrix multiplication with \textit{representations} that are specific to the space (e.g. 
+$\mD_{X}$ and $\mD_{Y}$) and are parameterized by the same group element $\mathfrak{g}$.
+A group may have different representations, and a special one is the one that always maps to the
+identity: $\mD_{Y}(\mathfrak{g})=1, \forall \mathfrak{g} \in \mathfrak{G}$; a function on whose
+output space $\mathfrak{G}$ acts with the identity representation is said to be \textit{invariant}
+to $\mathfrak{G}$.
+
+\textbf{Irreducible representations: the key to building equivariant neural networks.} How are
+equivariant layers generally achieved? The key is to look at the group's \textit{irreducible
+representations} (irreps). These are the group's \textit{smallest} representations, so that any
+possible representation can be provably decomposed into a direct sum of irreps. Therefore, the
+group's irreps can be used to describe how the group elements act on any vector space.
+Consequently, data itself can be seen as being composed (via direct sum, i.e. concatenation) of
+features of different "types", where having a particular type means transforming - under the
+group's action - according to the group's corresponding irrep. It turns out that, if data is
+decomposed in such a way, it is then generally easier to work out the conditions for constructing
+equivariant functions acting on it. This is easier said than done, but it has been worked out for
+SO(3), the group describing 3D rotations about a fixed point~\citep{geiger_e3nn_2022,
+kondor_clebsch-gordan_2018, thomas_tensor_2018}. The irreps of SO(3) are the Wigner-D matrices:
+\EQ
+        D^{\ell}(R) \in \mathbb{C}^{(2\ell+1)\times(2\ell+1)} \quad \mathrm{where} \,\, \ell = 0,
+        1, 2, ... \,\,\mathrm{and}\,\, R \in \mathrm{SO(3)}
+        \label{eq:WignerD}
+\EE
+Notably, $D^0(R)$ describes how \textit{invariant} features transform under rotation, and thus it
+is $1$ for every rotation.\\
+Thus, to construct SO(3)-Equivariant models, two things are needed: 1) a way to encode the data
+into a set of features that "rotate" according to these irreps, and 2) a way to process the
+resulting data equivariantly.
+
+\section{Holographic Encoding of the Data}
+\label{sec:encoding}
+
+To perform the encoding we leverage the Spherical Harmonics. This set of functions has the desired
+property that each of them "rotates" according to the Wigner-D matrices:
+\EQ
+	Y_{\ell m}(\theta,\phi) \overset{\text{rotation:\,} R}{\longrightarrow}\sum_{m' = -\ell}^\ell
+	D^{\ell}_{m'm}(R) Y_{\ell m'}(\theta,\phi)
+	\label{eq:YLMWignerD}
+\EE
+where $Y_{\ell m}(\theta,\phi)$ is the spherical harmonic of degree $\ell$ and order $m$ defined as
+
+\EQ
+	Y_{\ell m}(\theta,\phi) =
+	\sqrt{\frac{2n+1}{4\pi}\frac{(n-m)!}{(n+m)!}}e^{im\phi}P^m_\ell(\cos\theta)
+	\label{eq:YLM}
+\EE
+where $\ell$ is a non-negative integer ($0\leq \ell$), and $m$ is an integer within the interval
+$-\ell\leq m \leq \ell$. $P^m_\ell(\cos \theta)$ is the Legendre polynomial of degree $\ell$ and
+order $m$.
+The spherical harmonics also form a complete and orthonormal basis for signals on a sphere. Thus, a
+signal over a sphere of radius $r$ - $\rho(\theta,\phi):~{S}^2(r) \rightarrow \mathbb{R}$ - can be
+encoded into a set of Fourier coefficients $\hat{F}_{\ell m}$ via the spherical Fourier transform
+(SFT):
+\EQ
+    \hat{F}_{\ell m}=\int_0^{2\pi}  \int_0^\pi \rho(\theta,\phi) Y_{\ell m} (\theta,\phi) \sin
+    \theta \,\d\theta\,\d\phi
+    \label{eq:SFT}
+\EE
+Not only do these coefficients efficiently represent the signal without loss of information (up to
+desired maximum resolution $\ell_{\mathrm{max}}$), but they also transform under SO(3) following
+the Wigner-D matrices (analogously to~\ref{eq:YLMWignerD}).
+
+The original spherical signal $\rho(\theta,\phi)$ can then be recovered (up to resolution
+$\ell_{\mathrm{max}}$) via the Inverse SFT (ISFT):
+\EQ
+    \tilde{\rho}(\theta,\phi) = \sum_{\ell = 0}^{\ell_{\mathrm{max}}} \sum_{m=-\ell}^{\ell}
+    \hat{F}_{\ell m} Y_{\ell m} (\theta,\phi)
+    \label{eq:ISFT}
+\EE
+
+To encode 3D data about a predefined center ($\rho(r, \theta, \phi)~: \mathbb{R}^3 \rightarrow
+\mathbb{R}$) one can simply add a complete and orthonormal radial basis function that will capture
+the radial distribution of the data around the center. Following~\citep{pun_learning_2022}, we use
+the Zernike radial functions $R_{\ell}^{n}(r)$, leading to the Zernike Fourier Transform (ZFT):
+\EQ
+    \hat{Z}_{\ell m}^{n} = \int_0^1 \int_0^{2\pi}  \int_0^\pi \rho(r, \theta, \phi) Y_{\ell m}
+    (\theta,\phi) R_{\ell}^{n}(r) r^2 \sin \theta \,\d r\,\d\theta\,\d\phi
+    \label{eq:ZFT_prelim}
+\EE
+where $n$ represents radial resolution and is capped to a maximum value $n_{\mathrm{max}}$ in
+practice.
+
+To represent point clouds, a common choice for $\rho(\vr) \equiv \rho(r,\theta,\phi)$ is a sum of
+Dirac-$\delta$ functions centered at each point:
+\EQ
+    \rho(\vr) = \sum_{i\in \text{points}} \omega_i \delta(\rho(\vr_{i}) - \rho(\vr))
+    \label{eq:dirac_delta}
+\EE
+Where $\omega_i$ can be used to represent point-specific features.
+This choice is powerful because the forward transform has a closed-form solution that does not
+require a discretization of 3D space for numerical computation. Specifically, the ZFT of a point
+cloud follows:
+\EQ
+    \hat{Z}_{\ell m}^{n} = \sum_{i\in \text{points}} \omega_i R_{n}^{\ell}(r_i) Y_{\ell
+    m}(\theta_i, \varphi_i)
+    \label{eq:ZFT}
+\EE
+And again, the data can be reconstructed up to resolution defined by $\ell_{\mathrm{max}}$ and
+$n_{\mathrm{max}}$ using the corresponding inverse transform (IZFT):
+\EQ
+    \tilde{\rho}(r, \theta, \varphi) = \sum_{\ell = 0}^{L} \sum_{m = -\ell}^{\ell} \sum_{n}^{N}
+    \hat{Z}_{\ell m}^{n} R_{\ell}^{n}(r) Y_{\ell m} (\theta, \varphi)
+    \label{eq:IZFT}
+\EE
+
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Quals/figures/encoding.png}
+    \figcaption{Visualization of the Holograhic Encoding considered in this work.}{}
+    \medskip
+    \small
+    \justifying
+    \textbf{(A):} Encoding of a spherical signal. The signal is encoded via the Spherical Fourier
+    Transform into Fourier coefficients indexed by degree $\ell$ and order $m$, up to a maximum
+    type (aka degree) $\ell_{\mathrm{max}}$ ($\ell_{\mathrm{max}} = 2$ in this example). The
+    coefficients are most naturally represented with a pyramidal structure, as the order $m$ lies
+    in the range $[-\ell, \ell]$. \textbf{(B):} Encoding of a centered point cloud, specifically an
+    atomic environment. In addition to $\ell$ and $m$, coefficients are indexed by radial
+    coefficient $n$ as well as channel $\alpha$, where the latter is indicative of atom-level
+    features (e.g. atom type); in essence, the ZFT (Eg.~\ref{eq:ZFT}) is performed once per
+    channel. The radial and channel indices are conceptually combined in the \textit{multiplicity}
+    of a given type $\ell$.
+    \label{fig:encoding}
+\end{figure}
+
+As mentioned above, we can use $\omega_i$ to introduce atom-level features (such as atom type,
+partial charge, etc.). If $\omega_i$ is a \textit{vector} of multiple features (e.g. a one-hot
+encoding of atom type) indexed by its own index $\alpha$, the resulting Zernike coefficients will
+also have an associated index $\alpha$. This is equivalent to "splitting" the point cloud into
+multiple \textit{channels} where each point has scalar feature value $\omega_i$, and concatenating
+features of the same type $\ell$, as shown in Figure~\ref{fig:encoding}B. For the purposes of
+constructing equivariant operations, however, the indices $\alpha$ and $n$ are combined into a
+single index $c$. The number of indices $c$ for a particular type $\ell$ is called the
+\textit{multiplicity} of $\ell$ ($C_{\ell}$), following the \texttt{e3nn}
+nomenclature~\citep{geiger_e3nn_2022}; the multiplicity $C_{\ell}$ is often the same for all $\ell$
+and just denoted by $C$.
+
+In this document, we refer to a collection of Zernike coefficients representing a point cloud as a
+\textit{hologram}, due to the fact that Zernike projections in spherical Fourier space can be
+understood as a superposition of spherical holograms of an input point cloud.\\
+Instead, we refer to a generic collection of features of type $\ell$ (which can be a hologram or
+the output of one of the equivariant layers described in the next section) as a \textit{steerable
+tensor}, following the nomenclature of ref.~\citep{brandstetter_geometric_2022}. "Tensor" indicates
+the multi-dimensional nature of the representation, and "steerable" indicates that it can be
+transformed ("steered") - under the action of the group of interest, SO(3) in our case - via matrix
+multiplication.
+
+\textbf{On the Choice of Zernike.} The use of other radial bases is possible within this framework,
+as long as they are complete. Orthonormality is also desirable as it ensures that each basis
+encodes different information, resulting in a more efficient encoding of the coefficients.
+ref.~\cite{boyd_comparing_2011} demonstrates that encoding with Zernike polynomials result in a
+faster convergence compared to the radial basis functions localized at different radii, as well as
+most other orthogonal harmonic bases, with the exception of Logan-Shepp. ``Faster convergence"
+indicates that fewer frequencies are required to encode the same information.
+ref.~\cite{uhrin_through_2021} also uses Zernike to construct invariant descriptors of atomic
+environments. However, this choice is not unique and other special functions such as Bessel
+functions can be used to encode the data~\cite{musaelian_learning_2022}.
+
+
+
+\section{SO(3)-Equivariant Layers}
+\label{sec:layers}
+
+Once the data is encoded in the irreps basis, one can leverage a suite of pre-existing rules to
+build learnable functions (layers) without breaking rotational equivariance, and transform the
+input tensor into a new tensor composed of features within the same range of possible types. The
+most important consideration is that coefficients sharing the same $\ell$ and $n$, but having
+different $m$ are \textit{coupled}, meaning that they cannot be transformed independently of each
+other in arbitrary fashion or else equivariance gets broken. However, invariant properties (such as
+$\ell = 0$ coefficients, and magnitudes $\sum_{m} |\hat{Z}_{\ell m}^{n}|^2$) can be transformed
+arbitrarily.\\
+Arguably the most important equivariant operation is the Clebsch-Gordan (CG) Tensor
+Product~\citep{tung_group_1985}. It is the only known operation capable of non-linearly mixing
+information between features of different type $\ell$ and with different momentum index $m$. The CG
+tensor product combines two features of degrees $\ell_1$ and $\ell_2$ to produce another feature of
+degree $|\ell_2-\ell_1|\leq\ell_3\leq |\ell_1+\ell_2|$. Let $\vh_{\ell} \in \mathbb{R}^{2\ell + 1}$
+be a generic degree $\ell$ tensor, with individual components $\hat h_{\ell m}$ for $-\ell\leq m
+\leq \ell $. The CG tensor product is given by,
+\EQ
+\begin{aligned}
+    \hat  h_{\ell_3 m_3} &= (\vh_{\ell_1} \otimes_{cg} \vh_{\ell_2})_{\ell_3 m_3} \\
+    &= \sum_{m_1 = -\ell_1}^{\ell_1} \sum_{m_2 = -\ell_2}^{\ell_2} C_{(\ell_1 m_1)(\ell_2 m_2)}^{(\ell_3 m_3)} \hat h_{\ell_1 m_1} \hat h_{\ell_2 m_2}
+    \label{eq:cg_tensor_product}
+\end{aligned}
+\EE
+where $C_{(\ell_1 m_1)(\ell_2 m_2)}^{(\ell_3 m_3)}$ are the Clebsch-Gordan coefficients.
+
+These rules and operations can then be used to build neural network layers that respect
+SO(3)-Equivariance.
+
+\textbf{SO(3)-Equivariant Linearity.} The equivariant linear layer consists of a set of linear
+projections each acting on the set of features sharing the same type $\ell$. It practically equates
+to $\ell_{\text{max}} + 1$ standard linear layers with no bias except for the $\ell=0$ case, and
+with the consideration that all $2\ell+1$ moments of the same feature are processed together.
+Formally, let $\vh_{\ell} \in \mathbb{R}^{C \times (2\ell + 1)}$ be a set of $C$ features of type
+$\ell$. Then, we learn weight matrix $\mW_{\ell} \in \mathbb{R}^{C \times K}$ that linearly maps
+$h_{\ell}$ to $\overline{h}_{\ell} \in \mathbb{R}^{K \times (2\ell + 1)}$; if $\ell=0$,
+$\mathbf{b}_{\ell} \in\mathbb{R}^{K}$ is also learned:
+\EQ
+    \overline{\vh}_{\ell} = \mW_{\ell}^{T} \vh_{\ell} \,\,(+ \,\mathbf{b}_{\ell})
+    \label{eq:linearity}
+\EE
+This layer was introduced by~\citep{kondor_clebsch-gordan_2018}, and within it reside most of the
+learnable parameters.
+
+\textbf{Efficient Tensor Product Nonlinearity.} The CG Tensor Product is used as the primary
+nonlinear activation within this framework -
+as originally prescribed by~\citep{kondor_clebsch-gordan_2018} - by applying it between features
+within the same tensor. Crucially, this is
+also the only operation in this framework that can transfer information across features of
+different types $\ell$.
+~\citep{kondor_clebsch-gordan_2018} and ~\citep{pun_learning_2022} compute this tensor product
+naively, by processing every possible pair of
+features of types $\ell_1$ and $\ell_2$ within the tensor (dubbed Full Tensor Product).
+Instead, we consider two modifications proposed by~\citep{cobb_efficient_2021} that significantly
+reduce its computation time while sacrificing
+little in terms of expressive power.
+The first modification, which we refer to as "channel-wise computation", consists in conceptually
+splitting
+the steerable tensor along the channel dimension, yielding $C$ tensors of effective channel-size 1;
+then, the Tensor Product is computed within
+each teansor, and the output concatenated along the channel dimension. This modification reduces
+the time and space complexity with respect to
+the channel size $C$ from $O(C^2)$ to $O(C)$.
+The second modification, which we refer to as "sparsification", consists in dropping some of the
+individual Tensor Products. Specifically, if
+there already exist a Tensor Product within ($\ell_1$, $\ell_2$), and within ($\ell_2$ , $\ell_3$),
+then the Tensor Product within $(\ell_1, \ell_3)$
+is dropped. This modification reduces the time and space complexity with respect to
+$\ell_{\mathrm{max}}$ $C$ from $O(\ell_{\mathrm{max}}^2)$ to $O(\ell_{\mathrm{max}})$.
+Throughout this work, either both modifications or only the "channel-wise computation" modification
+are considered.
+An ablation study on the efficacy of these modifications - specific to H-(V)AE - can be found in
+Table~\ref{table:tp_ablation}. See ref.~\citep{cobb_efficient_2021} for further details.
+
+\textbf{SO(3)-Equivariant Batch Norm.} Introduced by~\citep{kondor_clebsch-gordan_2018}. Normalizes
+a tensor's features equivariantly by their respective batch-averaged magnitude:
+\EQ
+    N_{\ell}^{c} = \frac{1}{B} \sum_{b=1}^{B} \frac{1}{2\ell+1} \sum_{m=-\ell}^{\ell} (h_{\ell
+    m}^{c b})^2
+    \label{eq:batch_norm}
+\EE
+where $h$ is the tensor, indexed by $\ell$, $m$, $c$ and batch $b$.
+
+\textbf{Signal Norm.} We devise a simple normalization strategy to help confine the activations
+within the networks, which have a tendency to explode due to the tensor product being akin to a
+square non-linearity. It consist of simply normalizing a tensor $h$ by its total magnitude.
+Specifically, the total magnitude is defined as:
+\EQ
+    N_{tot} = \sum_{\ell} \frac{\sum_{c} \sum_{m = -\ell}^{\ell} (\hat h_{\ell m}^{c})^2}{2\ell+1}
+    \label{eq:signal_norm}
+\EE
+Then, the tensor features are updated as $\overline{\hat h_{\ell m}^{c}} = {\hat h_{\ell m}^{c}}
+w_{\ell}/{\sqrt{N_{tot}}}$, where $w_{\ell}$ is a degree-specific affine transformation for added
+flexibility
+
+\textbf{Layer Norm Nonlinearity.} This consists of applying a standard Layer
+Norm~\citep{ba_layer_2016} to each of the \textit{norms} of type-$\ell$ features (which are
+invariant), and then feeding the normalized norm into a standard nonlinear activation function.
+This layer effectively combines the equivariant layer norm in
+\texttt{e3nn}~\citep{geiger_e3nn_2022} with the Norm Nonlinearity originally used in Harmonic
+Networks~\cite{worrall_harmonic_2017}, and then adapted to the SO(3) domain by Tensor Field
+Networks~\citep{thomas_tensor_2018}. It is also used in the SE(3)-Transformer
+~\citep{fuchs_se3-transformers_2020, noauthor_se3-transformers_nodate}.
+
+\textbf{Implementation.} These SO(3)-equivariant layers, as well as the holographic encoding, were
+implemented with the help of \texttt{e3nn} primitives~\citep{geiger_e3nn_2022}.
+
+
+\section{Why Equivariance?}
+
+In deep learning, the creation of a model that is invariant or equivariant to a desired group
+of transformations has been traditionally achieved by training the network with group-transformed
+copies of the input-output pairs, a practice known as data augmentation. However, for high-dimensional
+groups, the amount of data augmentation required to learn the desired symmetry can be prohibitive
+($\sim 500$ fold for SO(3)~\citep{geiger_e3nn_2022}). Therefore, encoding the desired symmetry structure
+into the neural network structure itself, rather than learning it via data augmentation, can significantly
+reduce training time while guaranteeing exactness.
+
+When the target function is specifically invariant, another alternative is possible. Namely, 
+the input may be represented using exclusively invariant features, which any un-constrained neural network
+would process into an invariant output. For example, an SO(3)-invariant representation of 3 points may be
+constituted by their relative distances and angles. This approach is widely used for representing atomic point
+clouds due to its implementation and conceptual simplicity~\citep{dauparas_robust_2022, schutt_schnet_2017}.
+However, its success relies upon constructing a representation that contains all possible invariant information
+that is relevant for the task, avoiding ambiguities. For example, considering only relative distances in
+the above example of 3 points would ignore key information (e.g., the angles) that is required to represent the
+3 points unambiguously. Instead, using an equivariant neural network to learn an invariant output allows
+for the effective learning of invariant features from the raw input, maximizing expressivity, and is recommended
+in~\citep{bronstein_geometric_2021}.
+Last, in the specific domain of predicting quantum properties of atomic systems, it has been empirically observed
+that equivariant neural networks have more favorable scaling laws than invariant networks~\citep{batzner_e3-equivariant_2022}.
+
+
+
+

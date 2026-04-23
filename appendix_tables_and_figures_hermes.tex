@@ -1,0 +1,778 @@
+
+\begin{table}[h!]
+\centering
+\resizebox{0.9\textwidth}{!}{
+\begin{tabular}{l|c|c}
+\toprule
+\multirow{2}{*} {\bf Model} &{\bf Accuracy}& {\bf Accuracy}\\
+& Pyrosetta  pre-processing& {Biopython pre-processing} \\
+\midrule
+\HERMESPy & 0.73 & 0.75 \\
+\HERMESPyNoise & 0.64 & 0.65 \\
+\HERMESPyFtRelaxed & 0.55 & 0.47 \\
+\HERMESPyNoiseFtRelaxed & 0.50 & 0.44 \\
+\midrule
+\HERMESPyFtRos & 0.41 & 0.40 \\
+\HERMESPyNoiseFtRos & 0.38 & 0.37 \\
+\HERMESPyFtCdna & 0.47 & 0.45 \\
+\HERMESPyNoiseFtCdna & 0.39 & 0.38 \\
+\HERMESPyFtRelaxedFtCdna & 0.37 & - \\
+\HERMESPyNoiseFtRelaxedFtCdna & 0.34 & - \\
+\HERMESPyFtCdnaESM & 0.46 & 0.49 \\
+\HERMESPyNoiseFtCdnaESM & 0.40 & 0.40 \\
+\midrule
+\HERMESPyUntrainedFtCdna & 0.09 & - \\
+\HERMESPyNoiseUntrainedFtCdna & 0.08 & - \\
+\bottomrule
+\end{tabular}}
+\figcaption{Accuracy of HERMES models on wildtype amino-acid classification on all sites across
+40 CASP12 test proteins.}{
+Accuracy is defined as proportion of sites for which the wild-type amino acid is predicted with the
+highest probability among all 20 canonical amino acids.
+Model names indicate the architecture, the coordinate-noise amplitude used, and when applicable, the
+fine-tuning dataset (listed after ``$+$"); \textit{Untr.} is short for \textit{Untrained},
+indicating models that had no pre-training and were instead only trained on stability effects.
+Accuracy is reported for the two pre-processing schemes (with PyRosetta and Biopython) used in
+HERMES.
+}
+\label{table:aa_wt_cls}
+\end{table}
+
+
+\begin{table}[h!]
+\centering
+\resizebox{0.4\textwidth}{!}{%
+\begin{tabular}{l | c}
+\toprule
+\textbf{Model} & \textbf{hh:mm:ss} \\
+\midrule
+\HERMESPyNoise & 00:11:23 \\
+\HERMESPyNoiseFtRelaxed & 00:11:23 \\
+\HERMESPyNoiseRelaxed & 12:13:20 \\
+\bottomrule
+\end{tabular}}
+\figcaption{Inference speed of HERMES models on the T2837 dataset.}{ Runtimes are reported in
+hours (hh), minutes (mm), and seconds (ss) for inference on the T2837 dataset, which comprises 2837
+mutation effects across 129 proteins. For HERMES-{\em fixed} and HERMES-{\em amortized}, the script
+`mutation\_effect\_prediction\_with\_hermes.py` was used; for HERMES-{\em relaxed}, the script
+`mutation\_effect\_prediction\_with\_hermes\_with\_relaxation.py` was used. Both scripts, along with
+the dataset `csv` file, are available in our GitHub repository. All models were executed using a
+single CPU and a single A40 GPU.}
+\label{table:inference_speed}
+\end{table}
+
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.27\linewidth}
+>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Category} & \textbf{Description} \\
+\midrule
+
+\multirow{18}{*}{Hydrophobic Property}
+& 1.\ Retention coefficient in TFA \\
+& 2.\ Free energy of solution in water \\
+& 3.\ Solvation free energy \\
+& 4.\ Melting point \\
+& 5.\ Number of hydrogen-bond donors \\
+& 6.\ Number of full nonbonding orbitals \\
+& 7.\ Partition energy \\
+& 8.\ Hydration number \\
+& 9.\ Retention coefficient in high performance liquid chromatography (HPLC), pH 7.4 \\
+& 10.\ Retention coefficient in HPLC, pH 2.1 \\
+& 11.\ Partition coefficient in thin-layer chromatography \\
+& 12.\ Retention coefficient at pH 2 \\
+& 13.\ $R_f$ for 1-N-(4-nitrobenzofurazono)-amino acids in ethyl acetate/pyridine/water \\
+& 14.\ $\Delta G$ of transfer from organic solvent to water \\
+& 15.\ Hydration potential or free energy of transfer from vapor phase to water \\
+& 16.\ $R_f$, salt chromatography \\
+& 17.\ $\log D$, partition coefficient at pH 7.1 for acetamide derivatives of amino acids in
+octanol/water \\
+& 18.\ $\Delta G = RT \log f$, $f$ = fraction buried/accessible amino acids in 22 proteins \\
+\midrule
+
+\multirow{17}{*}{Steric Property}
+& 19.\ Average volume of buried residue \\
+& 20.\ Residue accessible surface area in tripeptide \\
+& 21.\ Graph shape index \\
+& 22.\ Normalized van der Waals volume \\
+& 23.\ STERMIMOL length of the side chain \\
+& 24.\ STERMIMOL minimum width of the side chain \\
+& 25.\ STERMIMOL maximum width of the side chain \\
+& 26.\ Average accessible surface area \\
+& 27.\ Distance between $C_{\alpha}$ and centroid of side chain \\
+& 28.\ Side-chain angle $\theta$ \\
+& 29.\ Side-chain torsion angle $\phi$ \\
+& 30.\ Radius of gyration of side chain \\
+& 31.\ Van der Waals parameter $R_0$ \\
+& 32.\ Van der Waals parameter $\varepsilon$ \\
+& 33.\ Refractivity \\
+& 34.\ Value of $\theta$ (i) \\
+& 35.\ Substituent van der Waals volume \\
+\midrule
+
+\multirow{15}{*}{Electronic Property}
+& 36.\ $\alpha$CH chemical shifts \\
+& 37.\ $\alpha$NH chemical shifts \\
+& 38.\ A parameter of charge transfer capability \\
+& 39.\ A parameter of charge transfer donor capability \\
+& 40.\ Nuclear magnetic resonance (NMR) chemical shift of $\alpha$ carbon \\
+& 41.\ Localized electrical effect \\
+& 42.\ Positive charge \\
+& 43.\ Negative charge \\
+& 44.\ Polarity \\
+& 45.\ Net charge \\
+& 46.\ Amphipathicity index \\
+& 47.\ Isoelectric point \\
+& 48.\ Electron-ion interaction potential values \\
+& 49.\ $\mathrm{pK}_{\mathrm{NH}_2}$ (NH$_2$ on $C_{\alpha}$) \\
+& 50.\ $\mathrm{pK}_{\mathrm{COOH}}$ (COOH on $C_{\alpha}$) \\
+\bottomrule
+\end{tabularx}
+\figcaption{Table of amino-acid properties used for comparison with substitution matrices.}{
+Values associated with each amino acid are listed in ref.~\cite{mei_new_2005}.}
+\label{table:aa_properties}
+\end{table}
+
+
+\begin{table}[h!]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{c c c c | c c c c c c c}
+            \toprule
+            \multirow{2}{*}{\makecell{antigen\\PDB id}} &
+            \multirow{2}{*}{\makecell{stabilized\\name}} &
+            \multirow{2}{*}{mutation} &
+            \multirow{2}{*}{\makecell{BLOSUM62\\score ; rank}} &
+                \makecell{Rosetta} & \makecell{Protein\\MPNN\\0.30} & \makecell{Thermo\\MPNN\\+
+                Megascale} & \makecell{HERMES\\-{\em fixed} 0.50} & \makecell{HERMES\\-{\em
+                amortized}\\0.50} & \makecell{HERMES\\-{\em fixed} 0.50\\+ cDNA117k} &
+                \makecell{HERMES\\-{\em fixed} 0.50\\+ Megascale} \\
+                \cmidrule(lr){5-11}
+                & & & & $r_\wt \rightarrow r_\mt$ & $r_\wt \rightarrow r_\mt$ & $r_\wt \rightarrow
+                r_\mt$ & $r_\wt \rightarrow r_\mt$ & $r_\wt \rightarrow r_\mt$ & $r_\wt \rightarrow
+                r_\mt$ & $r_\wt \rightarrow r_\mt$ \\
+                \midrule
+            \multirow{7}{*}{\makecell{RSV-F\\4JHW}} & \multirow{2}{*}{Cav1
+            \citep{mclellan_structure-based_2013}} & S190F & -2 ; 16 & \yellowl 19 $\rightarrow$ 11
+            & 4 $\rightarrow$ 7 & \green 14 $\rightarrow$ 3 & 4 $\rightarrow$ 8 & \greenl 11
+            $\rightarrow$ 4 & \green 12 $\rightarrow$ 3 & \green 13 $\rightarrow$ 3 \\
+             & & V207L & 1 ; 3 & \greenl 9 $\rightarrow$ 4 & 2 $\rightarrow$ 7 & \greenl 6
+             $\rightarrow$ 5 & 2 $\rightarrow$ 3 & \green 3 $\rightarrow$ 2 & \green 3 $\rightarrow$
+             2 & \green 3 $\rightarrow$ 2 \\
+            \cmidrule(lr){2-11}
+             & \multirow{1}{*}{Uncl. \citep{lee_rational_2024}} & S215P & -1 ; 13 & \green 13
+             $\rightarrow$ 1 & 1 $\rightarrow$ 14 & 10 $\rightarrow$ 20 & 10 $\rightarrow$ 15 &
+             \green 6 $\rightarrow$ 3 & 16 $\rightarrow$ 19 & 4 $\rightarrow$ 20 \\
+            \cmidrule(lr){2-11}
+             & \multirow{4}{*}{TriC \citep{mclellan_structure-based_2013}} & D486H & -1 ; 7 & \green
+             9 $\rightarrow$ 2 & 1 $\rightarrow$ 10 & 1 $\rightarrow$ 8 & \greenl 5 $\rightarrow$ 4
+             & \greenl 10 $\rightarrow$ 4 & \yellowl 20 $\rightarrow$ 9 & \yellowl 18 $\rightarrow$
+             9 \\
+             & & E487Q & 2 ; 3 & 2 $\rightarrow$ 9 & 1 $\rightarrow$ 13 & 1 $\rightarrow$ 12 & 2
+             $\rightarrow$ 3 & 4 $\rightarrow$ 5 & 11 $\rightarrow$ 12 & \yellowl 14 $\rightarrow$
+             12 \\
+             & & F488W & 1 ; 3 & 15 $\rightarrow$ 17 & 1 $\rightarrow$ 14 & \green 3 $\rightarrow$ 1
+             & 2 $\rightarrow$ 6 & 1 $\rightarrow$ 13 & 1 $\rightarrow$ 3 & 1 $\rightarrow$ 2 \\
+             & & D489H & -1 ; 7 & \green 5 $\rightarrow$ 2 & 3 $\rightarrow$ 14 & 5 $\rightarrow$ 12
+             & \yellowl 11 $\rightarrow$ 8 & \yellowl 18 $\rightarrow$ 15 & \yellowl 20
+             $\rightarrow$ 11 & \yellowl 17 $\rightarrow$ 12 \\
+            \midrule
+            \multirow{3}{*}{\makecell{HA\\7VDF}} & \multirow{3}{*}{Universal-HA
+            \citep{milder_universal_2022}} & H355W & -2 ; 12 & \green 5 $\rightarrow$ 1 & \green 5
+            $\rightarrow$ 1 & \green 4 $\rightarrow$ 2 & \green 4 $\rightarrow$ 3 & \green 7
+            $\rightarrow$ 2 & \green 5 $\rightarrow$ 3 & \green 8 $\rightarrow$ 3 \\
+             & & K380I & -3 ; 19 & \green 17 $\rightarrow$ 1 & \green 9 $\rightarrow$ 1 & \green 11
+             $\rightarrow$ 1 & \greenl 8 $\rightarrow$ 4 & \green 14 $\rightarrow$ 3 & \green 13
+             $\rightarrow$ 2 & \green 17 $\rightarrow$ 2 \\
+             & & E432I & -3 ; 19 & \yellowl 14 $\rightarrow$ 9 & \green 12 $\rightarrow$ 2 & \green
+             13 $\rightarrow$ 2 & \greenl 9 $\rightarrow$ 4 & \greenl 15 $\rightarrow$ 5 & \green 12
+             $\rightarrow$ 3 & \green 14 $\rightarrow$ 3 \\
+            \midrule
+            \multirow{11}{*}{\makecell{hMPV-F\\5WB0}} & \multirow{5}{*}{M104
+            \citep{gonzalez_general_2024}} & L130D & -4 ; 19 & \green 15 $\rightarrow$ 3$^\dagger$ &
+            8 $\rightarrow$ 9 & 4 $\rightarrow$ 10 & 5 $\rightarrow$ 9 & \green 12 $\rightarrow$ 2 &
+            \green 8 $\rightarrow$ 2 & \greenl 10 $\rightarrow$ 4 \\
+             & & A159L & -1 ; 10 & \green 6 $\rightarrow$ 1$^\dagger$ & 1 $\rightarrow$ 12 & 3
+             $\rightarrow$ 5 & 1 $\rightarrow$ 7 & 2 $\rightarrow$ 4 & \green 7 $\rightarrow$ 3 &
+             \green 5 $\rightarrow$ 3 \\
+             & & V203I & 3 ; 2 & \green 4 $\rightarrow$ 3$^\dagger$ & 1 $\rightarrow$ 2 & 1
+             $\rightarrow$ 2 & 1 $\rightarrow$ 2 & \green 2 $\rightarrow$ 1 & \green 3 $\rightarrow$
+             1 & \green 2 $\rightarrow$ 1 \\
+             & & V430Q & -2 ; 10 & \green 12 $\rightarrow$ 3$^\dagger$ & \greenl 5 $\rightarrow$ 4 &
+             \greenl 12 $\rightarrow$ 6 & \green 8 $\rightarrow$ 1 & \greenl 10 $\rightarrow$ 5 & 5
+             $\rightarrow$ 12 & \yellowl 10 $\rightarrow$ 8 \\
+             & & V449D & -3 ; 16 & \yellowl 13 $\rightarrow$ 8$^\dagger$ & \green 13 $\rightarrow$ 3
+             & \green 16 $\rightarrow$ 2 & \green 11 $\rightarrow$ 2 & \green 15 $\rightarrow$ 2 &
+             \green 18 $\rightarrow$ 2 & \greenl 19 $\rightarrow$ 6 \\
+            \cmidrule(lr){2-11}
+             & \multirow{4}{*}{MPV-2cREKR \citep{bakkers_efficacious_2024}} & V112R & -3 ; 19 & 6
+             $\rightarrow$ 13$^\dagger$ & \green 8 $\rightarrow$ 1 & \green 2 $\rightarrow$ 1 & 2
+             $\rightarrow$ 9 & \green 8 $\rightarrow$ 3 & 4 $\rightarrow$ 11 & 5 $\rightarrow$ 10 \\
+             & & D209E & 2 ; 2 & \green 8 $\rightarrow$ 1$^\dagger$ & \green 11 $\rightarrow$ 1 &
+             \greenl 12 $\rightarrow$ 4 & \green 3 $\rightarrow$ 1 & \green 14 $\rightarrow$ 3 &
+             \greenl 15 $\rightarrow$ 6 & \yellowl 16 $\rightarrow$ 7 \\
+             & & V231I & 3 ; 2 & \green 3 $\rightarrow$ 1$^\dagger$ & \green 3 $\rightarrow$ 1 &
+             \green 3 $\rightarrow$ 1 & \green 2 $\rightarrow$ 1 & \green 2 $\rightarrow$ 1 & \green
+             3 $\rightarrow$ 1 & \green 3 $\rightarrow$ 1 \\
+             & & E453P & -1 ; 10 & \green 10 $\rightarrow$ 2$^\dagger$ & 1 $\rightarrow$ 20 & 1
+             $\rightarrow$ 2 & 8 $\rightarrow$ 19 & \green 13 $\rightarrow$ 1 & \yellowl 17
+             $\rightarrow$ 16 & \greenl 19 $\rightarrow$ 6 \\
+            \cmidrule(lr){2-11}
+             & \multirow{2}{*}{Uncl. \citep{lee_rational_2024}} & E80D & 2 ; 2 & \yellowl 18
+             $\rightarrow$ 13 & \green 3 $\rightarrow$ 1 & 13 $\rightarrow$ 18 & 1 $\rightarrow$ 12
+             & 7 $\rightarrow$ 17 & 15 $\rightarrow$ 19 & 14 $\rightarrow$ 18 \\
+             & & V155P & -2 ; 13 & 10 $\rightarrow$ 20 & 4 $\rightarrow$ 20 & 1 $\rightarrow$ 20 & 1
+             $\rightarrow$ 19 & 1 $\rightarrow$ 20 & 2 $\rightarrow$ 20 & 4 $\rightarrow$ 20 \\
+            \midrule
+            \multirow{8}{*}{\makecell{DENV-E\\1OAN}} & \multirow{8}{*}{SC12
+            \citep{phan_conserved_2022}} & S29K & 0 ; 6 & \green 4 $\rightarrow$ 3$^\dagger$ &
+            \green 3 $\rightarrow$ 1 & \green 7 $\rightarrow$ 2 & 1 $\rightarrow$ 12 & 2
+            $\rightarrow$ 5 & 6 $\rightarrow$ 12 & 9 $\rightarrow$ 14 \\
+             & & T33V & 0 ; 3 & \greenl 9 $\rightarrow$ 4$^\dagger$ & \green 3 $\rightarrow$ 1 &
+             \green 6 $\rightarrow$ 1 & \green 3 $\rightarrow$ 1 & \green 5 $\rightarrow$ 1 & \green
+             10 $\rightarrow$ 1 & \green 10 $\rightarrow$ 1 \\
+             & & A35M & -1 ; 13 & \greenl 11 $\rightarrow$ 4$^\dagger$ & \green 6 $\rightarrow$ 1 &
+             \yellowl 10 $\rightarrow$ 8 & 1 $\rightarrow$ 12 & 1 $\rightarrow$ 11 & 1 $\rightarrow$
+             7 & 6 $\rightarrow$ 7 \\
+             & & G106D & -1 ; 5 & \green 18 $\rightarrow$ 1$^\dagger$ & \green 11 $\rightarrow$ 1 &
+             6 $\rightarrow$ 11 & \green 8 $\rightarrow$ 1 & \green 6 $\rightarrow$ 2 & \green 20
+             $\rightarrow$ 1 & \green 18 $\rightarrow$ 1 \\
+             & & A259W & -3 ; 20 & \green 7 $\rightarrow$ 1$^\dagger$ & 1 $\rightarrow$ 3 & 4
+             $\rightarrow$ 11 & 1 $\rightarrow$ 20 & 1 $\rightarrow$ 13 & 1 $\rightarrow$ 2 & \green
+             2 $\rightarrow$ 1 \\
+             & & T262R & -1 ; 11 & \green 15 $\rightarrow$ 3$^\dagger$ & 1 $\rightarrow$ 15 &
+             \yellowl 18 $\rightarrow$ 7 & 3 $\rightarrow$ 14 & \green 10 $\rightarrow$ 3 & \green
+             16 $\rightarrow$ 3 & \greenl 17 $\rightarrow$ 4 \\
+             & & F279W & 1 ; 3 & \green 3 $\rightarrow$ 1$^\dagger$ & 4 $\rightarrow$ 11 & \green 4
+             $\rightarrow$ 1 & 1 $\rightarrow$ 6 & 3 $\rightarrow$ 7 & 1 $\rightarrow$ 4 & 1
+             $\rightarrow$ 2 \\
+             & & T280P & -1 ; 13 & \green 12 $\rightarrow$ 2$^\dagger$ & 7 $\rightarrow$ 10 & 9
+             $\rightarrow$ 14 & 4 $\rightarrow$ 19 & \green 6 $\rightarrow$ 2 & 2 $\rightarrow$ 20 &
+             8 $\rightarrow$ 19 \\
+            \midrule
+            \multirow{4}{*}{\makecell{SARS-Cov-2\\6VSB}} & \multirow{4}{*}{hexapro
+            \citep{hsieh_structure-based_2020}} & F817P & -4 ; 20 & \green 3 $\rightarrow$ 1 &
+            \green 16 $\rightarrow$ 1 & 1 $\rightarrow$ 12 & 2 $\rightarrow$ 16 & \green 3
+            $\rightarrow$ 1 & 2 $\rightarrow$ 18 & 2 $\rightarrow$ 19 \\
+             & & A892P & -1 ; 14 & \green 16 $\rightarrow$ 3 & \green 5 $\rightarrow$ 1 & 2
+             $\rightarrow$ 4 & \green 2 $\rightarrow$ 1 & \green 4 $\rightarrow$ 1 & \green 4
+             $\rightarrow$ 1 & \green 5 $\rightarrow$ 1 \\
+             & & A899P & -1 ; 14 & 8 $\rightarrow$ 19 & 6 $\rightarrow$ 8 & 7 $\rightarrow$ 18 & 2
+             $\rightarrow$ 6 & \green 4 $\rightarrow$ 1 & 8 $\rightarrow$ 15 & 5 $\rightarrow$ 17 \\
+             & & A942P & -1 ; 14 & 5 $\rightarrow$ 12 & \green 3 $\rightarrow$ 1 & 2 $\rightarrow$ 8
+             & 1 $\rightarrow$ 4 & \green 2 $\rightarrow$ 1 & \green 2 $\rightarrow$ 1 & \green 2
+             $\rightarrow$ 1 \\
+            \midrule
+            & \multicolumn{3}{c|}{\green \makecell{proportion of correctly and\\strongly suggested
+            mutations}} & \textbf{20/33} & \textbf{15/33} & \textbf{11/33} & 8/33 & \textbf{19/33} &
+            \textbf{15/33} & \textbf{13/33} \\
+            \cmidrule(lr){2-11}
+            & \multicolumn{3}{c|}{\greenl \makecell{proportion of correctly and\\at least moderately
+            suggested mutations}} & \textbf{23/33} & \textbf{16/33} & 14/33 & 11/33 & \textbf{23/33}
+            & \textbf{16/33} & \textbf{17/33} \\
+            \cmidrule(lr){2-11}
+            & \multicolumn{3}{c|}{\makecell{proportion of correctly and\\at least weakly suggested
+            mutations}} & \textbf{27/33} & 16/33 & 16/33 & 12/33 & \textbf{24/33} & 19/33 & 22/33 \\
+
+            \bottomrule
+        \end{tabular}
+    }
+    \figcaption{Predicting antigen-stabilizing mutations with HERMES: extended results.}{ Recall for different
+models (columns) is evaluated on 33 previously reported antigen-stabilizing mutations (rows)
+spanning five viral antigens. For each antigen, we list the PDB structure used for scoring and the
+publication(s) that originally reported the mutation. Mutations are specified as
+wild-type$\to$mutant substitutions at the annotated site. Seven models are compared (columns). We
+additionally report the BLOSUM62 substitution score for each mutation and the mutant's rank among
+the 20 possible amino-acid substitutions for the wild-type residue (per BLOSUM62). For each model
+and mutation, predicted ranks of the wild-type and mutant amino acids are shown as $r_\wt \to
+r_\mt$. Dagger symbols ($\dagger$) indicate mutations originally proposed as stabilizing by
+Rosetta-based pipelines in the source reference. When a model ranks the mutant better than the wild
+type ($r_\mt < r_\wt$), the cell is shaded by the prediction strength based on the value of $r_\mt$:
+dark green, strongly suggested ($r_\mt \leq 3$); light green, moderately suggested ($4 \leq r_\mt
+\leq 6$); light yellow, weakly suggested ($r_\mt \geq 6$). Column summaries report counts of
+strongly, at least moderately, and at least weakly suggested mutations (out of 33); {\bf bold}
+indicates significance (p-value $<0.05$) for the number of recalled mutations relative to a random
+null model (see Fig.~\ref{fig:antigen_pvalues_vs_random} for p-values and Methods for details.) All
+structures were scored in their native multimeric states, generating symmetric partners when needed.
+ThermoMPNN's native mode predicts mutation effects only for monomers, ignoring multimeric assemblies
+even when present in the input structure. ``Uncl." stands for uncleaved prefusion-closed state.
+    }
+    \label{table:antigen_results}
+\end{table}
+
+
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c c | c c | c c}
+        \toprule
+          & & \makecell{\textbf{HERMES GPU}\\{[seconds]}} & \makecell{\textbf{HERMES
+          CPU}\\{[seconds]}} & \multicolumn{2}{|c}{\makecell{\textbf{Rosetta}\\{[CPU-hours]}}} \\
+        pdbID & \makecell{\# of monomer sites} & \makecell{all sites} & \makecell{all sites} &
+        \makecell{one site} & \makecell{all sites} \\
+        \midrule
+        4JHW & 449 & 57 & 112 & 150 & 67,350 \\
+        7VDF & 485 & 64 & 118 & 164 & 79,540 \\
+        5WB0 & 442 & 43 & 154 & 151 & 66,742 \\
+        1OAN & 394 & 32 & 151 & 59 & 23,246 \\
+        6VSB & 968 & 69 & 265 & 156 & 151,008 \\
+        \bottomrule
+    \end{tabular}
+    \figcaption{Execution times for saturation mutagenesis predictions on the viral antigens considered
+    in this study.}{ Executions times (in seconds) of HERMES apply to HERMES-{\em fixed} and
+    HERMES-{\em amortized} models, regardless of whether zero-shot or fine-tuned. Times were
+    computed when running the script \texttt{run\_hermes\_on\_pdbfiles.py} providing as input the
+    pdbfile as well as a single monomeric chain. A single CPU core with 64GB of memory was used, and
+    a NVIDIA A40 GPU when applicable. For Rosetta, we computed times (in CPU-hours) for a single CPU
+    core with 4 GBs of memory, and averaging 10 relaxation instances, which we consider the minimum
+    number of instances for robust results. Times for all sites in the structure were extrapolated
+    by multiplying the calculated average time for a single mutation by the number of monomeric
+    sites.
+    }
+    \label{table:speed_on_antigens}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{c c c | c c c}
+            \toprule
+            \makecell{antigen\\PDB id} &
+            \makecell{stabilized\\name} &
+            \makecell{mutation} &
+            \makecell{mutation\\type} &
+            \makecell{is synergistic} &
+            \makecell{notes} \\
+
+                \midrule
+            \multirow{7}{*}{\makecell{RSV-F\\4JHW}} & \multirow{2}{*}{Cav1
+            \citep{mclellan_structure-based_2013}} & S190F & cavity-filling & False & \\
+             &  & V207L & cavity-filling & False &   \\
+            \cmidrule(lr){2-6}
+             & \multirow{1}{*}{Uncl. \citep{lee_rational_2024}} & S215P & proline & False &   \\
+            \cmidrule(lr){2-6}
+             & \multirow{4}{*}{TriC \citep{mclellan_structure-based_2013}} & D486H & electrostatic &
+             True & \\
+             &  & E487Q & electrostatic & True &   \\
+             &  & F488W & cavity-filling & True &   \\
+             &  & D489H & electrostatic & True &   \\
+            \midrule
+            \multirow{3}{*}{\makecell{HA\\7VDF}} & \multirow{3}{*}{Universal-HA
+            \citep{milder_universal_2022}} & H355W & cavity-filling & False & \\
+             &  & K380I & cavity-filling & False &   \\
+             &  & E432I & cavity-filling & False &   \\
+            \midrule
+            \multirow{11}{*}{\makecell{hMPV-F\\5WB0}} & \multirow{5}{*}{M104
+            \citep{gonzalez_general_2024}} & L130D & electrostatic & False & \\
+             &  & A159L & cavity-filling & False &   \\
+             &  & V203I & cavity-filling & False &   \\
+             &  & V430Q & electrostatic & False &   \\
+             &  & V449D & electrostatic & False &   \\
+            \cmidrule(lr){2-6}
+             & \multirow{4}{*}{MPV-2cREKR \citep{bakkers_efficacious_2024}} & V112R & electrostatic
+             & False & \\
+             &  & D209E &  & False & same charge, slightly different size: unclear  \\
+             &  & V231I & cavity-filling & False &   \\
+             &  & E453P & proline & False &   \\
+            \cmidrule(lr){2-6}
+             & \multirow{2}{*}{Uncl. \citep{lee_rational_2024}} & E80D & & False & same charge,
+             slightly different size: unclear \\
+             &  & V155P & proline & False &   \\
+            \midrule
+            \multirow{8}{*}{\makecell{DENV-E\\1OAN}} & \multirow{8}{*}{SC12
+            \citep{phan_conserved_2022}} & S29K & electrostatic & False & \\
+             &  & T33V & cavity-filling & False &   \\
+             &  & A35M & cavity-filling & False &   \\
+             &  & G106D & electrostatic & False &   \\
+             &  & A259W & cavity-filling & True &   \\
+             &  & T262R & electrostatic & True &   \\
+             &  & F279W & cavity-filling & False &   \\
+             &  & T280P & proline & False &   \\
+            \midrule
+            \multirow{4}{*}{\makecell{SARS-Cov-2\\6VSB}} & \multirow{4}{*}{hexapro
+            \citep{hsieh_structure-based_2020}} & F817P & proline & False & \\
+             &  & A892P & proline & False &   \\
+             &  & A899P & proline & False &   \\
+             &  & A942P & proline & False &   \\
+
+            \bottomrule
+        \end{tabular}
+    }
+    \figcaption{Characteristics of antigen-stabilizing mutations.}{
+    Hand-curated mutation types are listed for antigen-stabilizing mutations reported in
+    Fig.~\ref{fig:antigen_figure_main_results} and Table~\ref{table:antigen_results}. Cavity-filling
+    mutations are defined as substitutions to hydrophobic residues that are larger than the
+    wild-type when the wild-type is also hydrophobic. Electrostatic mutations are substitutions that
+    change the residue's net charge. Proline mutations correspond to substitutions to proline.
+    Synergistic mutations were identified through structural reasoning based on the spatial
+    arrangement of mutations within the corresponding structure; see
+    ref.~\citep{byrne_principles_2022} for a breakdown of mutation types considered in the
+    structure-based vaccine design literature. ``Uncl." stands for ``Uncleaved Prefusion-Closed".
+     }
+    \label{table:mutation_types}
+\end{table}
+
+
+\clearpage
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/zeroshot_models_against_each_other.png}
+    \figcaption{Comparison of zero-shot model predictions on the Megascale test set.}{ For each
+    substitution in the Megascale test set, the predicted change in amino acid propensity upon
+    mutation ($\delta \log p$) is compared between two models in each panel. Color indicates local
+    point density (blue denotes low density and yellow denotes high density). The reported “Pr” in
+    each panel corresponds to the Pearson correlation coefficient between the predictions of the
+    model pair. Model names indicate the architecture and the coordinate-noise amplitude used.
+    $\Delta \hat{F}$ indicates the model's prediction, following
+    Equations~\ref{eq:log_ratio_wt_and_mt}~and~\ref{eq:deltaF_variants}.}
+    \label{fig:relaxed_vs_ft_relaxed}
+\end{figure}
+
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{hermes/figures/radial_plots__no_numbers.pdf}
+    \figcaption{Predicting mutational effects on thermodynamic folding stability.}{
+    Stabilizing-versus-destabilizing classification metrics are computed using $\Delta\Delta G < 0$
+    (experimental) and $\Delta \log p > 0$ (predicted) as cutoffs for stabilizing mutations.
+    \textbf{(A)} Evaluation on the T2837 results: zero-shot models (top) and models fine-tuned on
+    cDNA117k (bottom). \textbf{(B)} Evaluation on Megascale test set results: zero-shot models (top)
+    and models fine-tuned on the Megascale training set (bottom). Model names indicate the
+    architecture, the coordinate-noise amplitude used, and when applicable, the fine-tuning dataset
+    (listed after ``$+$"); \textit{Untr.} is short for \textit{Untrained}, indicating models that
+    had no pre-training and were instead only trained on stability effects. Only models trained
+    without coordinate noise are shown; the noise amplitude is indicated within each model name.
+    }
+   \label{fig:radial_plots__no_noise} 
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{hermes/figures/pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1.pdf}
+    \figcaption{Statistical significance of model performance differences on stabilizing mutation
+    identification.}{ Shown are two-tailed p-values for differences in model performance on
+    identifying stabilizing mutations across Megascale test set subsets. P-values correspond to the
+    performance comparisons shown in
+    Fig.~\ref{fig:megascale_precision_recall_f1_by_size_cutoff_0p0}. Green indicates strong
+    statistical significance ($p < 0.01$), while yellow indicates weaker significance ($0.01 \leq p
+    < 0.05$). P-values were computed using a permutation test and corrected for multiple comparisons
+    using the Holm–Bonferroni procedure within each performance metric (see Methods for details).}
+\label{fig:pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.4\linewidth]{hermes/figures/pvalues__bucketed_by_size__between_small_large_buckets__vertical.pdf}
+    \figcaption{Statistical significance of within-model performance differences in identifying
+    stabilizing mutations across mutational size classes.}{ Shown are two-tailed P-values for
+    within-model differences in performance when identifying stabilizing mutations from the
+    small$\to$large vs. large$\to$small mutational subsets of the Megascale test set. P-values
+    correspond to the performance comparisons shown in
+    Fig.~\ref{fig:megascale_precision_recall_f1_by_size_cutoff_0p0}. Green indicates strong
+    statistical significance ($p < 0.01$), while yellow indicates weaker significance ($0.01\leq p <
+    0.05$). P-values were computed using a bootstrap test and corrected for multiple comparisons
+    using the Holm–Bonferroni procedure within each performance metric (see Methods for details).}
+    \label{fig:pvalues__bucketed_by_size__between_small_large_buckets__vertical}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{hermes/figures/t2837_and_megascale_pairwise_pvalues_permutation.pdf}
+    \figcaption{Statistical significance of model performance differences in identifying stabilizing
+    mutations on the full test set.}{
+     Shown are two-tailed p-values for differences in model performance when identifying stabilizing
+     mutations on the full test set. P-values correspond to the performance comparisons shown in
+     Fig.~\ref{fig:radial_plots__noise}. Green indicates strong statistical significance ($p <
+     0.01$), while yellow indicates weaker significance ($0.01\leq p < 0.05$). P-values were
+     computed using a permutation test and corrected for multiple comparisons using the
+     Holm–Bonferroni procedure within each performance metric (see Methods for details).}
+    \label{fig:t2837_and_megascale_pairwise_pvalues_permutation}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{hermes/figures/ddg_stability_single_structure_results_with_bp.pdf}
+    \figcaption{Pearson correlation between model predictions and experimental stability
+    effects on the RaSP test set (8 proteins)~\citep{blaabjerg_rapid_2023}.}{
+    Each dot represents one protein, and the horizontal bar indicates the mean correlation across
+    proteins. Model labels specify the architecture, the coordinate-noise amplitude, and, when
+    applicable, the fine-tuning dataset (denoted after ``$+$"). ``Bp" indicates the use of our
+    open-source Biopython-based protein Pre-processing. See Methods for details on the RaSP
+    dataset.}
+    \label{fig:rasp_exp}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{hermes/figures/t2837_pearsonr_broken_down.pdf}
+    \figcaption{Pearson correlation between model predictions and experimental stability effects
+    on the T2837 dataset and its subsets.}{
+Pearson correlation values for all models other than HERMES are taken
+from~\citep{diaz_stability_2024}. This figure closely replicates a figure from
+ref.~\citep{diaz_stability_2024}, with the key difference that predictions for ``reverse" mutations
+are computed here by conditioning on wild-type structures (denoted as ``wt rev"). This distinction
+is made to avoid confusion with ``reverse" mutation predictions computed on mutant structures in the
+Ssym dataset (Fig.~\ref{fig:ssym_figure}). For each dataset (x-axis), we denote in text the
+performance of the HERMES models as well as that of the best-performing model overall.}
+    \label{fig:t2837_broken_down_and_comparison}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{hermes/figures/radial_plots__esmfold.pdf}
+    \figcaption{Predicting mutational effects on thermodynamic stability using ESMfold
+    predicted structures for fine-tuning or testing.}{ Stabilizing-versus-destabilizing
+    classification metrics are computed using $\Delta\Delta G < 0$ (experimental) and $\Delta \log p
+    > 0$ (predicted) as cutoffs for stabilizing mutations. We report results on the T2837 dataset,
+    after fine-tuning models on cDNA117k. We consider models fine-tuned and evaluated on crystal
+    structures (purple), models fine-tuned on ESMfold predicted structures and evaluated on crystal
+    structures (grey, ``\textit{train} ESMfold" in the model name), and models fine-tuned on crystal
+    structures and evaluated on ESMfold predicted structures (olive, ``\textit{eval} ESMfold" in the
+    model name).
+    }
+    \label{fig:radial_plots__esmfold}
+\end{figure}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{hermes/figures/mean_of_abs_symmetric__significance_matrices_all_models_vs_aminoacid_properties__holm_within.pdf}
+    \figcaption{Significance testing results for
+    Fig.~\ref{fig:correlations_to_aa_properties}B.}{
+    Shown are p-values of two-tailed t-tests comparing the distributions of spearman correlations
+    between each model's substitution matrix, and amino-acid properties of a particular class
+    (electronic, hydrophobic, steric). The Holm-Bonferroni method was used to correct p-values for
+    multiple testing error. Entries corresponding to pairs of distributions with p-value $\leq 0.01$
+    are colored in green, p-value $\leq 0.05$ are colored in yellow, and p-value $> 0.05$ are
+    colored in gray.}
+    \label{fig:correlation_to_aa_properties__significance}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{hermes/figures/mean_of_abs_symmetric_all__average_prediction_matrices__spearman_matrix.pdf}
+    \figcaption{Spearman correlations between pairs of model-average substitution matrices
+    $M^{\model}$.}{ The heatmaps for the underlying model-predicted substitution matrices are shown
+    in Fig.~\ref{fig:correlations_to_aa_properties}.}
+    \label{fig:spearmanr_between_model_average_substitution_matrices}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{hermes/figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_1.pdf}
+    \figcaption{Model-averaged substitution matrices stratified by protein core and surface
+    residues for zero-shot models.}{
+Shown are model-averaged substitution matrices $M^{\model}$ for different zero-shot models (rows
+2-4), computed from subsets of sites in the Megascale test set. The first row shows the experimental
+matrices for mean $|\Delta \Delta G|$ values across mutation subsets. Columns correspond to all
+residues (left), core residues with solvent-accessible surface area SASA $< 1 \AA^2$ (center), and
+surface residues with SASA $> 3 \AA^2$ (right).}
+    \label{fig:average_prediction_matrices__abs_symm__part_1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{hermes/figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_2.pdf}
+    \figcaption{Model-averaged substitution matrices stratified by protein core and surface
+    residues for stability fine-tuned models.}{
+     Similar to Fig.~\ref{fig:average_prediction_matrices__abs_symm__part_1} but for models
+     fine-tuned on the Megascale dataset.}
+    \label{fig:average_prediction_matrices__abs_symm__part_2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{hermes/figures/ssym_antisymmetry_reversibility_score_results.pdf}
+    \figcaption{Model reversibility scores on the Ssym dataset.}{
+    Reversibility is quantified as one minus the mean squared error between the forward mutational
+    effect $\Delta\log p_{fwd}$ and the negated reverse effect $-\Delta\log p_{rev}$ for different
+    models (rows), where model predictions are conditioned on the protein structure containing the
+    outgoing amino acid; The resulting score is normalized to lie between -1 and 1, with higher
+    values indicating a greater degree of reversibility: $1 - mean((\Delta\log p_{fwd}+\Delta\log
+    p_{rev})^2) / (mean({\Delta\log p_{fwd}}^2)+mean({\Delta\log p_{rev}}^2))$.
+    }
+    \label{fig:ssym_antisymmetry_reversibility_score_results}
+\end{figure}
+
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/heatmap.pdf}
+    \figcaption{Model predictions for amino acid preferences at sites with known
+    antigen-stabilizing mutations.}{ Predictions from different models (columns) are shown for sites
+    with known antigen-stabilizing mutations specified in Fig.~\ref{fig:antigen_figure_main_results}
+    and Table~\ref{table:antigen_results}. For each antigen (rows), predictions are computed using
+    the protein structure corresponding to the PDB ID indicated on the left. Predictions are
+    reported as changes in Rosetta Energy Units (REU) for Rosetta, and $\Delta \log p$ for
+    ProteinMPNN and HERMES models.
+    Wild-type amino acids are marked with centered crosses, while stabilizing mutant amino acids are
+    indicated by dark borders. Amino acids are grouped by broad biochemical class (see legend at the
+    bottom) and, within each class, ordered by increasing size (number of atoms).
+    }
+   \label{fig:antigen_heatmap} 
+\end{figure}
+
+\begin{figure}
+    \centering
+\includegraphics[width=0.95\linewidth]{hermes/figures/pvalues_vs_random.pdf}\vspace{0.5cm}
+\includegraphics[width=0.95\linewidth]{hermes/figures/pvalues_vs_blosum62.pdf}
+    \figcaption{Statistical significance for the number of retrieved antigen-stabilizing mutations.}{
+ Shown are p-values from binomial tests comparing the number of antigen-stabilizing mutations
+ retrieved by each model (rows) against random expectation (top) and the BLOSUM62 predictions
+ (bottom). These significance tests correspond to the results reported in
+ Figs.~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations}
+ and Table~\ref{table:antigen_results}; see Methods for details of p-value computation.}
+    \label{fig:antigen_pvalues_vs_random}
+    \label{fig:antigen_pvalues_vs_blosum62}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{hermes/figures/t2837_radial_plot_py_vs_bp.pdf}
+    \figcaption{Comparison of PyRosetta and Biopython Pre-processing pipelines for predicting
+    mutation stability effects on T2837.}{ Classification accuracy metrics, analogous to those shown
+    in Fig.~\ref{fig:radial_plots__noise}, are reported for fine-tuned models (left) and zero-shot
+    models (right). In each case, models trained using PyRosetta-based Pre-processing are compared
+    with those using Biopython-based Pre-processing (denoted by “Bp” in the model name).
+    Model labels specify the architecture, the coordinate-noise amplitude, and, when applicable, the
+    fine-tuning dataset (listed after ``+"). Consistent with results on the RaSP dataset
+    (Fig.~\ref{fig:rasp_exp}), Biopython-Pre-processed models show slightly reduced performance
+    relative to PyRosetta-Pre-processed models; however, this difference becomes statistically
+    insignificant after fine-tuning.}
+    \label{fig:t2837_py_vs_bp}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{hermes/figures/hermes_relaxed_ablation.pdf}
+    \figcaption{Ablation of PyRosetta fastrelax parameters for HERMES-\textit{relaxed} 0.50 on
+    the cDNA117k dataset.}{
+    \textbf{(A)} Classification accuracy metrics, analogous to those shown in
+    Fig.~\ref{fig:radial_plots__noise}, are reported for HERMES-{\em relaxed} models evaluated on
+    relaxed mutant structures using different PyRosetta fastrelax parameters (indicated by color).
+    HERMES-{\em relaxed} scores a mutation as the log-probability difference between the mutant and
+    wild-type amino acids. The wild-type log-probability is evaluated on the wild-type structure,
+    while the mutant log-probability is evaluated on the wild-type structure after introducing the
+    mutation and performing local relaxation. We use the PyRosetta fastrelax protocol and vary the
+    following parameters, noting that the procedure is stochastic: (1) {\bf side}, the distance
+    cutoff for side-chain relaxation; (2) {\bf bb}, the distance cutoff for backbone relaxation; (3)
+    {\bf nreps}, the number of protocol repetitions, with the lowest-energy conformation retained;
+    (4) {\bf ens}, the ensemble size, where predictions are averaged over relaxations obtained with
+    different random seeds.
+    {\textbf{(B)} Inference speed for predicting mutational effects on 51 mutants across the same
+    PyRosetta fastrelax parameters as in (A) (colors). A single NVIDIA A40 GPU and a single CPU with
+    64G of memory were used for all parameters.}
+    }
+    \label{fig:relaxations_ablation}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/rsvf_si_figure.pdf}
+    \figcaption{Structure of the wild-type pre-fusion RSV-F antigen highlighting observed and
+    candidate antigen-stabilizing mutations.}{
+The wild-type structure is shown on the left (PDB ID: 4JHW). A single protomer of the trimer is
+displayed as a cyan cartoon, with the remaining protomers shown as a grey surface. WT denotes wild
+type and MT denotes mutant. Mutations labeled as ``in silico" were introduced using PyMOL's
+Mutagenesis Wizard starting from the wild-type structure. Steric clashes (orange dashed lines) were
+identified using PyMOL's ``find clashes" command, and polar contacts (yellow dashed lines) were
+identified using the corresponding PyMOL command.
+    \textbf{(A)} The L207 mutant has been experimentally shown to stabilize the pre-fusion
+    conformation~\citep{mclellan_structure-based_2013} and appears to enhance intraprotomer packing.
+    We speculate that the I207 mutant, which HERMES-\textit{amortized} predicts to have a comparable
+    ranking to L207 in Fig.~\ref{fig:antigen_heatmap}, would pack similarly and may therefore
+    represent an additional stabilizing mutation worth screening.
+\textbf{(B)} Mutant F190 is observed to be stabilizing~\citep{mclellan_structure-based_2013}, though
+it appears to slightly over-pack the region. We speculate that L190, which HERMES-\textit{amortized}
+predicts to have a comparable ranking to F190 in Fig.~\ref{fig:antigen_heatmap}, would provide a
+similarly stabilizing effect without over-packing the region.
+    }
+    \label{fig:rsvf_si_figure}
+\end{figure}
+   
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/ha_si_figure.pdf}
+    \figcaption{Structure of the wild-type pre-fusion Universal-HA antigen, with highlighted
+    observed and candidate antigen-stabilizing mutations.}{
+    The wild-type structure is shown on the left (PDB ID 7VDF).
+    A single protomer of the trimer is shown as cyan cartoon; the other copies are shown as grey
+    surface.
+    WT denotes wild type and MT denotes mutant. Mutations labeled as ``in silico" were introduced
+    using PyMOL's Mutagenesis Wizard starting from the wild-type structure. Steric clashes (orange
+    dashed lines) were identified using PyMOL's ``find clashes" command, and polar contacts (yellow
+    dashed lines) were identified using the corresponding PyMOL command.
+    We highlight the H355W mutation which, despite stabilizing the pre-fusion conformation, exhibits
+    substantial steric clashes in the wild-type structural context.
+    }
+    \label{fig:ha_si_figure}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/hmpvf_si_figure.pdf}
+    \figcaption{Structure of the wild-type pre-fusion hMPV-F antigen, with highlighted observed
+    and candidate antigen-stabilizing mutations.}{
+    The wild-type structure is shown on the left (PDB ID 5WB0).
+ A single protomer of the trimer is shown as cyan cartoon; the other copies are shown as grey
+ surface.
+    WT denotes wild type and MT denotes mutant. Mutations labeled as ``in silico" were introduced
+    using PyMOL's Mutagenesis Wizard starting from the wild-type structure. Steric clashes (orange
+    dashed lines) were identified using PyMOL's ``find clashes" command, and polar contacts (yellow
+    dashed lines) were identified using the corresponding PyMOL command.
+    \textbf{(A)} The proposed V449D mutation is highlighted, which likely stabilizes the complex by
+    removing a surface-exposed hydrophobic residue and introducing an intraprotomer polar contact.
+    We speculate that substitution with glutamic acid, which HERMES-\textit{amortized} predicts to
+    have a comparable ranking to D449 in Fig.~\ref{fig:antigen_heatmap}, would produce a similar
+    stabilizing effect.
+     \textbf{(B)} Introduction of an Arginine in place of a Valine at position 112 likely introduces
+     an intraprotomer polar contact, as well as packing against the adjacent protomer (shown in
+     green); we believe L112, which HERMES-\textit{amortized} predicts to have a comparable ranking
+     to R112 in Fig.~\ref{fig:antigen_heatmap}, would also pack against the adjacent protomer better
+     than Valine.
+    \textbf{(C)} A159L stabilizes the complex likely due to a cavity-filling effect, albeit
+    necessitating nearby I137 to adopt a different rotamer; we believe I159, which
+    HERMES-\textit{amortized} predicts to have a comparable ranking to L159 in
+    Fig.~\ref{fig:antigen_heatmap}, would also fulfill a similar role on the condition of L141 also
+    adopting a different rotamer.
+    }
+    \label{fig:hmpvf_si_figure}
+\end{figure}
+  
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\textwidth]{hermes/figures/denve_si_figure.pdf}
+    \figcaption{Structure of wild-type pre-fusion DENV-E antigen, with highlighted observed and
+    candidate mutations.}{
+    The wild-type structure is shown on the left (PDB ID 1OAN).
+   A single protomer of the trimer is shown as cyan cartoon; the other copies are shown as grey
+   surface.
+    WT denotes wild type and MT denotes mutant. Mutations labeled as ``in silico" were introduced
+    using PyMOL's Mutagenesis Wizard starting from the wild-type structure. Steric clashes (orange
+    dashed lines) were identified using PyMOL's ``find clashes" command, and polar contacts (yellow
+    dashed lines) were identified using the corresponding PyMOL command.
+   \textbf{(A)} The S29K mutation is experimentally observed to be
+   stabilizing~\citep{phan_conserved_2022}, despite appearing to introduce substantial steric
+   clashes when inspected in the wild-type structure, suggesting that stabilization requires a shift
+   in backbone conformation.
+    \textbf{(B)} The F279W mutation is experimentally observed to be
+    stabilizing~\citep{phan_conserved_2022}, likely by filling an under-packed cavity. A substantial
+    backbone rearrangement is also observed in the mutant structure (residues 269–281), potentially
+    facilitated by the T280P mutation.
+    \textbf{(C)} The G106D mutation is experimentally observed to be
+    stabilizing~\citep{phan_conserved_2022}, likely through the introduction of a polar contact with
+    the adjacent protomer (shown in green) and/or interactions with surrounding water molecules.
+    }
+    \label{fig:denve_si_figure}
+\end{figure}
+
+
