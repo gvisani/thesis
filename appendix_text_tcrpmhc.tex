@@ -1,34 +1,4 @@
 
-\section{HERMES neural network model for amino acid propensities}
- HERMES is a self-supervised structure-based machine learning model for
- proteins~\cite{Visani2024-sh,Pun2024-qz}. HERMES has a 3D rotationally equivariant architecture and
- is trained to predict a residue's amino acid identity from its surrounding atomic environment
- within a 10 \AA~ of the central residue's C-$\alpha$ in the 3D structure. The input to the neural
- network is a point cloud of atoms from a given structural neighborhood, in which all atoms
- associated with the central residue are masked. These point clouds are featurized by atom types,
- including computationally-added hydrogens, partial charge, and Solvent Accessible Surface Area
- (SASA). The point clouds are first projected onto the orthonormal Zernike Fourier basis, centered
- at the position of the (masked) central residue's C-$\alpha$ (Fig.~1A). The resulting
- \textit{holographic} projections are fed to a stack of SO(3)-equivariant layers, the output of
- which is SO(3)-invariant, and is then passed through a multi-layer perceptron (MLP) to generate the
- desired predictions. The MLP's outputs are termed pseudo-energies, associated with the 20 different
- possible amino acids that can be placed at the masked residue, and act as logits within a softmax
- function to compute probabilities of each amino acid.
-
-Each HERMES model is an ensemble of 10 individually-trained architectures. In this work, we used
-HERMES models trained on structural data with different levels of added noise: 0.00 noise (the
-original PDB structure), and 0.50 noise, which is obtained by adding Gaussian noise to the 3D
-coordinates of the original structure, with standard deviation of 0.50~\AA. We only use models that
-were trained on the wild-type amino acid classification task~\cite{Visani2024-sh}. Models were
-pre-trained on structures from 30\% similarity split of ProteinNet's CASP12
-set~\cite{alquraishi_proteinnet_2019}, resulting in around $\sim$10k training structures.
-
-We refer the reader to refs.~\cite{Pun2024-qz, Visani2024-sh} for further details on the
-architecture, training procedure, training data preparation, and the mathematical introduction to
-SO(3)-equivariant models in Fourier space.
-
-
-
 
 \section{TCR-pMHC binding affinity and T-cell activity prediction}
 \label{sec:aff_act}

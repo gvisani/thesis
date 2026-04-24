@@ -1,4 +1,9 @@
 
+The contents of this chapter are published in~\citet{visani_t_2025}, under the title
+\textit{T cell receptor specificity landscape revealed through de novo peptide design}.
+This work was started by my mentor and former labmate Mike Pun.
+His first-hand contributions can be found in his thesis~\citep{pun_rotationally_2023}.
+
 T-cells play a key role in the adaptive immune system, contributing to immune surveillance and
 response to pathogens. T-cells recognize pathogen-derived epitopes in the form of short protein
 fragments (peptides) displayed on specific molecules known as Major Histocompatibility Complexes
@@ -46,7 +51,7 @@ complexes~\cite{Bravi2023-aj,Meynard-Piganeau2024-po}. However, lack of generali
 sparse and skewed training data has remained a challenge in these models.
 
  
-\begin{figure*}[th!]
+\begin{figure}[th!]
 \includegraphics[width=1.0\textwidth]{tcrpmhc/figures/schematic_0}
 \figcaption{HERMES model for predicting and designing TCR-pMHC interactions.}{ {\bf (A)} HERMES is
 a structure-based, rotationally equivariant neural network pre-trained on the protein universe to
@@ -74,7 +79,7 @@ improved sequences with MCMC (SI). This procedure is then iterated until converg
 designed by both approaches are then filtered by TCRdock~\cite{Bradley2023-rl} or Alpha-Fold
 3~\cite{Abramson2024-jp} to assure the stability of the complex.
 \label{Fig:1}}
-\end{figure*}
+\end{figure}
  
 Protein-protein interactions in general, and immune-pathogen interaction in particular, rely on the
 complementarity in the 3D structures and amino acid compositions of the interacting protein pairs.
@@ -113,7 +118,7 @@ By leveraging our design algorithm, we characterize the specificity of a diverse
 providing a quantitative measure for the diversity of the peptide-MHC antigens that a TCR can
 recognize in humans and mice.
 
-\begin{figure*}[ht!]
+\begin{figure}[ht!]
 	\centering
 	\includegraphics[width=0.9\textwidth]{tcrpmhc/figures/affinity_figure_0}
 	\figcaption{Predicting binding affinity of TCR-pMHC complexes.}{ {\bf(A)} The structure of the
@@ -134,13 +139,15 @@ recognize in humans and mice.
 	(used for orange points).
 	\label{Fig:2}
 	}
-\end{figure*}
+\end{figure}
 
-\section*{Model}
 
- T-cell response is mediated by the interactions between TCRs and pMHC complexes. To model the
- TCR-pMHC interaction, we use HERMES~\cite{Visani2024-sh}, a 3D rotationally equivariant
- structure-based neural network model, trained on the protein universe; see Fig.~\ref{Fig:1}A.
+
+\section{Model}
+
+T-cell response is mediated by the interactions between TCRs and pMHC complexes. To model the
+TCR-pMHC interaction, we use HERMES~\cite{Visani2024-sh}, a 3D rotationally equivariant
+structure-based neural network model, trained on the protein universe; see Fig.~\ref{Fig:1}A.
 HERMES predicts the amino acid propensity from its surrounding 3D protein environment, a measure
 that we have previously shown to serve as a reliable proxy for assessing the effect of mutations on
 protein stability or binding~\cite{Pun2024-qz,Visani2024-sh}.
@@ -149,7 +156,6 @@ For TCR-pMHC complexes, we seek to determine how changes in a peptide sequence i
 affinity of a TCR-pMHC complex, and ultimately, the T-cell response to the antigen. To do so, we
 characterize a score, which we term peptide energy, for a peptide $\sigma$, given its surrounding
 TCR and MHC structural environment,
-{
 \EQ
 E_{\text{peptide}}(\sigma ; \text{TCR, MHC}) = \sum_{i=1}^\ell E(\sigma_i ; \text{TCR,
 MHC},\sigma_{/i})
@@ -159,10 +165,10 @@ We assume that each peptide residue contributes linearly to the total energy by 
 $E(\sigma_i ; \text{TCR, MHC}, \sigma_{/i})$, where $\sigma_i$ is the amino acid at position $i$ of
 the peptide. A residue's energy contribution $E$ is evaluated by HERMES (logits of the network),
 taking in as input the atomic composition of the surrounding TCR, MHC, and the rest of the peptide
-$\sigma_{/i}$ (excluding the $i^{th}$ residue) within a 10~\AA~of $\sigma_i$'s $\alpha$-Carbon}; see
+$\sigma_{/i}$ (excluding the $i^{th}$ residue) within a 10~\AA~of $\sigma_i$'s $\alpha$-Carbon; see
 Fig.~\ref{Fig:1} and SI for details.
 
-\begin{table*}[ht]
+\begin{table}[ht]
 \centering
 \begin{tabular}{ll|cc|cccccccc}
 \toprule
@@ -208,7 +214,7 @@ correlations) is indicated with an asterisk (*). See
 Tables~\SpearmanrAffinityTable~and~\SpearmanrActivityTable~in the SI for $p$-values and additional
 models.}
 \label{table:spearmanr_affinity_and_activity}
-\end{table*}
+\end{table}
 
 
  To compute peptide energy, we input to HERMES an experimentally or computationally determined
@@ -241,9 +247,8 @@ models.}
 
 
 
-
-\section*{Results}
-\subsection*{Predicting binding affinity of TCR-pMHC complexes} 
+\section{Results}
+\subsection{Predicting binding affinity of TCR-pMHC complexes} 
  Binding between TCRs and pMHC complexes is necessary to mediate a T-cell response. The binding
  affinity of a natural TCR-pMHC complex is relatively low, with a dissociation constant $K_d$ in the
  range of $1-100\mu{\rm M}$~\cite{Davis1998-bv,Piepenbrink2009-jy,Zhong2013-ja}, in contrast to
@@ -321,7 +326,7 @@ also in other methods such as TCRdock~\cite{Bradley2023-rl}
 (Tables~\ref{table:spearmanr_affinity_and_activity},~\SpearmanrAffinityTable). }
  
  
-\subsection*{\bf Predicting T-cell response to peptide antigens}
+\subsection{\bf Predicting T-cell response to peptide antigens}
 {T-cell activation is shaped by factors beyond TCR-pMHC affinities, including the T-cell's
 differentiation state, its cross-reactivity to
 self-antigens~\cite{Altan-Bonnet2005-lm,Achar2022-tb}, and avidity effects from TCR/co-receptor
@@ -399,7 +404,7 @@ Fig.~\AfExamplesFigure).
  
 
 
-\begin{figure*}[ht!]
+\begin{figure}[ht!]
 	\centering
 	\includegraphics[width=0.9\textwidth]{tcrpmhc/figures/activity_all_0}
 	\figcaption{Predicting T-cell activity in response to peptide variants.}{
@@ -426,7 +431,7 @@ Fig.~\AfExamplesFigure).
 	experimentally measured mutational effects are shown in Fig.~\ActivityHeatmapsFigure.
 		\label{Fig:3}
 	}
-\end{figure*}
+\end{figure}
 
 
 
@@ -451,7 +456,7 @@ antibody-pMHC interactions, commonly leveraged in T-cell therapies for their hig
 affinities;
 
 
-\begin{figure*}[th!]
+\begin{figure}[th!]
 \centering
 \includegraphics[width=0.63\textwidth]{tcrpmhc/figures/design_figure_final_4_0}
 \figcaption{{De novo} peptide design to elicit a T-cell response.}{ {\bf (A-C)} Validation results
@@ -486,10 +491,10 @@ in complex with their cognate TCR-MHC's. For each system, designs generated by {
 shifts are seen in the backbone conformations of the peptides and the TRA (blue) and TRB (orange)
 loops.}
 \label{Fig:4}}
-\end{figure*}
+\end{figure}
 
 
-\subsection*{\bf Design of novel peptides reactive to a TCR-MHC complex} 
+\subsection{\bf Design of novel peptides reactive to a TCR-MHC complex} 
 TCR-engineered T-cell therapies are designed to target defined neoantigens, but specificity
 remains a central challenge. Engineered high-affinity TCRs can cross-react with untested
 self-peptides, causing severe off-target toxicity; in a MAGE-A3 directed trial, recognition of a
@@ -596,7 +601,7 @@ preference for {g}lutamic acid at position 10 of the successful designs relative
 positives (Fig.~\ref{Fig:4}B).
 
 
-\begin{figure*}[th!]
+\begin{figure}[th!]
 \includegraphics[width=0.9\textwidth]{tcrpmhc/figures/entropy_TCRMHC_cartoon_0}
 \figcaption{Evaluating T-cell specificity from {de novo} designed peptides.}{ {\bf (A)} 
 T-cell specificity is measured by peptide entropy, which is computed from the HERMES-{\em fixed}
@@ -618,7 +623,7 @@ the degeneracy of the peptides that can interact with a TCR-MHC complex compared
 by the same MHC.
 \label{Fig:5}
 }
-\end{figure*}
+\end{figure}
 
 For the MAGE system, we used two structural templates: one with the 9-amino acid MAGE-A3 peptide
 EVDPIGHLY and another with the Titin-derived self-peptide ESDPIVAQY, which is expressed in
@@ -711,7 +716,7 @@ explore peptide conformational space within the TCR-MHC groove remains a compell
 future research.}
 
 
-\subsection*{Structural basis for TCR specificity}
+\subsection{Structural basis for TCR specificity}
 TCRs exhibit substantial degeneracy in their recognition, with some autoimmune T-cells
 experimentally shown to recognize over one million distinct peptides~\cite{Wooldridge2012-zq}.
 However, the full extent of TCR degeneracy for typical receptors remains unclear, largely due to the
