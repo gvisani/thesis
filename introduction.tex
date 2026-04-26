@@ -1,16 +1,121 @@
 
 
-% \textbf{Group-equivariant neural networks.} Group-equivariant neural networks have improved the
-% state-of-the-art on many supervised tasks, thanks to their data efficiency
-% ~\citep{bekkers_roto-translation_2018, hutchinson_lietransformer_2021, romero_group_2021}. 
-% Related to our work are 3D Euclidean neural networks, which are equivariant to (subsets of) the 3D
-% Euclidean group:~\citep{weiler_3d_2018, thomas_tensor_2018, fuchs_se3-transformers_2020,
-% brandstetter_geometric_2022, batzner_e3-equivariant_2022, musaelian_learning_2022,
-% satorras_en_2022, liao_equiformer_2022} and often use spherical harmonics and tensor products to
-% construct SO(3) equivariant layers.
-% Seminal work on SO(3) equivariance has been conducted for spherical
-% images~\citep{cohen_spherical_2018, esteves_spin-weighted_2020}; we were inspired by the fully
-% Fourier approach of~\citet{kondor_clebsch-gordan_2018}, and  leveraged operations proposed
-% by~\citet{cobb_efficient_2021}.
+
+something about proteins in general, how they're formed, what they do, etc.
+
+make introduction about protein modeling, aboud making models of proteins
+
+sequence-structure-function paradigm, but substitute it with sequence-structure-interaction
+
+much of protein science revolves arund making models that relate these different components with
+each other
+--> elaborate on this further
+
+section on the binding process, with equations and whatnot. talk about the dynamic nature of it, but
+also the
+thermodynamic description, which averages over the dynamics
+
+
+mention molecular dynamics as an attempt of a first-principles approach to study protein function 
+--> first-principles (or at least close to them) because it does not hide the dynamic nature of
+proteins
+--> cite DESRES papers and maybe old media coverage
+--> DESRES paper where they used "fraction of time ligand is bound to protein within MD trajectory"
+as a proxy for
+binding affinity --> example of going about it via first principles
+
+
+"Molecular dynamics force fields
+A force field like AMBER, CHARMM, or OPLS is built differently. It's a parametrized potential energy
+function — bonds, angles, dihedrals, Lennard-Jones, Coulomb — where the parameters are fit to
+reproduce quantum chemistry calculations on small molecules and experimental thermodynamic data
+(densities, heats of vaporization, hydration free energies). Every atom is explicit, water is
+usually explicit too (TIP3P, SPC/E, etc.), and the function returns energies in real kcal/mol. The
+function is differentiable in Cartesian coordinates, so you integrate Newton's equations forward in
+time with femtosecond time steps to generate a trajectory. The Boltzmann distribution at the
+simulation temperature is sampled (in principle, given enough time), so you can compute
+thermodynamic averages, kinetics, and free energy differences with proper statistical mechanics."
+
+
+Rosetta's energy function (Alford et al. in 2017) is a weighted sum of terms that score a static
+protein conformation.
+The terms include both approximations of physical interactions (e.g. Lennard-Jones potentials,
+hydrogen-bonding components)
+and statistical regularities extracted from protein structures deposited in the Protein Data Bank
+(PDB).
+An implicit model model of solvent is also present, thus avoiding the need of explicitly placing
+water model molecules in the structure for scoring.
+
+"Rosetta is a scoring function: a tool engineered to rank conformations and sequences such that
+native-like states score well. It's not trying to give you correct dynamics; it's trying to give
+you a landscape where the global minimum is the right answer for design and prediction tasks."
+--> I really like the last sentence
+
+
+machine learning effectively reduces to using only statistical regularities for modeling.
+--> AF2, and then Sergey's paper claiming AF2 (using MSA!) has learned an energy landscape! no need for explicit physics??
+of course, the truth is more nuanced than this. in fact, in designing a machine learning solution,
+one can choose exactly what information to include in the "statistical mining" performed by the model.
+
+While it is accepted that the amino-acid sequence contains enough information to determine the lowest-energy
+conformation of a protein, it is unclear how many sequence-structure pairs are required to learn such
+a mapping robustly. If the available pairs are insufficient, an alternative is to include other kinds of
+data that contain information about the underlying process that is to be modeled.
+This is exactly what AlphaFold does: instead of predicting structure from the amino-acid sequence alone,
+the model incorporates a Multiple Sequence Alignment of the seuqnce against all known other proteins.
+This changes the exact function learned by the model, such that the model requires less input-output pairs to learn
+a function that better represents the underlying process.
+
+
+a machine learning model would be able to learn such mapping only in the limit
+of high data.  
+
+--> zero-shot!!!
+--> still, it is important to attempt an understanding of the physical rules encoded by the machine
+learning model, as they often reveal "shortcuts" that are not physical and are at the core of
+the model's mistakes.
+
+
+--> machine learning!! mention alphafold as a revelatory moment for the field
+
+machine learning entails learning statistical patterns between paired entities
+
+machine learning entails learning a mapping between two domains (?)
+
+it's indeed not an accident that machine learning has been linked with statistical mechanics, as one
+can view machine
+learning as providing a data-driven mean-field theopry of a process 
+
+
+"A mean-field theory replaces interactions with an effective field that captures the average
+behavior of everything else.
+A trained ML model, in a real sense, also replaces a complicated joint distribution with a tractable
+surrogate
+— often a factorized or low-rank one."
+
+
+maybe a section on zero-shot learning as a concept? mention our perspective article on Sergey's
+paper,
+which is a seminal paper trying to understand the use of confidence metrics of structure-prediction
+algorithms
+--> notion of predicting the amount with which a design is "in-distribution"
+
+
+Introduce equivariance simply as a way to simply restrict the function class learned by a model such that
+it respectes known symmetry of a problem.
+
+Introduce locality as an assumption that simplifies the mapping, while introducing approximation error
+that we know to be limited given our knowledge of the underlying physics that out model is approximating.
+Furthermore, insofar as the models we create are tools for design - i.e. to sample the viable protein space
+in search of \textit{at least one example} that works - instead of claiming to accurately model all of
+protein space, then the assumption of locality is a specification of the tool - akin to a function's
+contract in programming - which does limit its use cases, but also an improved 
+
+the paragraph above makes me think: what if I wrote a paragraph on design vs. modeling the entire landscape?
+
+
+
+let's think about figures:
+1. 
 
 
