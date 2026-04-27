@@ -1,5 +1,5 @@
 
-
+\begin{comment}
 
 something about proteins in general, how they're formed, what they do, etc.
 
@@ -25,7 +25,7 @@ as a proxy for
 binding affinity --> example of going about it via first principles
 
 
-"Molecular dynamics force fields
+"Molecular dynamics force fields:
 A force field like AMBER, CHARMM, or OPLS is built differently. It's a parametrized potential energy
 function — bonds, angles, dihedrals, Lennard-Jones, Coulomb — where the parameters are fit to
 reproduce quantum chemistry calculations on small molecules and experimental thermodynamic data
@@ -55,7 +55,7 @@ you a landscape where the global minimum is the right answer for design and pred
 machine learning effectively reduces to using only statistical regularities for modeling.
 --> AF2, and then Sergey's paper claiming AF2 (using MSA!) has learned an energy landscape! no need for explicit physics??
 of course, the truth is more nuanced than this. in fact, in designing a machine learning solution,
-one can choose exactly what information to include in the "statistical mining" performed by the model.
+one can choose exactly what information to include in the "`statistical mining" performed by the model.
 
 While it is accepted that the amino-acid sequence contains enough information to determine the lowest-energy
 conformation of a protein, it is unclear how many sequence-structure pairs are required to learn such
@@ -114,8 +114,180 @@ contract in programming - which does limit its use cases, but also an improved
 the paragraph above makes me think: what if I wrote a paragraph on design vs. modeling the entire landscape?
 
 
-
 let's think about figures:
-1. 
+
+1. dna --> rna --> protein sequence --> protein structure --> protein-protein interactions
+
+2. protein modeling paradigms. protein structure
+
+
+
+\end{comment}
+
+
+TODO: maybe change this
+--> just explain the importance of proteins and what they are at a very high level
+--> then talk about details of how they carry their function
+    --> amino-acids
+    --> structure (primary, secondary etc)
+    --> interactions, which give rise to function
+--> then talk about how this has been modeled
+    --> moleculr dynamics
+    --> rosetta and other scoring tools
+    --> machine learning!!!
+
+
+
+If DNA is the blueprint of life \todo{(cite someone here)} - as it is the primary source of information of
+how a living organism is "built" - then proteins are its machinery, its fundamental functional units.
+Indeed, many of the key players across all areas of biology are proteins: ion channels, antibodies, enzymes
+- names familiar to most computer scientists - represent the remarkably different roles that proteins carry.
+
+\todo{(some more detailed examples of proteins, and the functions they carry. talk about antibodies and
+vaccines and immune receptors like T-cell receptors --> things that are relevant to this thesis)}
+
+The ubiquity and importance of proteins makes them obvious objects of analysis across all areas of biology.
+Despite their functional diversity, all proteins carry their respective functions according to shared
+fundamental principles. Thus, thoroughly understanding - and by this I mean \texit{making accurate predictive models of} -
+the fundamental principles underlying protein function can provide insight into many biological processes,
+with broad applications in biotechnology \todo{(cite some bioengineering stuff)} and medicine \todo{(cite tcr and antibody stuff)}.
+Making accurate predictions, however, is not enough. Indeed, the speed at which predictions are made also
+matters, as low speeds can bottleneck discovery, to the point of being downright unfeasible for very slow
+predictions.
+In recent years, machine learning has emerged as a tool for creating models of proteins that are both fast
+in generating predictions, and accurate enough to significantly aid discovery, with AlphaFold2 being perhaps
+the most famous example \todo{(cite)}.
+
+Throughout my PhD I have followed this line of work. Specifically, this thesis explores the capabilities
+of a specific class of machine learning models that my colleagues and I have developed.
+
+In this introductory chapter, I will first give a brief primer on proteins: how they originate, how they are composed,
+how they carry their respective functions.
+I will then discuss traditional ways in which proteins and their functions are modeled, using explicit physics
+models the fundamental basis.
+Finally, I will introduce machine learning as a paradigm for modeling proteins, and discuss the key elements of
+the specific machine learning framework that is the subject of this thesis.
+
+
+\section{Proteins and their functions}
+
+\subsection{How proteins are made}
+
+Within cells, information of how proteins are built is encoded directly into the DNA.
+At a high-level, the protein creation process can be seen as a sequence-to-sequence translation mechanism, where a 
+specific sub-sequence of the DNA - composed of 4 possible \textit{nucleotide} molecules serving as its alphabet -
+gets translated deterministically (except for errors) into a protein's sequence, composed of 20 possible \textit{amino-acid}
+molecules.
+
+More specifically, the process follows what is known as the central dogma of biology.
+The above-mentioned sub-sequences of DNA - referred to as "coding regions" - get first \textit{transcribed}
+into sequences of RNA - composed of 4 nucleotides just like DNA, with the exception of Tyrosines (T) being
+converted into Uraciles (U) - then each RNA segment gets \textit{translated} into a \textit{chain} (or sequence) of 
+covalently-bonded \textit{residues}, where each residue is an instance of of the 20 amino-acid types.
+
+\subsection{Amino-acids}
+
+\todo{(show one of the classical images of amino-acids and refer to it in the text)}
+
+Amino-acids are the building blocks of proteins, and the diversity of protein function stems ultimately from
+the diversity in the amino-acids. There are 20 possible canonical amino-acids~\footnote{there are also other
+so-called non-canonical amino-acids, but they are rare and mostly get created after the RNA-protein translation
+event. For simplicity, we do not considee them in this work}, with size spanning between the 5 heavy atoms
+of Glycine (G) to the 14 of Tryptophan (W). All amino-acids share a substructure called the \textit{backbone},
+composed of a central carbon - the C$\alpha$ - bonded to an amino group (-NH$_2$) and a carboxylic group (-COOH).
+Along a protein chain, subsequent amino-acids are linked together along their backbones via \textit{peptide bonds},
+whereby the carboxyl group of one reacts with the amino group of the other. What distinguishes each amino-acid is
+then the variable substructure, called the \textit{side-chain} as it "dangles" on the side of the protein chain, connected to the bakbone via the C$\alpha$.
+Side-chains span a wide range of chemistries, but are generally categorized in: hydrophobic, polar, positively charged,
+negatively charged, and special cases, like prolines (P), which can only adopt certain backbone conformations,
+cysteines (C) that can form the very stable disulfide bonds, and glycines (G) which have no side-chain.
+The high diversity of chemistries in the amino-acids, coupled with the extremely high number of possible sequences
+that can be created with them~\footnote{for a typical length of 400 residues, that is $20^{400}$ possible protein sequences,
+which dwarves the estimated number of atoms in the universe - $10^{80}$}, generates enourmous complexity that is at the
+core of proteins' functional diversity.
+
+
+\subsection{The Sequence-Structure-Function paradigm}
+
+At a very high level, the way in which a protein's amino-acid sequence results in its function is often understood
+via the "sequence-structure-function" paradigm. In this description, function is understood via \textit{structure}:
+the protein's sequence, owing to complex non-covalent interactions between the side-chains of the residues that compose it,
+"folds" into a complex 3D structure, and it is then owing to this specific structure that the protein can carry its function.
+
+
+
+
+
+
+talk about primary structure, secondary structure, tertiary structure
+
+say that secondary structure is important and plays a role in design and engineering
+
+
+
+
+\section{Modeling proteins}
+
+
+\subsection{Molecular Dynamics force fields: pure physics and dynamics}
+
+
+\subsection{Scoring functions: static physics and statistics}
+
+
+\subsection{Machine learning for proteins}
+
+
+
+
+something something MD and physics-based scoring tools can be accurate and try to be first-principles, but they are slow,
+and machine learing has emerged as a way of providing approximations of the first principles that are much faster
+to make, and sometimes can even surpass human-crafted models.
+
+Nevertheless, reasoning about optimal designs of machine learning models is important to achieve accurate-enough predictions,
+as is the understanding of these 
+
+
+
+
+% In fact, according to the central dogma of biology \todo{(cite Crick 1958)}, much of the information in DNA encodes precisely for proteins,
+% and it is proteins that act as the functional units within life's machinery.
+
+How is this functional diversity achieved?
+Just as DNA is fundamentally a long chain (also referred to as "sequence") of special molecules called nucleotides - of which there are 
+4 types - each protein is fundamentally composed of a chain or sequence of small molecules called \texit{amino-acids},
+of which there are 20 canonical types (plus other non-canonical types that are not considered in this thesis).
+The sequential nature of both DNA and proteins is not accidental: each protein's amino-acid sequence is indeed "translated"
+indirectly from a sub-sequence of DNA, through an intermediate sequence called an RNA, which is a transcription
+(one-to-one mapping) of the relevant sub-sequence of DNA.
+
+Then, the popular view is that protein function can be understood according to the sequence-structure-function paradigm.
+At a high level, the paradigm states that a protein's amino-acid sequence, due to the physical forces arising from the biochemically
+diverse amino-acids composing it, "folds" into a complex 3D structure, and it is then owing to this specific structure that
+the protein carries its specific function. For example, to serve the purpose their very name suggests, ion channels must be
+shaped with a "channel" in the center that can be opened and closed depending on specific external conditions.
+
+% TODO: write a better transition
+However, "the devil is in the details", so in what follows I will describe in greater details elements of the paradigm and
+of protein science in general that are important to understand this thesis.
+
+We start with discussing amino-acids and the protein folding process.
+
+amino-acids: the building blocks
+20 of them, each composed of a "backbone" substructure that is the same across them, and a "side-chain" that is unique for each
+amino-acid.
+we refer to a specific 
+
+with different biochemical properties: 
+
+
+
+
+
+talk about primary structure, secondary structure, and tertiary structure
+
+talk more about amino-acids
+
+
 
 
