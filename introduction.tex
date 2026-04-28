@@ -135,6 +135,9 @@ TODO: maybe change this
     --> moleculr dynamics
     --> rosetta and other scoring tools
     --> machine learning!!!
+--> talk about some engineering task that we consider? mutation effect prediction, rotamer packing...
+    no need to go into the details, since each chapter has its own introduction and motivation as well,
+    here I'm only setting the stage
 
 
 
@@ -171,6 +174,7 @@ the specific machine learning framework that is the subject of this thesis.
 
 \section{Proteins and their functions}
 
+
 \subsection{How proteins are made}
 
 Within cells, information of how proteins are built is encoded directly into the DNA.
@@ -194,13 +198,15 @@ the diversity in the amino-acids. There are 20 possible canonical amino-acids~\f
 so-called non-canonical amino-acids, but they are rare and mostly get created after the RNA-protein translation
 event. For simplicity, we do not considee them in this work}, with size spanning between the 5 heavy atoms
 of Glycine (G) to the 14 of Tryptophan (W). All amino-acids share a substructure called the \textit{backbone},
-composed of a central carbon - the C$\alpha$ - bonded to an amino group (-NH$_2$) and a carboxylic group (-COOH).
+composed of a central carbon - the C$\alpha$ - bonded to a carboxylic group (-COOH) and an amino group (-NH$_2$) (with the exception of proline).
 Along a protein chain, subsequent amino-acids are linked together along their backbones via \textit{peptide bonds},
-whereby the carboxyl group of one reacts with the amino group of the other. What distinguishes each amino-acid is
-then the variable substructure, called the \textit{side-chain} as it "dangles" on the side of the protein chain, connected to the bakbone via the C$\alpha$.
-Side-chains span a wide range of chemistries, but are generally categorized in: hydrophobic, polar, positively charged,
-negatively charged, and special cases, like prolines (P), which can only adopt certain backbone conformations,
-cysteines (C) that can form the very stable disulfide bonds, and glycines (G) which have no side-chain.
+whereby the carboxyl group of one reacts with the amino group of the other; the sub-section of a protein denoted by all
+of the bonded amino-acid backbones is commonly referred to as the protein's backbone.
+What distinguishes each amino-acid is then its variable substructure.
+This is called the \textit{side-chain} as it "dangles" on the side of the protein chain, and it is connected to the backbone via the C$\alpha$.
+Side-chains span a wide range of chemistries, but are generally categorized as follows:
+hydrophobic, polar uncharged, positively charged, negatively charged, and special cases, like prolines (P), which can only adopt certain 
+backbone conformations, cysteines (C) that can form the very stable disulfide bonds, and glycines (G) which have no side-chain.
 The high diversity of chemistries in the amino-acids, coupled with the extremely high number of possible sequences
 that can be created with them~\footnote{for a typical length of 400 residues, that is $20^{400}$ possible protein sequences,
 which dwarves the estimated number of atoms in the universe - $10^{80}$}, generates enourmous complexity that is at the
@@ -210,18 +216,103 @@ core of proteins' functional diversity.
 \subsection{The Sequence-Structure-Function paradigm}
 
 At a very high level, the way in which a protein's amino-acid sequence results in its function is often understood
-via the "sequence-structure-function" paradigm. In this description, function is understood via \textit{structure}:
-the protein's sequence, owing to complex non-covalent interactions between the side-chains of the residues that compose it,
-"folds" into a complex 3D structure, and it is then owing to this specific structure that the protein can carry its function.
+via the "sequence-structure-function" paradigm. In this description, the key bridge between the two is \textit{structure}:
+the protein's sequence, owing to non-covalent interactions between the diverse side-chains of the residues that compose it,
+as well as between residues and the immediately surrounding environment (mostly water), "folds" into a complex 3D structure,
+and it is then due to the specific structure that the protein carries a specific function. A canonical example is ion channels:
+to serve the purpose their name suggests, they are shaped with a "channel" in the center which a size and shape such that
+they can let specific ions through at the right time.
+
+Over the course of my PhD, I have learned that this description is useful, but its details as well as its exceptions must
+be noted with care. In what follows, I will attempt to unpack this paradigm carefully.
+
+
+\subsubsection{sequence $\to$ structure}
+
+We start by noting that proteins do not generally adopt a static 3D structure: the truth is, as always, more nuanced.
+As mentioned above, the protein's amino-acid composition (i.e. its sequence) determines the interactions
+the protein has with itself and with the watery environment it is in.
+Sometimes, the amino-acid composition is such that the protein never adopts a stable conformation: these proteins
+are referred to as "intrinsically disordered", and make up around $~30\%$ of the human proteome \todo{(cite)}.
+Most times, however, these interactions cause the protein to "fold" onto itself into a mostly-stable 3D structure.
+
+There are several types of interactions and effects that contribute to a protein's fold: these include electronic interactions, 
+which occur between charged side-chains, disulfide bonds, which are covalent bonds binding the Sulfur atoms of two nearby
+cysteine residues, and perhaps the two most importat ones, hydrogen bonds and hydrophobic effects.
+An hydrogen bond is a mostly electrostatic interaction, forming when a hydrogen atom covalently bound to an electronegative
+atom (called the "donor"), interacts with another electronegative atom (the "acceptor") that has a lone pair of electrons.
+Hydrogen bonds accur frequently in proteins, and are the primary drivers for the formation of \textit{secondary} structure
+elements. Secondary structure is a local, regular folding pattern of the protein - in between the sequence (aka primary structure)
+and the overall 3D fold (tertiary structure). There are three main secondary structure elements: $\alpha$-helices, a right-handed 
+helix held together by hydrogen bonds; $\beta$-sheets, linear stretches of protein held together side-by-side via hydrogen bonds;
+and finally loops, which do not have a regular shape - but can be both flexible and well-ordered - and serve as connecting regions
+between the other elements.
+Finally, the effect that is often cited as the primary driver of a protein's 3D fold is the hydrophobic effect.
+This is the name for the tendency of hydrophobic residues - such as alanines, valines, and leucines - to "hide" from water
+molecules which, since they are polar, tend to engage with polar counterparts: other water molecules and polar residues.
+This effect gives rise to a particular 3D fold by forcing hydrophobic residues to be close to each other, "burying" themselves
+into the core of a 3D structure that they themselves contribute to create.
+
+So far I have talked of protein chains as if they're flexible "strands".
+This flexibility does however have its limits, which are worth mentioning.
+The protein chain can "bend" along two dihedral angles that from along the backbone: $\phi$ and $\psi$. 
+Crucially, the range of values that these angles can take varies among the amino-acids.
+All amino-acids have roughly the same admissible range, except for two: glycines and prolines.
+Glycines are the most flexible: the lack of a side-chain allows for certain conformations that in other amino-acids are barred
+by steric clashes.
+Prolines instead are the opposite: their unique backbone geometry - with the amino group substituted by the pyrrolidine ring -
+restricts the possible range of dihedral angles, making Prolines notably unsuitable for both $\alpha$-helices and $\beta$-strands.
+
+The interplay of the interactions and effects mentioned above is complex, and it can be highly dynamic.
+Luckily, thermodynamics offers a conceptual framing that ties together these complex effects into quantities that ultimately
+allow us to reason about the global "stability" of a given
+protein structure, intended intuitively as the propensity of the protein to hold that specific structural configuration.
 
 
 
 
+Specifically, every protein configuration can be assigned what is called a "Gibbs Free Energy" (denoted by $G$).
+This thrmodynamic quantity, with units of energy, is used in chemistry to determine whether a given reaction will
+occurr spontaneously. In this case the "reaction" is the folding a protein from a general unfolded (disordered) state
+into a specific structure. Crucially, if the free 
+
+In this framing, the interactions and effects can contribute to one of two quanties that are properties of the system.
+Enthalpy  and entropy...
+
+eenthalpy and entropy come together in the "Gibbs Free Energy" (denoted by $G$).
 
 
-talk about primary structure, secondary structure, tertiary structure
+finish talking about the thermodynamic framing
 
-say that secondary structure is important and plays a role in design and engineering
+mention and show "folding funnel" picture from Wolynes and Onuchic and others
+
+talk about the importance of measuring protein therodynamic stability: some proteins need to hold a certain shape in order
+to carry their function!
+
+mention at some point that x-ray crystallography and NMR as techniques to obtain 3D structures
+
+
+
+
+\subsubsection{structure (and sequence) $\to$ function}
+
+
+A protein carries its function via interacting with other molecules.
+This seeminly trivial statement hides an ocean of complexity in its implications.
+
+Proteins trivially interact with other molecules through contacts with their surface.
+This has several implications:
+(1) the 3D fold of the protein can determine the overall nature of the interactions carried by the protein.
+this determines which residues are "exposed". we often talk about the "binding site" of a protein, meaning the location on the
+protein's surface that the protein uses to interact with other molecules in carrying its function.
+global fold of the antibody, global fold of the 3D structure.
+\todo{say more, I'm tired}
+(2) the amino-acid composition, and even the local structure of the binding site determine the specificity of the function.
+For example, two antibodies with different amino-acid composition at the binding site will interact with different pathogens,
+thus eliciting different immune responses. The global function is the same, but diffrs in details.
+
+maybe talk about function in tiers and relate each tier to the relevant structural and sequence elements.
+
 
 
 
@@ -246,48 +337,6 @@ to make, and sometimes can even surpass human-crafted models.
 
 Nevertheless, reasoning about optimal designs of machine learning models is important to achieve accurate-enough predictions,
 as is the understanding of these 
-
-
-
-
-% In fact, according to the central dogma of biology \todo{(cite Crick 1958)}, much of the information in DNA encodes precisely for proteins,
-% and it is proteins that act as the functional units within life's machinery.
-
-How is this functional diversity achieved?
-Just as DNA is fundamentally a long chain (also referred to as "sequence") of special molecules called nucleotides - of which there are 
-4 types - each protein is fundamentally composed of a chain or sequence of small molecules called \texit{amino-acids},
-of which there are 20 canonical types (plus other non-canonical types that are not considered in this thesis).
-The sequential nature of both DNA and proteins is not accidental: each protein's amino-acid sequence is indeed "translated"
-indirectly from a sub-sequence of DNA, through an intermediate sequence called an RNA, which is a transcription
-(one-to-one mapping) of the relevant sub-sequence of DNA.
-
-Then, the popular view is that protein function can be understood according to the sequence-structure-function paradigm.
-At a high level, the paradigm states that a protein's amino-acid sequence, due to the physical forces arising from the biochemically
-diverse amino-acids composing it, "folds" into a complex 3D structure, and it is then owing to this specific structure that
-the protein carries its specific function. For example, to serve the purpose their very name suggests, ion channels must be
-shaped with a "channel" in the center that can be opened and closed depending on specific external conditions.
-
-% TODO: write a better transition
-However, "the devil is in the details", so in what follows I will describe in greater details elements of the paradigm and
-of protein science in general that are important to understand this thesis.
-
-We start with discussing amino-acids and the protein folding process.
-
-amino-acids: the building blocks
-20 of them, each composed of a "backbone" substructure that is the same across them, and a "side-chain" that is unique for each
-amino-acid.
-we refer to a specific 
-
-with different biochemical properties: 
-
-
-
-
-
-talk about primary structure, secondary structure, and tertiary structure
-
-talk more about amino-acids
-
 
 
 
