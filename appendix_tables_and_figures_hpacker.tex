@@ -146,7 +146,7 @@
 
 \begin{table}[t]
     \centering
-    
+    \resizebox{0.9\textwidth}{!}{
     \begin{tabular}{l c c c | c c c }
      & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
      & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
@@ -162,8 +162,9 @@
      H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.826 & 0.540 & 1.032 & 0.972 & 0.591 & 1.214 \\
      H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.821 & 0.530 & 1.029 & 0.964 & 0.589 & 1.208 \\
      H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.730 & 0.452 & 0.941 & 0.880 & 0.504 & 1.124 \\
-        
+
     \end{tabular}
+    }
     \figcaption{Reconstruction RMSD when considering the additional (non-natural) symmetries
     used by AttnPacker.}{}
     \label{tab:rmsd_with_symmetries}
@@ -172,7 +173,7 @@
 
 \begin{table}[t]
     \centering
-    
+    \resizebox{0.9\textwidth}{!}{
     \begin{tabular}{l c c c | c c c }
      & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
      & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
@@ -188,8 +189,9 @@
      H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.842 & 0.540 & 1.060 & 0.992 & 0.598 & 1.239 \\
      H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.837 & 0.529 & 1.057 & 0.984 & 0.596 & 1.232 \\
      H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.741 & 0.444 & 0.968 & 0.895 & 0.500 & 1.147 \\
-        
+
     \end{tabular}
+    }
     \figcaption{Reconstruction RMSD when standardizing the true structure by reconstructing it
     using our data-derived constant redundant internal coordinates.}{}
     \label{tab:rmsd_with_standardization}
@@ -197,7 +199,7 @@
 
 \begin{table}[t]
     \centering
-    
+    \resizebox{0.9\textwidth}{!}{
     \begin{tabular}{l c c c | c c c }
      & \multicolumn{6}{c}{Atom RMSD \AA $\downarrow$} \\
      & \multicolumn{3}{c}{CASP13} & \multicolumn{3}{c}{CASP14} \\
@@ -213,8 +215,9 @@
      H-Packer$_2$ $\ell_{\text{max}} = 5$    & 0.805 & 0.506 & 1.023 & 0.953 & 0.560 & 1.202 \\
      H-Packer$_5$ $\ell_{\text{max}} = 5$    & 0.800 & 0.496 & 1.019 & 0.945 & 0.558 & 1.195 \\
      H-Packer$_{up}$ $\ell_{\text{max}} = 5$ & 0.706 & 0.414 & 0.930 & 0.860 & 0.471 & 1.111 \\
-        
+
     \end{tabular}
+    }
     \figcaption{Reconstruction RMSD when considering both the additional (non-natural)
     symmetries used by AttnPacker, and when standardizing the true structure by reconstructing it
     using our data-derived constant redundant internal coordinates.}{}

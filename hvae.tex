@@ -75,7 +75,6 @@ found in the Appendix (Sec.~\ref{sec:mlp_decoder_appendix}) and in Table~\ref{ta
 
 
 \section{Methods}
-\label{sec:hvae}
 
 \noindent {\bf Network architecture and training.}  H-(V)AE consists of an encoder that, through
 learned linear projections and pre-set nonlinear operations, project the data  onto a compressed
@@ -194,8 +193,10 @@ we found keeping both norms to speed up convergence in preliminary experiments
     \centering
     \resizebox{0.5\textwidth}{!}{
     \begin{tabular}{c}
-        \includegraphics[width=0.8\textwidth]{Quals/figures/mnist/disentanglement/disentanglement-n_samples=1-seed=4.pdf} \\
-        \includegraphics[width=0.8\textwidth]{Quals/figures/mnist/disentanglement/disentanglement-n_samples=1-seed=5.pdf} \\
+        \includegraphics[width=0.8\textwidth]{Quals/figures/mnist/disentanglement/disentanglement-n_samples=1-seed=4.pdf}
+        \\
+        \includegraphics[width=0.8\textwidth]{Quals/figures/mnist/disentanglement/disentanglement-n_samples=1-seed=5.pdf}
+        \\
         \includegraphics[width=0.8\textwidth]{Quals/figures/mnist/disentanglement/disentanglement-n_samples=1-seed=7.pdf}
     \end{tabular}
     }
@@ -481,7 +482,6 @@ representation by computing the ZFT (Eq.~\ref{eq:ZFT}) over the point clouds ass
 atom type within the neighrbohood (C, N, O and S) and concatenating atom-specific features of the
 same degree $\ell$.
 
-%atom-type-specific clouds (C, N, O and S) and concatenating atom-type-specific features of the same degree. We use $N = 20$ and vary the maximum spherical degree $L$. 
 We train several H-AE models with varying architectures with different maximum spherical degree $L$
 and latent space sizes $z$ (see details in Sec.~\ref{sec:protein_neighborhoods_details}); note that
 we do not experiment with variational models for this task. H-AE shows strong reconstruction
@@ -490,10 +490,7 @@ degree $L$ (Table~\ref{table:mse_and_cosine}).
 Notably, the learned latent space is smoothly structured according to geometric
 features of the neighborhoods, such as the presence of secondary structure components
 (Fig.~\ref{fig:lba_diagram}B and~\ref{fig:umaps_sec_struct_with_abundances}) and number of atoms
-(Figure~\ref{fig:umap_total_power}). In Figure~\ref{fig:lba_diagram}B we show the 
-% Notably, the learned latent space is structured according to the secondary structure of the neighborhood's focal amino acid (Fig.~\ref{fig:lba_diagram}B).\\
-
-
+(Figure~\ref{fig:umap_total_power}).
 
 
 
@@ -577,5 +574,78 @@ pre-training scheme using expensive molecular dynamics simulations that informs 
 conformational flexibility, information that our method does not have access to. Given the
 computational cost of training complex atom-level graph-based models, our residue-based approach
 can offer a more viable alternative for modeling large protein interfaces.
+
+
+\section{Summary}
+
+In this chapter, we have developed the first end-to-end SO(3)-equivariant unsupervised algorithm, termed Holographic
+(Variational) Auto-Encoder (H-(V)AE), suitable for data distributed in three dimensions around a given central point.
+The model learns an invariant embedding describing the data in a ``canonical" orientation alongside an equivariant frame
+describing the data's original orientation relative to the canonical one.
+
+Prior works have attempted to learn representations that are invariant to certain transformations. For example, in
+refs.~\cite{shu_deforming_2018, koneripalli_rate-invariant_2020} general ``shape" embeddings are learned by
+characterizing a separate ``deformation" embedding. However, these networks are not explicitly equivariant to the
+transformations of interest.
+
+Others proposed to learn an exactly invariant embedding alongside an approximate (but not equivariant) group action to
+align the input and the reconstructed data. For example, {\em Mehr et al}~\cite{mehr_manifold_2018} learns in
+quotient space by pooling together the latent encodings of copies of the data that have been transformed with sampled
+group actions, and backpropagate the minimum reconstruction loss between the decoded element and the transformed copies
+of the data. This approach is best suited for discrete and finite groups, for which it does not require approximations,
+and it is computationally expensive as it is akin to data augmentation. {\em Lohit et
+al}~\cite{lohit_rotation-invariant_2020} construct an SO(3)-invariant autoencoder for spherical signals by learning an
+invariant latent space and minimizing a loss which first finds the rotation that best aligns the true and reconstructed
+signals. Although this approach is effective for non-discrete data, it still manually imposes rotational invariance, and
+can only reconstruct signals up to a global rotation. In contrast, H-(V)AE is fully equivariant and only requires simple
+MSE for reconstruction of data in its original orientation.
+
+A small body of work went beyond invariance to develop equivariant autoencoders. Several methods construct data and
+group-specific architectures to auto-encode data equivariantly, learning an equivariant representation in the
+process~\cite{hinton_transforming_2011, kosiorek_stacked_2019}. Others use supervision to extract class-invariant and
+class-equivariant representations~\cite{feige_invariant-equivariant_2022}. A recent theoretical work proposes to train
+an encoder that encodes elements into an invariant embedding and an equivariant group action, then using a standard
+decoder that uses the invariants to reconstruct the elements in a canonical form, and finally applying the learned group
+action to recover the data's original form~\cite{winter_unsupervised_2022}. Our method in SO(3) is closely related to
+this work, with the crucial difference that our network is end-to-end rotationally equivariant, in that we use an
+equivariant decoder and learn to reconstruct the Fourier encoding of the data. A more detailed comparison of the two
+approaches and the benefits of our fully equivariant approach can be found in the Appendix
+(Section~\ref{sec:mlp_decoder_appendix}) and in Table~\ref{table:mlp_decoder_comparison}.
+Recently, generative models of atomic point clouds that are equivariant to Euclidean transformation have been developed
+for molecular~\citep{hoogeboom_equivariant_2022} and protein~\citep{yim_se3_2023, watson_broadly_2022} generation in
+3D using Normalizing Flows~\citep{hoogeboom_equivariant_2022} and diffusion processes~\citep{satorras_en_2022,
+yim_se3_2023, watson_broadly_2022}. Our work is partly related to these, but with some crucial differences. 1) Our
+method is designed for spherical images and for point clouds with a preferential center, as opposed to point clouds. 2)
+The use of an autoencoder architecture makes our method suitable for compressing information into a lower-dimensional
+space, for effective later use in annotation-scarce domains like ligand binding affinity prediction; by contrast the
+latent space of normalizing flows and diffusion-based models must have the same size as the data, making them unsuitable
+for this task.
+
+There is also a diverse body of literature on constructing representations of atomic systems that are
+invariant/equivariant to euclidean symmetries, leveraging Fourier transforms and CG tensor products, with focused
+applications on materials science~\cite{drautz_atomic_2019, musil_physics-inspired_2021, uhrin_through_2021}\\
+
+H-(V)AE's learned embeddings are highly expressive. For example, we used the learned invariants to achieve
+state-of-the-art unsupervised clustering and classification results on various spherical image datasets. By making our
+model variational in its invariant latent space, we enhanced the quality of clustering and made the model generative.
+Our model is defined fully in spherical Fourier space, and thus, can reach a desired expressiveness without a need for
+excessive computational resources.
+
+H-(V)AE also produces rich residue-level representations of local neighborhoods in protein structures, which we use as
+embeddings for downstream structure-based tasks such as Ligand Binding Affinity prediction. Indeed, H-(V)AE
+representations paired with a simple Random Forest Regressor achieve state-of-the-art results on learning the binding
+affinity between proteins and small molecule ligands.
+
+More broadly, we expect that H-(V)AE can be used to extract rich, symmetry-aware features from local neighborhoods in
+spherical images and complex 3D objects, to be used in more complex downstream tasks that benefit from the symmetry
+constraints. For example, our method can be leveraged for modeling diffusion MRI data, for which rotation-equivariant
+methods have recently shown to be highly beneficial~\cite{muller_rotation-equivariant_2021}. In structural biology, we
+expect our method to be useful for coarse-graining full-atom representations of protein structures to facilitate
+structure-based predictions of protein function. For example, a large protein graph can be coarse-grained by
+substituting its full-atom representation with rich embeddings of local structural neighborhoods learned from an
+unsupervised model. With an added supervised step, these coarse-grained embedding can be leveraged to predict complex
+protein functions, as we show for predicting ligand binding affinity. This approach is akin to using protein
+embeddings for sequence data, learned by language models, to inform (few-shot) predictions for protein
+function~\cite{swanson_predicting_2022}.
 
 

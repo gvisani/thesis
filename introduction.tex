@@ -1,15 +1,6 @@
 
-
-% let's think about figures:
-
-% 1. dna --> rna --> protein sequence --> protein structure --> protein-protein interactions
-
-% 2. protein modeling paradigms. protein structure
-
-
-
-If DNA is the blueprint of life \todo{(cite someone here)} - as it is the primary source of information of
-how a living organism is "built" - then proteins are its machinery, its fundamental functional units.
+If DNA is the recipe book of life - as it is the primary source of information of
+how a living organism is "built"~\citep{alberts_molecular_2002} - then proteins are its machinery, its fundamental functional units.
 Indeed, many of the key players across all areas of biology are proteins: ion channels, antibodies, enzymes
 - names familiar to most computer scientists - represent the remarkably different roles that proteins carry.
 
@@ -18,99 +9,126 @@ vaccines and immune receptors like T-cell receptors --> things that are relevant
 
 The ubiquity and importance of proteins makes them obvious objects of analysis across all areas of biology.
 Despite their functional diversity, all proteins carry their respective functions according to shared
-fundamental principles. Thus, thoroughly understanding - and by this I mean \texit{making accurate predictive models of} -
+fundamental principles. Thus, thoroughly understanding - and by this I mean \textit{making accurate predictive models of} -
 the fundamental principles underlying protein function can provide insight into many biological processes,
-with broad applications in biotechnology \todo{(cite some bioengineering stuff)} and medicine \todo{(cite tcr and antibody stuff)}.
+with broad applications in biotechnology and medicine~\citep{mclellan_structure-based_2013, wang_d3distalmutation_2021, hie_efficient_2024}.
 Making accurate predictions, however, is not enough. Indeed, the speed at which predictions are made also
 matters, as low speeds can bottleneck discovery, to the point of being downright unfeasible for very slow
 predictions.
 In recent years, machine learning has emerged as a tool for creating models of proteins that are both fast
 in generating predictions, and accurate enough to significantly aid discovery and engineering, with AlphaFold2 being
-perhaps the most famous example \todo{(cite)}.
+perhaps the most famous example~\citep{jumper_highly_2021}.
 
 Throughout my PhD I have followed this line of work. Specifically, this thesis explores the capabilities
 of a specific class of machine learning models that my colleagues and I have developed.
 
 In this introductory chapter, I will first give a brief primer on proteins: how they originate, how they are composed,
-how they carry their respective functions.
+and the physical basis of protein function.
 I will then discuss traditional ways in which proteins and their functions are modeled, using explicit physics
 models as the fundamental basis.
-Finally, I will introduce machine learning as a paradigm for modeling proteins, and discuss the key elements of
-the specific machine learning framework that is the subject of this thesis.
+Then, I will discuss machine learning as a paradigm for modeling proteins via learning effective theories.
+And finally, I will introduce the key design choices of the machine learning framework that is the subject of this thesis.
 
 
 \section{Proteins and their functions}
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/dogma_and_paradigm.pdf}
+    \figcaption{A protein's life cycle: from DNA to function.}{
+        Highly-simplified schematic of the central dogma of biology (from DNA to protein sequence)
+        tied to proteins' sequence-structure-function paradigm.
+        Nucleotides are represented as squared, and amino-acid residues as circles.
+        The protein represented is an antibody, whose function is to bind to the Respiratory Syncytial Virus Fusion antigen (also a protein).
+        which then elicits an immune response against the virus; adapted from PDB ID 4jhw.
+        }
+   \label{fig:dogma_and_paradigm}
+\end{figure}
 
 
 \subsection{How proteins are made}
 
 Within cells, information of how proteins are built is encoded directly into the DNA.
-At a high-level, the protein creation process can be seen as a sequence-to-sequence translation mechanism, where a 
-specific sub-sequence of the DNA - composed of 4 possible \textit{nucleotide} molecules serving as its alphabet -
-gets translated deterministically (except for errors) into a protein's sequence, composed of 20 possible \textit{amino-acid}
+At a high-level, the protein creation process can be seen as a sequence-to-sequence translation mechanism:
+a specific sub-sequence of the DNA - composed of 4 possible \textit{nucleotide} molecules serving as its alphabet -
+gets translated deterministically - except for errors - into a protein's sequence, composed of 20 possible \textit{amino-acid}
 molecules.
 
-More specifically, the process follows what is known as the central dogma of biology.
+More specifically, the process follows what is known as the central dogma of biology~\citep{alberts_molecular_2002}.
 The above-mentioned sub-sequences of DNA - referred to as "coding regions" - get first \textit{transcribed}
-into sequences of RNA - composed of 4 nucleotides just like DNA, with the exception of Tyrosines (T) being
-converted into Uraciles (U) - then each RNA segment gets \textit{translated} into a \textit{chain} (or sequence) of 
-covalently-bonded \textit{residues}, where each residue is an instance of of the 20 amino-acid types.
+into sequences of RNA - composed of 4 nucleotides just like DNA, with the exception of Tyrosines being
+converted into Uraciles - then each RNA segment gets \textit{translated} into a \textit{chain} (or sequence) of 
+covalently-bonded \textit{residues}, where each residue is an instance of one of the 20 amino-acid types; see Figure~\ref{fig:dogma_and_paradigm}.
 
 \subsection{Amino-acids}
-
-\todo{(show one of the classical images of amino-acids and refer to it in the text)}
 
 Amino-acids are the building blocks of proteins, and the diversity of protein function stems ultimately from
 the diversity in the amino-acids. There are 20 possible canonical amino-acids~\footnote{there are also other
 so-called non-canonical amino-acids, but they are rare and mostly get created after the RNA-protein translation
 event. For simplicity, we do not considee them in this work}, with size spanning between the 5 heavy atoms
 of Glycine (G) to the 14 of Tryptophan (W). All amino-acids share a substructure called the \textit{backbone},
-composed of a central carbon - the C$\alpha$ - bonded to a carboxylic group (-COOH) and an amino group (-NH$_2$) (with the exception of proline).
+composed of a central carbon - the C$\alpha$ - bonded to a carboxylic group (-COOH) and an amino group (-NH$_2$) (with the exception of proline, more on it later).
 Along a protein chain, subsequent amino-acids are linked together along their backbones via \textit{peptide bonds},
-whereby the carboxyl group of one reacts with the amino group of the other; the sub-section of a protein denoted by all
+whereby the carboxyl group of one reacts with the amino group of the other, releasing water; the sub-section of a protein denoted by all
 of the bonded amino-acid backbones is commonly referred to as the protein's backbone.
-What distinguishes each amino-acid is then its variable substructure.
-This is called the \textit{side-chain} as it "dangles" on the side of the protein chain, and it is connected to the backbone via the C$\alpha$.
+What distinguishes each amino-acid is then its variable substructure: this is called the \textit{side-chain}, and it is connected to the backbone via the C$\alpha$.
 Side-chains span a wide range of chemistries, but are generally categorized as follows:
 hydrophobic, polar uncharged, positively charged, negatively charged, and special cases, like prolines (P), which can only adopt certain 
 backbone conformations, cysteines (C) that can form the very stable disulfide bonds, and glycines (G) which have no side-chain.
+See Figure~\ref{fig:aminoacids} for the amino-acids graphs and classification into physico-chemical families.
 The high diversity of chemistries in the amino-acids, coupled with the extremely high number of possible sequences
 that can be created with them~\footnote{for a typical length of 400 residues, that is $20^{400}$ possible protein sequences,
 which dwarves the estimated number of atoms in the universe - $10^{80}$}, generates enourmous complexity that is at the
 core of proteins' functional diversity.
 
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/aminoacids.png}
+    \figcaption{Canonical amino-acids and their chemistries.}{
+        Taken from \url{https://www.technologynetworks.com/applied-sciences/articles/essential-amino-acids-chart-abbreviations-and-structure-324357}.
+        This very image was my best friend throughout the PhD.
+        }
+   \label{fig:aminoacids}
+\end{figure}
+
 
 \subsection{The Sequence-Structure-Function paradigm}
 
 At a very high level, the way in which a protein's amino-acid sequence results in its function is often understood
-via the "sequence-structure-function" paradigm. In this description, the key bridge between the two is \textit{structure}:
+via the "sequence-structure-function" paradigm; see Figure~\ref{fig:dogma_and_paradigm}.
+In this description, the key bridge between sequence and function is \textit{structure}:
 the protein's sequence, owing to non-covalent interactions between the diverse side-chains of the residues that compose it,
-as well as between residues and the immediately surrounding environment (mostly water), "folds" into a complex 3D structure,
-and it is then due to the specific structure that the protein carries a specific function. A canonical example is ion channels:
-to serve the purpose their name suggests, they are shaped with a "channel" in the center which a size and shape such that
+as well as between residues and the protein's watery environment, "folds" into a complex 3D structure,
+and it is then due to the specific structure that the protein carries a specific function.
+A canonical example is ion channels: to serve the purpose their name suggests,
+they are shaped with a "channel" in the center, with a specific size and shape such that
 they can let specific ions through at the right time.
 
 Over the course of my PhD, I have learned that this description is useful, but its details as well as its exceptions must
 be noted with care. In what follows, I will attempt to unpack this paradigm carefully.
 
 
-\subsubsection{sequence $\to$ structure}
-
+\textbf{sequence $\to$ structure}\\
+\\
 We start by noting that proteins do not generally adopt a static 3D structure: the truth is, as always, more nuanced.
 As mentioned above, the protein's amino-acid composition (i.e. its sequence) determines the interactions
 the protein has with itself and with the watery environment it is in.
 Sometimes, the amino-acid composition is such that the protein never adopts a stable conformation: these proteins
-are referred to as "intrinsically disordered", and make up around $~30\%$ of the human proteome \todo{(cite)}.
+are referred to as "intrinsically disordered", they make up around $~30\%$ of the human proteome~\citep{ward_prediction_2004},
+and carry important functions~\citep{deiana_intrinsically_2019}.
 Most times, however, these interactions cause the protein to "fold" onto itself into a mostly-stable 3D structure.
+We also note that the 3D structure of a single protein chain as a whole is commonly referred to as \textit{tertiary} structure,
+but often what are colloquially referred to as "functional" proteins are actually composed of multiple non-covalently but tightly bound
+chains each with their own tertiary structure, forming what the \textit{quaternary} structure;
+for our purposes we may group together both types of structures without loss of generality.
 
 There are several types of interactions and effects that contribute to a protein's fold: these include electronic interactions, 
-which occur between charged side-chains, disulfide bonds, which are covalent bonds binding the Sulfur atoms of two nearby
-cysteine residues, and perhaps the two most importat ones, hydrogen bonds and hydrophobic effects.
+which occur between charged side-chains, disulfide bonds, and perhaps the two most importat ones, hydrogen bonds and hydrophobic effects.
 An hydrogen bond is a mostly electrostatic interaction, forming when a hydrogen atom covalently bound to an electronegative
 atom (called the "donor"), interacts with another electronegative atom (the "acceptor") that has a lone pair of electrons.
 Hydrogen bonds accur frequently in proteins, and are the primary drivers for the formation of \textit{secondary} structure
 elements. Secondary structure is a local, regular folding pattern of the protein - in between the sequence (aka primary structure)
-and the overall 3D fold (tertiary structure). There are three main secondary structure elements: $\alpha$-helices, a right-handed 
+and the overall 3D fold (tertiary and quaternary structure). There are three main secondary structure elements: $\alpha$-helices, a right-handed 
 helix held together by hydrogen bonds; $\beta$-sheets, linear stretches of protein held together side-by-side via hydrogen bonds;
 and finally loops, which do not have a regular shape - but can be both flexible and well-ordered - and serve as connecting regions
 between the other elements.
@@ -120,7 +138,8 @@ molecules which, since they are polar, "want" to engage with polar counterparts:
 This effect gives rise to a particular 3D fold by forcing hydrophobic residues to be close to each other, "burying" themselves
 into the core of a 3D structure that they themselves contribute to create.
 
-So far I have talked of protein chains as if they're flexible "strands".
+So far we have implicitly assumed protein chains are like flexible "strands" that can bend and fold
+at the sole will of the above-mentioned effects.
 This flexibility does however have its limits, which are worth mentioning.
 The protein chain can "bend" along two dihedral angles that from along the backbone: $\phi$ and $\psi$. 
 Crucially, the range of values that these angles can take varies among the amino-acids.
@@ -132,22 +151,34 @@ restricts the possible range of dihedral angles, making Prolines notably unsuita
 
 The interplay of the interactions and effects mentioned above is complex, and it can be highly dynamic.
 Luckily, thermodynamics offers a conceptual framing that ties together these complex effects into quantities that ultimately
-allow us to reason about the global "stability" of a given protein structure, intended intuitively as the propensity of the protein
+allow us to reason about the global "stability" of a given protein's structural configuration, intended intuitively as the propensity of the protein
 to hold that specific structural configuration.
 
 
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/folding_landscape.pdf}
+    \figcaption{Gibbs free energy landscapes of protein folding.}{
+        Simplified illustrations of three canonical folding free energy landscapes.
+        \textit{left}: landscape with a single deep well, corresponding to a single stable conformation.
+        \textit{center}: landscape with two deep wells, corresponding to a fold-switching protein.
+        \textit{right}: landscape without distintly deep wells, characteristic of an intrinsically-disordered protein.
+        }
+   \label{fig:folding_landscape}
+\end{figure}
 
 
-Specifically, every protein configuration can be assigned what is called a "Gibbs free energy" (denoted by $G$).
-Without going into details, this energy quantity is derived from the Second Law of Thermodynamics,
-which states that, within a closed environment, the \textit{entropy} (defined later)
-of a system (the protein) and its environment (the watery solvent) must spontaneously increase in the absense of external work,
-i.e. $\Delta S_{tot} > 0$ over time.
-Then, $G$ is derived as a property \textit{of only the system} (i.e. the protein) such that $G$ spontaneously decreases
+Specifically, every protein configuration can be assigned what is called a "Gibbs free energy" (denoted by $G$, and free energy thereof).
+Without going into details, this quantity is derived from the Second Law of Thermodynamics,
+which states that, within a closed environment, the \textit{entropy}
+of a system (the protein) and its environment (its watery solvent) must spontaneously increase in the absense of external work,
+i.e. $\Delta S_{tot} > 0$ spontaneously over time~\citep{callen_thermodynamics_1985}.
+Then, $G$ is derived as a property \textit{of only the system} (the protein) such that $G$ spontaneously decreases
 over time. In other words, the minimization of $G$ is a substitute for the Second Law that allows us to determine whether
-a reaction (a protein folding event) would occur spontaneously, by focusing only on properties of the system \todo{(cite)}.
+a reaction (a protein folding event in this case) would occur spontaneously, by focusing only on properties of the system~\citep{phillips_physical_2013}.
 
-How is $G$ composed? It is defined as
+What are then the properties of the system that compose $G$? In short, $G$ is largely derived from the interactions and effects mentioned earlier.
+Specifically, $G$ is defined as:
 \begin{equation}
     G = H - T S
 \end{equation}
@@ -156,19 +187,19 @@ Enthalpy is essentially the internal energy of the protein, determined by molecu
 electrostatic interactions (it also formally includes a term with pressure and volume, but we assume them to be contant here).
 Entropy instead quantifies - in loose terms - the amount of "conformational freedom" of the protein: how many specific
 conformations are "easily accessible" from the current one.
-% We note that enthalpy and entropy contribute with opposite sign to the Gibbs free energy... (maybe no need to talk about this)
 
-Since nature tends to spontaneously minimize the Gibbs free energy (energy), the protein folding process can be seen as nature's attempt
-at minimizing this quantity by searching through configuration space, often visualized with Wolynes and Onuchic's "folding funnel" \todo{(show and ref figure)}
-A useful analogy is that of a "random walk biased by a gradient": the gradient is determined by the energy landscape, and the amount
-of randomness is detemined by temperature: higher temperatures cause higher exploration against the energy gradient.
-
-Note that this picture captures the complexity of the protein sequence-structure relationship.
-Indeed, depending on the structure of their energy landscape, exhibit a single stable fold (one easily-reachable global minimum
-that is hard to escape), several meta-stable conformations (multiple deep local minima), or even no generally stable conformations
-at all (no deep minima) \todo{(perhaps have an image to reference here?)}.
-Furthermore, even if a protein's conformation is in a deep (stable) energy well, some amount of small thermal fluctuation of the
-structure is always expected.
+Since nature tends to spontaneously minimize the free energy, the protein folding process can be seen as nature's attempt
+at minimizing this quantity by searching through configuration space, often visualized with the "folding funnel"~\citep{onuchic_theory_1997}.
+Note that this conceptual framing captures the full complexity of the protein sequence-structure relationship:
+the key is the structure of the free energy landscape.
+For example, a landscape with a deep, easy to reach global minimum represents a protein always found in a single, stable fold (Figure~\ref{fig:folding_landscape}, left);
+a landscape with many deep local minima indicates a protein with many stable conformations (Figure~\ref{fig:folding_landscape}, center);
+and a landscape without recognizable minima is characteristic of an intrinsically disordered protein (Figure~\ref{fig:folding_landscape}, right).
+Last, we note that the protein inhabits this landscape \textit{dynamically}:
+it is constantly being "kicked" around the landscape, moving the structure, by so-called thermal
+fluctuations, which scale in magnitude following temperature.
+A useful analogy is that of a "random walk biased by a gradient": the gradient is determined by the free energy landscape, and the amount
+of randomness is detemined by temperature: higher temperatures cause higher exploration against the gradient.
 
 In this thesis, we concern ourselves primarily with proteins that adopt a single, stable conformation, and occasionally with
 proteins that can adopt meta-stable conformations (Chapter~\ref{sec:hermes}).
@@ -176,9 +207,9 @@ For a given stable conformation, we quantify its folding stability as
 \begin{equation}
     \Delta G_{folding} = G_{folded} - G_{unfolded}
 \end{equation}
-where $G_{folded}$ and $G_{unfolded}$ are the Gibbs free energies of the folded and unfolded states, respectively.
+where $G_{folded}$ and $G_{unfolded}$ are the free energies of the folded and unfolded states, respectively.
 If $\Delta G_{folding} < 0$ then the protein is stable in the folded conformation, meaning it is more likely to be found in 
-the folded conformation than in the unfolded one, and comparatively more so the lower $Delta G_{folding}$ is.
+the folded conformation than in the unfolded one, and comparatively more so the lower $\Delta G_{folding}$ is.
 
 Quantifying the relative stability of two meta-stable conformations can be done analogously by considering their relative energy:
 the conformation with lowest energy should be the most likely to find the protein in.
@@ -186,26 +217,24 @@ However, there is a key subtlety: since both conformations sit at minima of the 
 between them. This barrier may be hard to insurmountable by thermic fluctuations alone, or it may be surmounted
 on time-scales longer than the characteristic length of certain biological processes involving the protein.
 Therefore, coming out with the likelihood of finding a protein in a given meta-stable conformation over another
-is often more complex than simply considering the energy value at the landscape's minima. % maybe say less or don't even mention this?
-
-% talk about mutation effects maybe? or reserve them to later motivation for modeling?
+is often more complex than simply considering the energy value at the landscape's minima.
 
 A major breakthrough in protein science has been the ability to experimentally determine the structure of a protein in its lowest-energy state,
-using techniques like X-Ray Crystallography \todo{(cite)}, and deposited in the Protein Data Bank \todo{(cite)}.
+using techniques like X-Ray Crystallography~\citep{rupp_biomolecular_2010}, and deposited in the Protein Data Bank~\citep{berman_protein_2000}.
 These structure can be seen as "snapshots" of the protein's around its lowest-energy, so they do not capture their inherent thermodynamic
 fluctuations, but are usually sufficient representations of the structure we expect the protein to have as it carries its function.
 
 
 
-\subsubsection{structure (and sequence) $\to$ function}
-
+\textbf{structure (and sequence) $\to$ function}\\
+\\
 Having unpacked some of the complexity of the protein sequence-structure relationship, we move on to talk about how both
 relate to function.
 First, what exactly do we mean by "function"? At a fundamental - and seemingly trivial - level, a protein carries its function
 through engaging in specific interactions with other molecules in its environment.
-The way in which sequence and structure determine the specific interactions can be understood at two levels of abstraction.
+The way in which sequence and structure determine the specific interactions can be understood at \textbf{two} levels of abstraction.
 At the highest level, the protein's general 3D fold determines the "class" of interactions carried by the protein.
-The structure of ion channels is a canonical example: to function as an ion channel, a stable channel-like structure is necessary.
+The structure of ion channels is again a canonical example: to function as an ion channel, a stable channel-like structure is necessary.
 Immune receptors are another example: an immune receptor for example must be structured so that it binds to its antigen,
 while being located in the cell surface and able to carry signals through the inside of the cell.
 More generally, the 3D fold of the protein can determine the shape and location of the "binding site" of the protein,
@@ -213,7 +242,7 @@ i.e. the surface "patch" with which the protein interacts with other molecules i
 
 At the lower level of abstraction then, is the precise amino-acid composition of the binding site, which determines the
 exact molecules - e.g. the exact ion or antigen(s) - an individual protein interacts with.
-Notably, the amino-acid composition of the binding site is often largely  independent of the overall fold of the protein:
+Notably, the amino-acid composition of the binding site is often largely independent of the overall fold of the protein:
 for example, immune receptors explicitly evolved to have a hyper-variable binding site while keeping the overall fold mostly
 constant, allowing for receptors that bind a very broad range of antigens and thus can guarantee coverage from a broad range
 of pathogens.
@@ -247,7 +276,7 @@ Then, a lower $K_d$ - and hence a lower $\Delta G_{binding}$ - implies a higher 
 in the bound state at equilibrium, a likelihood that is driven by the "tighter binding" granted in turn by the enthalpic
 and entropic effects of the interatomic interactions previously mentioned.
 
-Binding affinity can be measured experimentally via (mostly expensive) methods like Surface Plasmon Resonance (SPR) \todo{(cite)}.
+Binding affinity can be measured experimentally via (mostly expensive) methods like Surface Plasmon Resonance (SPR)~\citep{karlsson_spr_2004}.
 
 
 % Binding is a dynamic process, constantly oscillating between the bound and the unbound state alink to the thermodynamic
@@ -261,9 +290,9 @@ Binding affinity can be measured experimentally via (mostly expensive) methods l
 
 There is a rich and ongoing history of experimental techniques for measuring key properties of proteins.
 I already mentioned X-Ray Crystallography to determine a protein's structure and SPR for binding affinity,
-but there are also methods to measure a protein's thermodynamic stability \todo{(cite)}, complex functional phenotypes
-that depend upon stability and multiple binding events \todo{(cite viral entry DMS studies?)}, and even new techniques
-for measuring local un-folding events \todo{(cite that one Rocklin paper)}.
+but there are also methods to measure a protein's thermodynamic stability~\citep{tsuboyama_mega-scale_2023}, complex functional phenotypes
+that depend upon stability and multiple binding events~\citep{tan_high-throughput_2023}, and even new techniques
+for measuring local un-folding events~\citep{ferrari_large-scale_2025}.
 
 Each of measurements can give us different insight into how the protein's amino-acids sequence results its function:
 resolving the lowest-energy structure tells us the proteins overall function; measuring changes to its stability as 
@@ -273,10 +302,10 @@ stop the protein from carrying its function by using a drug.
 
 However, while experimental techniques allow us to have a close look at what happens in nature, they are
 - and likely always will be - expensive and laborious.
-The alternative - as in all the physical sciences - is to predict desired properties using theoretical and computational
+The alternative - as in all of science - is to predict desired properties using theoretical and computational
 models of proteins.
-Indeed, the mere fact that we seem to have a grasp of all the fundamental actors at play - as very briefly outlined
-in the previous chapter - has made researcher feel that highly-predictive models are within reach.
+Indeed, the mere fact that we seem to have a grasp of all the fundamental physico-chemical forces at play,
+has made researcher feel that highly-predictive models are within reach.
 
 Being within reach, however, does not mean being simple.
 In what follows, I will outline some of the different paradigms that are used to make predictive models of proteins.
@@ -285,25 +314,27 @@ I will do so in decreasing order of explicit physico-chemical detail included in
 
 \subsection{Molecular Dynamics force fields: pure physics and dynamics}
 
-At its core, inMolecular Dynamics (MD) we construct a parameterized potential energy function at the atomic level - Lennard-Jones, Coulomb, etc. -
-whose parameters are fit to reproduce quantum chemical calculations on small molecules and experimental thermodynamic data
+At its core, Molecular Dynamics (MD) consists in constructing a parameterized potential energy function at the atomic level - Lennard-Jones, Coulomb, etc. -
+whose parameters are fit to reproduce quantum chemical calculations on small molecules and experimental thermodynamic data~\citep{hollingsworth_molecular_2018, lopes_current_2015}
 (with the implicit assumption that these parameters apply broadly across all chemical domains, including proteins).
 This potential function considers as input the full atomic configuration - including the solvent (usually water for proteins) -
-and its output is then differentiated with respect to the atoms' coordinates to generate a force field \todo{(cite AMBER and CHARMM ?)}.
+and its output is then differentiated with respect to the atoms' coordinates to generate a force field.
 The force field is then integrated trough time with very short (femtoseconds) time steps to generate a trajectory.
 In essence, the MD trajectory seeks to be a simulation of the reaction dynamics through time (e.g. folding, binding...).
 Therefore, in principle and given enough time, one can map out the energy landscape for folding and binding, and compute
-gibbs free energy differences such as $\Delta G_{folding}$ and $\delta G_{binding}$ \todo{(cite DESRES paper that computes binding affinity, I know one exists)}.
+gibbs free energy differences such as $\Delta G_{folding}$ and $\Delta G_{binding}$~\citep{pan_quantitative_2017}.
 
 While MD appears to be a natural, first-principles way of modeling protein function, it is heavily bottleneck by
 speed and computational requirements. Indeed, running a single molecular dynamics simulation at the time-scales required
 to estimate relevant quantities takes enormous computational resources, prohibitive for medium and large systems.
 
-The speed of an MD simulation decreases appoximately linearly with the number of atoms present in the simulation \todo{(cite)}.
+The speed of an MD simulation decreases appoximately linearly with the number of atoms present in the simulation
+(see~\citep{darden_particle_1993} for a theoretical bound on the most expensive operation, and~\citep{shaw_anton_2021} for an empirical benchmark).
 For example, for atomic systems the size of a medium-size protein (92K atoms, 234 residues), the simulation speed is in the order of
 1 $\micro s / day$ using commercially-available hardware (a single A100 GPU), and in the order of 100s of $\micro s / day$ if using 
-specialized hardware \todo{(cite the Anton 3 paper Shaw et al 2021)}. By comparison, the characteristic timescale of folding for 
-proteins of similar size is in the order of \textit{seconds}. Thus, molecular dynamics on its own is limited in the types of molecular
+specialized hardware~\citep{shaw_anton_2021}. By comparison, the characteristic timescale of folding for 
+proteins of similar size is in the order of \textit{seconds}~\citep{naganathan_scaling_2005}.
+Thus, molecular dynamics on its own is limited in the types of molecular
 processes that it can model within a reasonable amount of time - and even then its accuracy is unclear.
 This bottleneck is even more problematic when considering that much of biological research and engineering involve
 predicting the properties of multiple proteins or protein-drug combinations, for example in efforts to find optimal drug candidates
@@ -315,7 +346,7 @@ albeit currently limited to events that happen at short-enough timescales.
 
 \subsection{Physics-based scoring functions: static physics and statistics}
 
-Scoring functions, among which the most notable example is Rosetta \todo{(cite Alford et al. in 2017)},
+Scoring functions, among which the most notable example is Rosetta~\citep{alford_rosetta_2017},
 are related to molecular dynamics in that they also are largely grounded in first-principles physical modeling,
 and they also construct a potential energy function. However, while the potential in MD is crafted to provide accurate
 dynamics, the potential in Rosetta is designed only to provide a landscape in which the global minimum corresponds
@@ -342,7 +373,8 @@ However, their limitations in accuracy and in speed still leave space for altern
 
 \subsection{Machine learning for proteins}
 
-In recent years, machine learning (ML) has emerged as a new paradigm for modeling proteins at large.
+In recent years, machine learning (ML)~\citep{bishop_pattern_2006}, and in particular the sub-field of deep learning~\citep{goodfellow_deep_2016},
+has emerged as a new paradigm for modeling proteins at large.
 
 At a high level, machine learning is the building of algorithms that \textit{learn} function maps between different data domains
 (supervised learning) or that learn data distributions (unsupervised learning, generative modeling, often learning a function from data to likelihood value),
@@ -350,15 +382,15 @@ such that the learned function \textit{generalizes} to data that was not used to
 Here, by generalization we mean specifically the ability of the model to be approximately as predictive on unseen data as it is on training data.
 
 As such, ML has much broader scope than molecular dynamics and physics-based scoring functions: in fact, it can be used both to parameterize
-MD simulations \todo{(cite Allegro)}, and for scoring proteins conformations \todo{(cite Roney et al and ProteinEBM)}.
+MD simulations~\citep{musaelian_learning_2022}, and for scoring proteins conformations~\citep{roney_state---art_2022, roney_protein_2026}.
 
 More broadly, in the context of protein modeling, the role of machine learning has been to substitute explicit physics-based modeling with
 learned maps capturing complex statistical patterns present in data.
 Furthermore, while explicit physics-based modeling must operate at the atomic level - since the most robust laws that physics has worked out
 operate at this scale, with machine learning we have more freedom in choosing the scale at which we want to learn the maps, and also the 
 "subjects" of the maps.
-For example, one could in principle learn a low-level map like the force applied on a single atom \todo{(cite Allegro)} just like they could
-learn a very high-level map like one that outputs the lowest-energy structure of a protein from its amino-acid sequence \todo{(cite AlphaFold)}.
+For example, one could in principle learn a low-level map like the force applied on a single atom~\citep{musaelian_learning_2022} just like they could
+learn a very high-level map like one that outputs the lowest-energy structure of a protein from its amino-acid sequence~\citep{jumper_highly_2021}.
 
 Whether a given function map gets learned successfully (i.e. it \textit{generalizes}), is primarily a combination of two things:
 the representation capacity of the model, and the avilability of data.
@@ -366,7 +398,8 @@ the representation capacity of the model, and the avilability of data.
 The model's representation capacity must be large enough to be able to capture the complexity of the task; another way to conceptualize 
 representation capcity is via the \textit{function class} that can be represented by a model: in a successful model, its function class must
 admit a good-enough approximation of the underlying target map.
-Luckily, having large-enough representation capacity is not an issue: neural networks can in principle learn abitrarily complex maps \todo{(cite the Universal Approximation Theorem)}.
+Luckily, having large-enough representation capacity is not an issue: neural networks, at the basis of deep learning, can in principle
+represent arbitrarily complex maps~\citep{cybenko_approximation_1989, hornik_multilayer_1989}.
 
 The second necessary ingredient then is data. Unfortunately, the amount of data required to sucessfully learn a model scales with the complexity
 (i.e. representation capacity) of the model itself, and thus generally with the complexity of the target map.
@@ -378,7 +411,24 @@ This can be done in several ways. An obvious one is simply to collect more relev
 However, this option is limited by high costs - in terms of the time, financial resource and expertise required for wet-lab experiments.
 Therefore, careful modeling strategies are required to make the most out of the available data.
 
-\subsubsection{Overview of modeling approaches}
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/machine_learning_protein_tasks.pdf}
+    \figcaption{Examples of machine learning tasks on proteins.}{
+        \textbf{A}: protein structure prediction from single sequence.
+        \textbf{B}: inverse protein folding.
+        \textbf{C}: rotamer packing.
+        \textbf{D}: masked amino-acid modeling in sequence: predicting the probability distribution of amino-acids that fit in a sequence context.
+        \textbf{E}: masked amino-acid modeling in structure: predicting the probability distribution of amino-acids that fit in a structural context.
+        \textbf{F}: free energy scoring of a protein conformation.
+        \textbf{G}: predicting the effect of an amino-acid mutation on a protein's stability, using the protein's sequence.
+        }
+   \label{fig:machine_learning_protein_tasks}
+\end{figure}
+
+
+\textbf{Overview of modeling approaches}
 
 In my view, modeling decisions in machine learning for proteins can be placed in three complementary approaches.
 
@@ -391,19 +441,21 @@ any map it can learn must respect that symmetry. For example, say we wish to lea
 structural conformation. We know that the output of such target map (structure$\to$energy) should be \textit{invariant} (i.e. not change)
 with roto-translations of the structure. Therefore, if we constrain the model's function class in the right way, we can reduce the need for data
 to learn the map. This approach is central in this thesis and is widely used in
-machine learning research, belonging to the sub-field known as Geometric Deep Learning \todo{(cite GDL book)}.
+machine learning research, belonging to the sub-field known as Geometric Deep Learning~\citep{bronstein_geometric_2021}.
 
 The second approach for careful modeling of proteins with machine learning, is to carefully craft the \textit{task},
 by specifying the "subjects" of the learned map, such that it is learnable with available data.
-This is quite abstract, so let me explain by mean of examples.
-AlphaFold2 is often cited as having made such progress in predicting the 3D structure of proteins to have effectively "solved" it \todo{(cite AF2, and maybe some press?)}.
-Aside from debates on what "solving" means, the map that the AlphaFold2 neural network learns is actually not from sequence to structure, but rather
+This is quite abstract, so let me explain by means of examples.
+AlphaFold2 is cited as the first machine learning algorithm with sufficiently high performance in predicting protein structures
+to be considered broadly useful~\citep{jumper_highly_2021}. However, the map that the AlphaFold2 neural network learns is actually not from sequence to structure, but rather
 from Multiple Sequence Alignment (MSA) to structure. In short, an MSA is a stacking of protein sequences that highlights which residues and sections 
-of the protein have been preserved throughout evolution, and which ones have been preserved. Since co-evolutionary signal in MSAs is indicative of structural
-features \todo{(add key citation here)}, the mapping MSA$\to$structure is much easier to learn (i.e. requires less data examples) than the mapping sequence$\to$structure.
-Since an MSA can be constructed for any protein (except for orphan proteins \todo{(cite)}), at the level of abstraction of the user, the mapping appears
+of the protein have been preserved throughout evolution, and which ones have been preserved; proteins in the MSA are referred to as \textit{homologs} of the query protein,
+a term indicating a close common evolutionary ancestor which causes sequence similarity.
+Since co-evolutionary signal in MSAs is indicative of structural features~\citep{gobel_correlated_1994}, the mapping MSA$\to$structure is much easier to learn
+(i.e. requires less data examples) than the mapping sequence$\to$structure.
+Since an MSA can be constructed for any protein (except for \textit{orphan} proteins, which have no detected homologs), at the level of abstraction of the user, the mapping appears
 to be from sequence to structure, but the machine learning map is really MSA$\to$structure (in fact, it is notoriously hard to accurately predict the structure
-of orphan proteins \todo{(cite)}).
+of orphan proteins~\citep{chowdhury_single-sequence_2022}).
 Another example that is more relevant to this thesis, is that of predicting mutation effects.
 Specifically, say we wish to predict the effect that a certain mutation (i.e. a single amino-acid substitution in the protein) has on its stability $\Delta G_{folding}$.
 We could conceivably construct a map from the amino-acid sequences to the energetic difference (sequences$\to$$\Delta\Delta G$).
@@ -412,16 +464,17 @@ However, we know from first-principle protein science that the forces and effect
 protein directly provides information of the types of interactions and effects that the mutation could create or destroy.
 This very approach is considered in this thesis, even going one step further and assuming knowledge of only the local structure surounding the
 mutating residue.
+Overall, the diversity of tasks that can be built and ``machine-learned" is astounding; some examples are shown in Figure~\ref{fig:machine_learning_protein_tasks}.
 
 Finally, the third approach, related in spirit to the second one, is to craft a task that can be used to make \textit{zero-shot} predictions for other tasks that
 have less available data and thus cannot be learned as robustly.
 A model's prediction for a given task is termed "zero-shot" if the model was not explicitly trained to make such prediction.
-These predictions only work non-trivially if there is meaningful overlap in the target maps of the two tasks.
-A notable example of this in protein modeling is the predicred confidence scores of a structure prediction model like AlphaFold2 \todo{(cite alphafold 2)}.
+These predictions only work if there is meaningful semantic overlap in the target maps of the two tasks~\citep{larochelle_zero-data_2008, palatucci_zero-shot_2009}.
+A notable example of this in protein modeling is the predicred confidence scores of a structure prediction model like AlphaFold2~\citep{jumper_highly_2021}.
 Confidence scores are trained to recapitulate the expected error in the structure predicted by the algorithm. However, it has been repeatedly found
-that confidence scores can serve as scoring functions of both protein sequences and structures, that partially recapitulare protein stability \todo{(cite Roney et al)}
-and protein-protein binding affinity \todo{cite tcrdock}. We make use of this in chapter~\ref{sec:tcrpmhc} and I have co-authored a perspective article on this
-phenomenon \todo{(cite our article)}.
+that confidence scores can serve as scoring functions of both protein sequences and structures, that partially recapitulare protein stability~\citep{roney_state---art_2022}
+and protein-protein binding affinity~\citep{Bradley2023-rl}. We make use of this in chapter~\ref{sec:tcrpmhc} and I have co-authored a perspective article on this
+phenomenon~\citep{nourmohammad_machine-learning_2022}.
 Another example is the prediction of the effect of amino-acid mutations on several phenotypes (e.g. stability) via probabilistic models.
 It has been observed time and time again that learning the probability distribution over possible amino-acids conditioned on sequence and/or structure contexts
 can partically recapitulate mutational effects. Crucially, carefully choosing the context can result in predictions that are more indicative of certain phenotypes over others.
@@ -429,7 +482,7 @@ Chapters~\ref{sec:hermes}~and~\ref{sec:tcrpmhc} adopt and discuss this approach.
 
 
 
-\subsubsection{Machine learning models as effective theories}
+\textbf{Machine learning models as effective theories}
 
 The modeling approaches discussed above highlight the conceptual freedom in design choices that can be made when modeling proteins with machine learning.
 Scales, tasks, parameterizations: these are all degrees of freedom in the design space of protein ML models, yielding models with varying accuracy, use cases, and speed.
@@ -466,15 +519,28 @@ There are three main design choices, all driven by considerations rooted in phys
           C$\alpha$ and with a radius of 10 or 12.5~\AA~depending on the model. We call these local environment \textit{neighborhoods}.
     \item \textit{Atom-level representation}. Since the chemical properties of amino-acids - and the interactions they can partake in -
           are trivially described by their atomic composition - we consider as input the atomic point cloud itself, instead of a coarse-grained
-          representation of structure and sequence like other works \todo{(cite proteinmpnn)}. We also often augment it with other physico-chemical
+          representation of structure and sequence like other works~\citep{dauparas_robust_2022}. We also often augment it with other physico-chemical
           properties like partial charge and Solvent Accessible Surface Area (SASA).
     \item \textit{Rotation-equivariance}. Since all the tasks considered in this work present rotational symmetries about each neighborhood's center,
           we build our models with rotation-equivariant neural networks, whose output provably respects the rotational symmetry of the target map.
 \end{itemize}
 
-In the next chapter, I will thorough introduce this framework.
+In the next chapter, I will formally introduce this framework.
 Then, each of the following 4 chapters will be devoted to a particular first-author publication: the first three are focused on modeling and introduce
-each a new machine learning model, the last one instead is focused on a using one of the models to tackle a longstanding problem in theoretical immunology.
+each a new machine learning model for a specific high-level task,
+the last one instead is focused on a using one of the models to tackle a longstanding problem in theoretical immunology.
+A high-level visual summary of the models and tasks discussed in this thesis can be found in Figure~\ref{fig:overview_of_thesis_models}
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/overview_of_thesis_models.pdf}
+    \figcaption{Schematic overview of modeling framework and specific tasks addressed in this thesis.}{
+        The left-hand side illustrates this thesis' framework's focus on building equivariant and invariant models
+        of site-centered local atomic environments (neighborhoods).
+        The right-hand side shows the three high-level tasks tackled using the framework, with associated publications.
+        }
+   \label{fig:overview_of_thesis_models}
+\end{figure}
 
 
 \section{Beyond this thesis}
@@ -482,14 +548,15 @@ each a new machine learning model, the last one instead is focused on a using on
 Throughout my tenure at UW I have also participated in other projects and co-authored papers both in line with and tangential to my line of research.
 These works are:
 \begin{enumerate}
-    \item \todo{citet perspective article}, a perspetive article on \todo{cite Roney et al}
-    \item \todo{citet loop-diffusion}, which I helped conceive and in which I acted as a mentor
-    \item \todo{citet Bingxu's paper}, where I contributed code and sdiscussions for predicting binding specificity
-    \item \todo{citet paper with Pampa}, where I acted as machine learning expert as mentor
-    \item \todo{citet IMMREP25}, which describes the results of a Kaggle competition in which I entered HERMES, one of the models described in this work.
-    \item \todo{citet multi-evolve preprint}, a critical analysis of a high-profile machine learning model, born out of discussion
-            with Prof. Will DeWitt while I was being hosted in his lab.
+    \item ~\citet{nourmohammad_machine-learning_2022}, a viewpoint article on this paper~\citep{roney_state---art_2022}.
+    \item ~\citet{borisiak_loop-diffusion_2024}, which I helped conceive and in which I acted as a mentor.
+    \item ~\citet{Liu2025-hl}, where I contributed code and discussions for predicting binding specificity.
+    \item ~\citet{savioli_engine_2024}, where I acted as machine learning expert as mentor.
+    \item ~\citet{richardson_immrep25_2026}, which describes the results of a Kaggle competition in which I entered HERMES, one of the models described in this work.
+    \item ~\citet{visani_additive_2026}, a critical analysis of a high-profile machine learning model, born out of discussion
+            with UW Genome Sciences Professor William DeWitt while I was being hosted in his lab.
 \end{enumerate}
+
 
 
 

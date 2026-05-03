@@ -11,7 +11,8 @@ We first introduce group equivariance, discuss why and how to incorporate it in 
 introduce SO(3)-equivariant neural networks. The contents of this chapter are largely adapted from
 previous works, including~\citep{pun_learning_2024, thomas_tensor_2018, kondor_clebsch_2018, bronstein_geometric_2021}.
 
-\section{Background}
+
+\section{Mathematical background}
 
 \textbf{Group Invariance and Equivariance.} Starting with an intuitive explanation, a \textit{function}
 is said to be \textit{invariant} to a certain group of transformations (e.g. 3D rotations) if applying one 
@@ -38,6 +39,21 @@ A group may have different representations, and a special one is the one that al
 identity: $\mD_{Y}(\mathfrak{g})=1, \forall \mathfrak{g} \in \mathfrak{G}$; a function on whose
 output space $\mathfrak{G}$ acts with the identity representation is said to be \textit{invariant}
 to $\mathfrak{G}$.
+See Figure~\ref{fig:invariance_and_equivariance} for a visual reference of these concepts.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/invariance_and_equivariance.pdf}
+    \figcaption{Invariance and Equivariance to 3D rotations, explained using a water molecule.}{
+        The mass of a water molecule does not change if the molecule is rotated - it is said to be \textit{invariant}
+        to rotations of the molecule.
+        Instead, its dipole moment rotates alongside the molecule - it is said to be \textit{equivariant}
+        to rotations of the molecule.
+        See text for a more formal mathematical definition.
+        Slide credit: Michael Pun.
+        }
+   \label{fig:invariance_and_equivariance}
+\end{figure}
 
 \textbf{Irreducible representations: the key to building equivariant neural networks.} How are
 equivariant layers generally achieved? The key is to look at the group's \textit{irreducible
@@ -325,7 +341,4 @@ for the effective learning of invariant features from the raw input, maximizing 
 in~\citep{bronstein_geometric_2021}.
 Last, in the specific domain of predicting quantum properties of atomic systems, it has been empirically observed
 that equivariant neural networks have more favorable scaling laws than invariant networks~\citep{batzner_e3-equivariant_2022}.
-
-
-
 

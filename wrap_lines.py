@@ -13,7 +13,7 @@ Usage:
 import argparse
 import sys
 
-DEFAULT_WIDTH = 100
+DEFAULT_WIDTH = 120
 
 
 def wrap_line(line, width):

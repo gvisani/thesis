@@ -3,7 +3,7 @@ At the time of writing, most of the contents of this chapter are under review, a
 preprint~\citet{visani_hermes_2026}, under the title \textit{HERMES: Holographic Equivariant neuRal
 network model for Mutational Effect and Stability prediction}.
 
-This work originated as a re-implementation of the \texit{Holographic-CNN} (H-CNN), developed by my mentor
+This work originated as a re-implementation of the \textit{Holographic-CNN} (H-CNN), developed by my mentor
 and former labmate Mike Pun~\citep{pun_learning_2024}. I desired to re-implement the network within
 the framework I was familiar with, and that had external support, so that I could better use it and better
 tweak it as I saw fit. Following up on Mike's initial findings that H-CNN could be used to predict
@@ -77,13 +77,16 @@ epitopes~\citep{mclellan_structure-based_2013}. Identifying stabilizing mutation
 requires domain expertise and costly experimental iteration. While computational approaches using
 Rosetta~\citep{gonzalez_general_2024, phan_conserved_2022} or machine learning (e.g.,
 ReCAP~\citep{bakkers_efficacious_2024}) have emerged, HERMES offers significant computational
-efficiency over Rosetta and, unlike ReCAP, is publicly available. When evaluated on 33 known
+efficiency over Rosetta and, unlike ReCAP, is publicly available.
+When evaluated on 33 known
 stabilizing mutations across 5 viral envelopes, HERMES ranks 19 within the top 3 predicted
 substitutions at each position, with particularly strong performance on mutations that stabilize
-independently without synergistic interactions. Lastly, we demonstrate that HERMES can be fine-tuned
+independently without synergistic interactions.
+\GM{We also illustrate two mutation discovery pipelines using full saturation mutagenesis with HERMES
+to suggest an initial set of candidates, followed by a refinement of the candidate set with Rosetta.}
+Lastly, we demonstrate that HERMES can be fine-tuned
 to predict mutational effects on protein-protein binding affinity, benchmarking competitively
 against existing models.
-\todo{add the new pecision results?}
 
 Code is open source at \url{https://github.com/StatPhysBio/hermes/tree/main}.
 
@@ -462,7 +465,7 @@ path $\alpha \to \beta \to \gamma$, this implies: $\Delta F_{\alpha\to \gamma} =
 
 
 
-HERMES predicts mutation effects as differences in amino-acid–specific log-probabilities (logits)
+HERMES predicts mutation effects as differences in amino-acid-specific log-probabilities (logits)
 $\log p(aa | X_{aa})$ (both zero-shot and after fine-tuning). As log-probability differences under a
 fixed structural context, these predictions satisfy reversibility by construction:
 \EQ 
@@ -495,7 +498,7 @@ We found that zero-shot HERMES models and ProteinMPNN predict stability effects 
 forward substitutions ($\wt \to\mt$) than for the reverse direction, consistent with previous
 observations~\citep{blaabjerg_rapid_2023, dieckhaus_transfer_2024} (Fig.~\ref{fig:ssym_figure}A).
 Adding coordinate noise during pre-training and fine-tuning on stability effects both reduced this
-forward–reverse disparity, but did not eliminate it. Models trained {\em only} on stability effects
+forward-reverse disparity, but did not eliminate it. Models trained {\em only} on stability effects
 showed little or no disparity, albeit with substantially lower overall accuracy.
 Across all pre-trained models, the predicted stability effects of forward mutations from the
 wild-type tend to have larger magnitudes than those of the corresponding reverse mutations
@@ -508,11 +511,80 @@ in wild-type preference for lower-similarity
 proteins (Fig.~\ref{fig:ssym_figure}B). A more detailed characterization of this bias is left to
 future work.
 
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{hermes/figures/antigen_design_concept.pdf}
+    \figcaption{\GM{Overview of structure-based vaccine design against enveloped viruses.}}{
+        \GM{
+            A large proportion of viruses are enveloped by a bi-lipid membrane akin to that of human cells,
+            The infect human cells, they make use of specialized proteins that latch onto the cell's
+            membrane and ``fuse" it to the virus' envelope. This fusion process is enabled by a
+            conformational change in the fusion protein: from a ``pre-fusion" to a ``post-fusion"
+            conformation.
+            Naturally, vaccines should be engineered to elicit immune responses that target epitopes
+            presented \textit{before} the virus has infected the cell, i.e. while the fusion protein
+            is in the pre-fusion conformation.
+            However, the wild-type of fusion viruses is generally more stable in the post-fusion
+            conformation.
+            Therefore, the field of structure-based vaccine design has proposed to use vaccines
+            containing engineered mutants of the fusion proteins that are more stable in
+            pre-fusion relative to post-fusion.
+            Figure adapted from \url{https://www.niaid.nih.gov/diseases-conditions/safe-and-effective-rsv-protein-vaccines}.
+        }
+    }
+    \label{fig:antigen_design_concept}
+\end{figure}
+
+
+\subsection{Antigen stabilization with HERMES for vaccine design}
+Structure-based vaccine design seeks to increase vaccine efficacy by \GM{engineering viral envelope
+glycoproteins (hereafter, ``antigens") to be more stable in their pre-fusion conformation,
+relative to their post-fusion conformation (Figure~\ref{fig:antigen_design_concept}).
+Pre-fusion stabilization} enriches presentation of neutralization-relevant epitopes and can bias elicited immune responses
+toward protective specificities.
+\GM{In the literature, it is achieved by applying a minimal set of mutations to the fusion protein that either improve the stability
+of the pre-fusion conformation, or decrease that of the post-fusion conformation, while preserving the relevant
+epitopes~\citep{mclellan_structure-based_2013, gonzalez_general_2024, bakkers_efficacious_2024, milder_universal_2022, phan_conserved_2022}.
+
+Practitioners often classify mutations in different types
+based on the manner in which they provide relative pre-fusion stabilization (hereafter, ``antigen stabilization").
+For example, {\em Cavity-filling mutations} mutations stabilize the pre-fusion conformation by filling cavities
+located within the hydrophobic core, by inserting a larger hydrophobic side-chain.
+{\em Proline mutations} instead are often used to impede post-fusion $\alpha$-helix formation and
+stabilize pre-fusion conformations, due to proline's unique lack of amide hydrogens which prevents
+it from taking part in stable $\alpha$-helices.
+Other mutation types include {\em electrostatic mutations}, which introduce polar or charged amino acids in environments
+where they can engage in stabilizing electrostatic interactions,
+and finally {\em synergistic mutations}, which involve applying multiple mutations so that they positively interact
+through a variety of mechanisms.
+We show examples of mutation types in Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.
+}
+
+\GM{
+The use of computational tools to guide antigen stabilization has precedents in the literature,
+but it is largely limited to the use of scoring functions like Rosetta~\citep{gonzalez_general_2024, phan_conserved_2022},
+with few closed-source attempts to use machine learning~\citep{bakkers_efficacious_2024}.
+Therefore, we sought out to test whether HERMES can be used to aid vaccine design campaigns.
+
+Unfortunately, large scale datasets of experimentally-validated mutations are not yet present.
+Thus, we started the campaign by manually collecting 33 previously reported antigen-stabilizing mutations drawn from
+five viral antigens: Influenza HA~\citep{milder_universal_2022} (3 mutations),
+RSV-F~\citep{mclellan_structure-based_2013, lee_rational_2024} (7 mutations),
+hMPV-F~\citep{gonzalez_general_2024, bakkers_efficacious_2024, phan_conserved_2022} (11 mutations),
+DENV-E~\citep{phan_conserved_2022} (8 mutations), and SARS-CoV-2 spike
+protein~\citep{hsieh_structure-based_2020} (4 mutations).
+We then benchmarked model performance on their ability to identify the specific mutants
+as the most pre-fusion-stabilizing within their respective sites; essentially evaluating per-site recall.
+We scored mutations using zero-shot and
+stability-fine-tuned variants of ProteinMPNN and HERMES. Importantly, none of the stabilized
+variants in this benchmark appeared in the training data of any HERMES model, either during
+pre-training or during stability fine-tuning.
+}
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/antigen_figure_main_results.pdf}
-    \figcaption{Predicting antigen-stabilizing mutations with HERMES.}{
+    \includegraphics[width=1.0\linewidth]{hermes/figures/antigen_figure_main_results_with_time.pdf}
+    \figcaption{Recovering previously-identified antigen-stabilizing mutations with HERMES.}{
     \textbf{(A)} Model recall is evaluated on 33 previously reported antigen-stabilizing mutations
     (rows) across five viral antigens. For each antigen, the PDB structure used for scoring is
     indicated. Mutations are specified as wild-type$\to$mutant substitutions at the annotated site.
@@ -522,7 +594,8 @@ future work.
     (arrow tip); arrow size indicates whether the mutant ranks in the top 3 (large), ranks 4--6
     (medium), or ranks $>6$ (small). The $\dagger$ symbols mark mutations originally proposed as
     stabilizing by Rosetta. ``Univ.-HA" stands for ``Universal-HA"; ``MPV-2c." stands for
-    MPV-2cREKR; ``Uncl." stands for ``Uncleaved Prefusion-Closed". {\bf (B)} Counts of correctly
+    MPV-2cREKR; ``Uncl." stands for ``Uncleaved Prefusion-Closed".
+    {\bf (B)} Counts of correctly
     prioritized antigen-stabilizing mutations ($r_\mt < r_\wt$), stratified by predicted rank group:
     strongly suggested ($r_\mt \leq 3$), moderately suggested ($3 < r_\mt \leq 6$), or weakly
     suggested ($6\leq r_\mt$) are shown for each model. For comparison, BLOSUM62 is used to rank
@@ -532,27 +605,12 @@ future work.
     and ($\#$), respectively, when binomial tests corrected p-value$<0.05$; see Methods).
     We note that all structures were considered in their native multimeric state, generating
     symmetric partners with PyMOL when necessary.
+    \GM{{\bf (C)} Estimated times for saturation mutagenesis predictions on the viral antigens considered
+    in this study. Each dot is an antigen. Times shown are for a single CPU and a single NVIDIA A40 GPU.
+    See Table~\ref{table:speed_on_antigens} for precise per-antigen times.}
     }
     \label{fig:antigen_figure_main_results}
 \end{figure}
-
-\subsection{Antigen stabilization  with HERMES  for vaccine design}
-Structure-based vaccine design seeks to increase vaccine efficacy by stabilizing viral envelope
-glycoproteins (hereafter, ``antigens") in their metastable pre-fusion conformation. Stabilization
-enriches presentation of neutralization-relevant epitopes and can bias elicited immune responses
-toward protective specificities~\citep{mclellan_structure-based_2013, gonzalez_general_2024,
-bakkers_efficacious_2024, milder_universal_2022, phan_conserved_2022}.
-
-To test whether HERMES can identify  antigen-stabilizing mutations, 
-we benchmarked model performances on 33 previously reported antigen-stabilizing mutations drawn from
-five viral antigens: Influenza HA~\citep{milder_universal_2022} (3 mutations),
-RSV-F~\citep{mclellan_structure-based_2013, lee_rational_2024} (7 mutations),
-hMPV-F~\citep{gonzalez_general_2024, bakkers_efficacious_2024, phan_conserved_2022} (11 mutations),
-DENV-E~\citep{phan_conserved_2022} (8 mutations), and SARS-CoV-2 spike
-protein~\citep{hsieh_structure-based_2020} (4 mutations). We scored mutations using zero-shot and
-stability-fine-tuned variants of ProteinMPNN and HERMES. Importantly, none of the stabilized
-variants in this benchmark appeared in the training data of any HERMES model, either during
-pre-training or during stability fine-tuning.
  
 To quantify performance, we emulated a simple model-guided selection workflow in which a
 practitioner considers substitutions at a site in descending order of model scores. For each known
@@ -566,8 +624,8 @@ each predicted-stabilizing mutation (i.e., with $r_\mt < r_\wt$) as strongly sug
 would group mutations with similar physico-chemical properties into the same rank class.
 Consequently, models are generally not penalized for ranking a biophysically similar alternative
 above a known stabilizing mutant, making our performance metrics robust to fine-grained rank
-differences in different models (see Fig.~\ref{fig:antigen_heatmap} and SI for a more detail
-discussion on antigen-stabilizing mutations).
+differences in different models (see Fig.~\ref{fig:antigen_heatmap} and Appendix~\ref{sec:hermes_appendix}
+for a more detail discussion on antigen-stabilizing mutations).
 
 Figs.~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations}
 {and Table~\ref{table:antigen_results}} summarize predictions across the 33 stabilizing mutations we
@@ -577,15 +635,16 @@ suggested ($r_\mt \leq 3$). Notably, stability fine-tuning does not consistently
 over the corresponding zero-shot ProteinMPNN and HERMES-{\em amortized} on this task
 (Table~\ref{table:antigen_results}).
 
-For comparison, we also scored each mutant with Rosetta~\citep{chaudhury_pyrosetta_2010}
+For comparison, we also scored each mutant with Rosetta~\citep{chaudhury_pyrosetta_2010},
 (Extended Methods, Appendix~\ref{sec:hermes_appendix}).
 Rosetta recovers stabilizing mutations on par with HERMES-\emph{amortized}
 ({Fig.~\ref{fig:antigen_figure_main_results} and} Table~\ref{table:antigen_results}); however, 17
 variants in this benchmark were originally selected (by the references that discovered the variants)
-using Rosetta-based screening, which partially biases this baseline in Rosetta's favor. Moreover,
+using Rosetta-based screening, which partially biases this baseline in Rosetta's favor.
+Most importantly, however,
 Rosetta inference is substantially more computationally intensive than the machine learning models,
 limiting its practicality for predicting the stability effects in high-throughput saturation
-mutagenesis (Table~\ref{table:speed_on_antigens}).
+mutagenesis \GM{(Fig.~\ref{fig:antigen_figure_main_results}C)}.
 
 To assess statistical enrichment of model predictions over chance, we compared the predicted number
 of stabilizing mutations in the strong/moderate categories to a random-ranking baseline using a
@@ -602,53 +661,8 @@ Fig.~\ref{fig:antigen_figure_main_results},} and binomial test p-values reported
 Fig.~\ref{fig:antigen_pvalues_vs_blosum62}), underscoring the value of incorporating structural
 context when predicting stabilizing substitutions.
 
-\begin{figure}[t!]
-    \centering
-    \includegraphics[width=0.9\linewidth]{hermes/figures/antigen_figure_types_of_mutations__2.pdf}
-    \figcaption{Model ability to recover different mutation patterns that stabilize antigens.}{
-    \textbf{(A)} Representative examples of mutation types commonly seen in antigen
-    stabilization~\citep{byrne_principles_2022}, and analyzed in this study. The mutated residue(s)
-    are shown in magenta.
-    \textbf{(A.1)} {\em Electrostatic mutation} in hMPV-F: wild-type structure (PDB ID 5WB0, left),
-    in-silico mutant {generated with PyMOL's mutagenesis wizard}; right. The introduced Aspartic
-    acid forms an electrostatic interaction with a nearby Asparagine (dashed yellow line).
-    \textbf{(A.2)} {\em Proline mutation} at the N-terminal of a $\alpha$-helix cap in SARS-CoV-2
-    spike: wild-type structure (PDB ID 6VSB; left), in-silico mutant {generated with PyMOL's
-    mutagenesis wizard}; right.
-    \textbf{(A.3)} {\em Cavity-filling mutation} in RSV-F: mutant structure (PDB ID 4MMS). A bulky
-    hydrophobic substitution packs a previously underfilled region: the $2Fo$-$Fc$ electron density
-    map is shown as a thin mesh.
-    \textbf{(A.4)} {\em Synergistic dimer-stabilizing mutations} in DENV-E: A259W and T262R in the
-    dimer mutant structure (PDB ID 6WY1). introduced in both chains, create a stabilizing
-    cation-$\pi$ interaction (dashed green lines).
-    \textbf{(B)} Number of stabilizing mutations recovered by each model, stratified by mutation
-    class, reported as in Fig.~\ref{fig:antigen_figure_main_results}B.
-    }
-    \label{fig:antigen_figure_of_different_types_of_mutations}
-\end{figure}
-
-
-Practitioners commonly classify mutations in different types based upon the mechanism by which they
-stabilize pre-fusion antigens~\citep{byrne_principles_2022}.
-We consider four types, examples of which are shown in
-Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.
-(i) {\em Electrostatic mutations}, which introduce polar or charged amino acids in environments
-where they can engage in stabilizing electrostatic interactions
-(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.1);
-(ii) {\em Proline mutations}, which are often used to impede post-fusion helix formation and
-stabilize pre-fusion conformations, due to proline's unique lack of amide hydrogens which prevents
-it from taking part in stable $\alpha$-helices, except at the N-terminal end of a helix cap
-(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.2);
-(iii) {\em Cavity-filling mutations}, which stabilize a particular conformation by filling cavities
-located within the hydrophobic core of an antigen by inserting a larger hydrophobic side-chain
-(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.3);
-(iv) {\em Synergistic mutations}, which involve applying multiple mutations so that they positively
-interact through a variety of mechanisms
-(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.4).
-
-Based on these categories, we manually annotated the 33 antigen-stabilizing mutations
-(Table~\ref{table:mutation_types}), and stratified model performance by mutational types
-(Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}B).
+\GM{For a more detailed analysis, we manually annotated the 33 antigen-stabilizing mutations based on their mutation types
+(Table~\ref{table:mutation_types}) and accordingly stratified model performance (Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}B).}
 Among the models tested, HERMES-\emph{amortized} most reliably recovers stabilizing proline
 mutations (7 out of 8; Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}B), highlighting
 its potential utility for proposing pre-fusion stabilizing prolines. More broadly, all models
@@ -658,7 +672,7 @@ typically replace a smaller hydrophobic residue with a larger one that preserves
 hydrophobicity. Because such substitutions are common in natural sequence variation, they are partly
 captured by a sequence-derived matrix like BLOSUM62. In contrast, proline and charged substitutions
 are strongly context-dependent, with effects that hinge on local geometry and environment, and
-therefore benefit more from structure-aware modeling; see SI for a more extensive discussion.
+therefore benefit more from structure-aware modeling; see Appendix~\ref{sec:hermes_appendix} for a more detailed discussion.
 
 Lastly, the synergistic RSV-F TriC mutations are difficult to recover for almost all methods
 (Fig.~\ref{fig:antigen_figure_main_results}). This is expected for the three ``acid patch
@@ -667,15 +681,15 @@ were experimentally stabilizing only in combination (i.e., synergy) with
 F488W~\citep{mclellan_structure-based_2013}. These four residues are tightly clustered in both
 intra- and inter-chain space, consistent with a synergistic (epistatic) mechanism in which the
 substitutions act synergistically to stabilize the trimer. A second example of synergy is the DENV-E
-pair A259W and T262R, which together introduce a favorable cation–$\pi$ interaction
+pair A259W and T262R, which together introduce a favorable cation-$\pi$ interaction
 (Fig.~\ref{fig:antigen_figure_of_different_types_of_mutations}A.4). Because our evaluation scheme
 scores mutations in a site-independent manner, the models are not able to capture such multi-residue
 dependencies. Specifically, HERMES scores mutations at a single site under the assumption that all
 other amino-acid identities remain fixed, and therefore, cannot recover stabilization mechanisms
 that arise only from specific combinations of mutations. ProteinMPNN, ThermoMPNN, and Rosetta are
 likewise evaluated here under the same site-independent protocol for a fair comparison, although
-they can in principle be applied to score multi-residue variants jointly; see SI for a more
-extensive discussion.
+they can in principle be applied to score multi-residue variants jointly; see Appendix~\ref{sec:hermes_appendix} for a more
+detailed discussion.
 
 Beyond the inability to capture epistatic effects, several additional limitations of our approach
 should be noted. First, to emulate a practitioner's workflow we evaluate mutations using only their
@@ -690,7 +704,111 @@ conclusions in our analyses. Despite these caveats, our results suggest that HER
 practical screening tool for rational library design, prioritizing candidate antigen-stabilizing
 mutations for more efficient experimental validations.
 
+\GM{
+While the above analysis uses experimentally-verified antigen stabilizing mutations as ground truth,
+it is limited by a low sample size, and the fact that it measures only per-site recall.
+Therefore, it is not fully indicative of performance during a design campaing, in which precision is also a key metric.
 
+Despite a lack of extensive experimental ground truth, we sought to demonstrate the practical utility
+of HERMES by designing a workflow for suggesting individual antigen-stabilizing mutations.
+We considered two pipelines for suggesting mutations with HERMES.\\
+{\em 1) Stabilize pre-fusion core:} the first and simplest pipeline focuses on suggesting mutations that stabilize the pre-fusion conformation,
+ignoring possible effects to the post-fusion conformation.
+Specifically, given an pre-fusion structure, we scored all possible mutations all sites in the core (average SASA $< 1 \text{\AA}^2$),
+via $\Delta \log p^{pre-f}$, where higher scores indicate higher predicted stabilized effects.
+We then sorted the mutations by score, and considered as suggestions the top 80 mutations, with a limit
+of maximum 3 mutations at the same site to encourage more site variability; crucially, all mutations are predicted
+to be stibilizing by HERMES ($\Delta \log p^{pre-f} > 0$).\\
+{\em 2) Stabilize pre-fusion and destabilize post-fusion:} for the second pipeline instead we aim to suggest mutations that both stabilize the pre-fusion conformation,
+and destabilize the post-fusion conformation. Specifically, we consider as suggestions the top 80 mutations (again, max 3 per site)
+sorted by $\Delta \log p^{pre-f} - \Delta \log p^{post-f}$, and subject to both $\Delta \log p^{pre-f} > 0$
+and $\Delta \log p^{post-f} < 0$. For this approach, we do not pose any constraints on site locations.
+
+Of the HERMES models, we only considered HERMES-{\em amortized} as it was the best performing model in the ground truth recall analysis.
+For baselines, we considered mutations sampled with ProteinMPNN, BLOSUM62, and at random.
+Specifically, for ProteinMPNN we selected 80 mutations per pipeline in the same exact manner as with HERMES.
+For BLOSUM62 we randomly selected 80 sites per pipeline (either in pre-fusion core only or unrestrictedly),
+and took the top two mutations by BLOSUM62 score.
+Finally, we sampled 160 mutations at random (max 3 per site, either in pre-fusion core only or unrestrictedly). 
+For all models and pipelines, we excluded mutations to and from cysteine residues, both to avoid breaking disulfide bonds,
+and in consideration of the fact that stabilizing cysteine mutations usually come in pairs precisely to form
+disulfide bonds.
+
+Due to the lack of experimental ground truth, we resort to using Rosetta as an oracle.
+Rosetta scores are computed analogously to the previous analysis (Figure~\ref{fig:antigen_figure_main_results}),
+but with higher sample size.
+Specifically, for each mutation, the full structure with both wild-type and mutant amino-acid is
+relaxed and scored 50 times, yielding a distribution of 50 scores in Rosetta Energy Units (REU).
+These are then summarized into a single composite score ($S_{ros}$) by averaging the best (lowest) 20\% of the values.
+Then, a suggested mutation is considered a ``Rosetta hit" if either
+$\Delta\,S_{ros}^{pre-f} > 0$, or both $\Delta\,S_{ros}^{pre-f} > 0$ and $\Delta\,S_{ros}^{post-f} < 0$,
+respectively following the analogous pipeline used for suggesting mutations.
+
+Using Rosetta as oracle implies a model's performance should be interpreted as how much it agrees with Rosetta, not explicitly with experiments.
+However, we still consider this a useful exercise.
+Indeed, Rosetta's ability to identify stabilizing mutations is validated by our recall analysis~\ref{fig:antigen_figure_main_results},
+and by previous studies with experimental validation~\citep{gonzalez_general_2024, phan_conserved_2022}.
+Despite this, Rosetta is very slow (Figure~\ref{fig:antigen_figure_main_results}C), prohibitively so if CPU resources are limited.
+Thus, first using a fast model - like HERMES - to rank all possible mutations such that top mutations are agreed upon by
+Rosetta can accelerate the finding of truly antigen-stabilizing mutations.
+Furthermore, using the consensus of multiple models to generate candidates with the highest likelihood of experimental success
+is a ubiquitous strategy in protein design~\citep{butcher_novo_2025, abramson_accurate_2024},
+and adopted in this thesis also in Chapter~\ref{sec:tcrpmhc}.
+
+We ran both design pipelines on the RSV-F and DENV-E proteins, reporting respective results in Figures~\ref{fig:rsv_f_rosetta_hits_main_figure}
+~and~\ref{fig:denv_e_rosetta_hits_main_figure}.
+HERMES-{\em amortized} consistently outperforms - in terms of Rosetta hits - all baselines, with the exception of ProteinMPNN
+in the ``stabilize pre-fusion and destabilize post-fusion" pipeline.
+The greatest alignment with Rosetta is observed in the ``stabilize pre-fusion core" pipeline, where 7 of the top 10 mutations
+are validated by Rosetta, compared to 4 by ProteinMPNN and 2 if picked at random (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}).
+Plotting the amino-acid pairs involved in successfully suggested mutations, reveals that HERMES can identify cavity-filling
+mutations in the core (small hydrophobic $\to$ large hydrophobic and polar $\to$ hydrophobic) as well as electrostatic mutations
+(polar $\to$ positively or negatively charged) (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}A, middle).
+
+Manually inspecting mutations that were suggested by HERMES and validated by Rosetta, we identified A298I and N175P
+promising candidates (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}).
+In the pre-fusion conformation, alanine 298 is in an under-packed region of the core, surrounded by hydrophobic residues
+(with the exception of a single threonine); mutating it to an isoleucine provides better packing without requiring any
+relaxation of the neighborhood. Furthermore, even though this mutation
+was identified without concern for the post-fusion conformation, site 298 is on the surface of the post-fusion conformation
+thus a mutation to Isoleucine would not likely not further stabilize it (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}A, right).
+N175P instead was identified with the pipeline that includes the predicted effect on the post-fusion conformation,
+and is a canonical example of a proline mutation: in pre-fusion the site is on a loop, specifically on a
+kink, which allows for prolines; in post-fusion instead it is on a $\alpha$-helix, which generally cannot
+accommodate prolines (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}B, right).
+
+Overall, our analyses suggest that HERMES-{\em amortized} can speed-up antigen stabilization campaigns,
+by quickly evaluating all possible mutations and suggesting a pool of highly-likely antigen-stabilizing
+mutations for experimental validation.
+}
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=1.0\linewidth]{hermes/figures/rsv_f_rosetta_hits_main_figure.pdf}
+    \figcaption{\GM{Identifying new antigen-stabilizing mutations with HERMES for RSV-F.}}{
+    \GM{
+    Panel {\bf A} shows results using the ``stabilize pre-fusion core" pipeline, whereas
+    panel {\bf B} shows results using the ``stabilize pre-fusion and destabilize post-fusion" pipeline.
+    Each panel is split in three sub-panels.
+    \textit{Left}: Rosetta hit rate as a function of number of top-$k$ suggested mutations
+    (for all methods except for Random, for which we show the average hit rate of 20 random samples of $k$ mutations from the pool
+    of 160 randomly-selected mutations).
+    Rosetta hits were computed multiple times via 200 bootstrap samples with replacement of the 50 REU
+    scores.
+    Solid lines and markers denote the mean across bootstrap samples, whereas shaded regions denote
+    the 5-95 percentile range.
+    We note that all BLOSUM62 suggestions had a score $\geq 1$ and are ranked by score just like HERMES and ProteinMPNN.
+    P-values were computed via Wilcoxon signed-rank test and corrected for multiple testing via
+    Bonferroni within each panel.
+    \textit{Center}: heatmap showing number of Rosetta hits (blue) and misses (red) for each amino-acid
+    mutation pair suggested by HERMES-{\em amortized}.
+    Here, Rosetta hits were computed using all 50 REU scores instead of bootstrap samples.
+    \textit{Right}: examples of promising antigen-stabilizing mutation identified by each pipeline.
+    Mutant structures were generated using PyMOL's protein mutagenesis wizard.
+    }
+    }
+    \label{fig:rsv_f_rosetta_hits_main_figure}
+\end{figure}
 
 
 \begin{table}[t!]
@@ -762,7 +880,7 @@ complexes~\citep{visani_t_2025}. We further leveraged this capability for de nov
 antigens intended to elicit specific T-cell responses~\citep{visani_t_2025}. Here, we evaluate
 HERMES on the single-point mutation effects from the SKEMPI v2.0
 dataset~\citep{jankauskaite_skempi_2019}, which spans a substantially broader range of
-protein–protein interactions and binding-affinity perturbations.
+protein-protein interactions and binding-affinity perturbations.
 
 In a zero-shot setting, HERMES exhibits measurable predictive signal (HERMES-\emph{fixed} 0.50;
 Spearman's $\rho = 0.286$). ProteinMPNN achieves comparable overall performance, whereas
@@ -776,7 +894,7 @@ detailed comparison across models is provided in Table~\ref{table:skempi_spm}.
 Next, we fine-tuned HERMES directly on SKEMPI using 3-fold cross-validation. To control for
 information leakage under structural similarity, we introduced three homology-aware splitting
 strategies of increasing difficulty; the most stringent split prevents complexes from the same
-interaction ``class" (e.g., antibody–antigen or TCR–pMHC) from appearing in different folds; see
+interaction ``class" (e.g., antibody-antigen or TCR-pMHC) from appearing in different folds; see
 Extended Methods, Appendix~\ref{sec:hermes_appendix} for details.
 Fine-tuned HERMES models achieve substantially stronger correlations, including
 under the {\em Difficult} split (Table~\ref{table:skempi_spm}).
@@ -794,4 +912,92 @@ to HERMES as well, but we leave a
 systematic evaluation of such extensions, and of HERMES as a general framework for binding-affinity
 prediction, to future work.
 
+
+\section{Summary}
+
+In this chapter, we introduced HERMES, a family of fast, structure-based machine learning models for predicting the
+effects of mutations on protein function. HERMES leverages SO(3)-equivariant neural networks
+operating on local atomic neighborhoods in a protein structure to predict amino acid propensities,
+whose differences can be used to predict mutational effects. This formulation yields a
+computationally efficient predictor that is naturally suited to high-throughput settings. HERMES
+captures mutational impacts on diverse phenotypes, including thermodynamic stability and
+protein-protein binding affinity, and it provides a practical tool for antigen stabilization in
+vaccine design.
+
+A central finding is that encoding packing flexibility is essential for accurate predictions across
+mutations involving amino acids of different sizes. HERMES-{\em fixed}, a lightweight protocol that
+evaluates mutations in the rigid wild-type structure, exhibits strong bias toward size-conserving
+substitutions. Explicitly modeling relaxation via Rosetta~\citep{chaudhury_pyrosetta_2010},
+(HERMES-{\em relaxed} protocol) resolves this bias but incurs substantial computational cost. Our
+amortized approach offers an effective compromise: by fine-tuning on relaxed predictions for just
+0.5\% of pre-training data, HERMES-{\em amortized} learns implicit packing flexibility that can be
+leveraged for predictions at HERMES-{\em fixed} speed. This capability proves particularly valuable
+for antigen stabilization, where HERMES-{\em amortized} recovers over half of the verified
+stabilizing mutations in our benchmark and shows strong performance on proline substitutions (87.5\%
+recovery), which stabilize proteins by restricting backbone conformational freedom.
+
+Beyond zero-shot use, HERMES can be fine-tuned directly on experimental labels using a simple
+end-to-end procedure. Notably, both the native and the fine-tuned models use the difference of amino
+acid scores for predicting mutational effects, which yields an inherent reversibility with respect
+to mutation order--a thermodynamic consistency property that is often enforced via explicit
+19$\times$ data augmentation~\citep{diaz_stability_2024}.
+
+With fine-tuning, HERMES achieves competitive accuracy on thermodynamic stability benchmarks when
+trained on the same data as prior methods~\citep{blaabjerg_rapid_2023, diaz_stability_2024,
+dieckhaus_transfer_2024}. Interestingly, stability fine-tuning does not consistently transfer to
+antigen stabilization and can even degrade performance. One plausible explanation is dataset
+mismatch: the high-throughput stability datasets used for
+fine-tuning~\citep{tsuboyama_mega-scale_2023} are enriched for relatively small, compact domains,
+whereas vaccine antigens are often larger, multi-domain, and conformationally heterogeneous, with
+stabilizing mutations frequently targeting quaternary contacts, glycoprotein-specific features, or
+prefusion-state constraints. Resolving this discrepancy will likely require broader supervision that
+better reflects antigen structure and design objectives, or task-aligned fine-tuning data.
+
+We also demonstrate that pre-training on wild-type amino acid classification remains necessary for
+strong performance; models trained only on currently-available experimental stability data fail.
+Notably, pre-trained models exhibit ``wild-type preference," assigning elevated probabilities to
+wild-type residues in wild-type structural contexts. This bias correlates with sequence similarity
+to pre-training proteins, suggesting partial memorization rather than purely generalizable learning.
+Fine-tuning partially ameliorates but does not eliminate this effect, representing a fundamental
+trade-off in current training paradigms. More robust pre-training objectives, stronger
+regularization, or explicit debiasing strategies may be required to fully address this issue.
+
+A key application we highlight is structure-based vaccine design, where practitioners seek to
+stabilize substitutions that preserve a desired prefusion conformation of a vaccine antigen to
+elicit immune responses targeting relevant epitopes. For this task, a useful model should propose
+stabilizing mutation candidates across different sites of an antigen.
+On the limited available data comprising 33 verified antigen-stabilizing mutations across five viruses,
+HERMES performs well in recovering these mutations.
+\GM{We also develop two pipelines to suggest mutations with HERMES across the full antigen,
+showing close agreement with predictions made with the physics-based model Rosetta, which we
+suggest to use to further filter the candidate set of mutations.}
+Moreover, the strict locality of the model makes it straightforward and
+fast to apply to large antigens and assemblies that can pose challenges for architectures modeling
+global interactions in proteins.
+Our results show that local all-atom environments modeled by HERMES
+can encode multiple stabilization mechanisms, including cavity filling, post-fusion disruptions and
+pre-fusion backbone rigidification via prolines, and favorable electrostatic remodeling,
+while also underscoring limitations for mechanisms
+that depend on long-range coupling, or multi-site epistasis.
+
+
+We further evaluated HERMES on predicting changes in protein--protein binding affinity using the
+SKEMPI dataset~\citep{jankauskaite_skempi_2019}. In the zero-shot setting, HERMES shows measurable
+predictive signal, and supervised fine-tuning on SKEMPI {substantially} improves performance.
+Recent state-of-the-art approaches for binding prediction like Pythia-PPI~\citep{tao_reliable_2025}
+indicate that design choices such as self-distillation can substantially improve
+performance~\citep{tao_reliable_2025}; we expect HERMES would similarly benefit from such
+approaches, representing a clear next step.
+
+Several directions could extend HERMES' capabilities. Developing larger, more diverse training
+datasets, particularly for antigen stabilization and binding, would likely improve performance, as
+our results indicate that training data dominates architectural differences in determining benchmark
+performance. The locality of HERMES appears to be a double-edged sword: local neighborhoods reduce
+input complexity, remove constraints on protein size, and improve scalability, but necessarily limit
+the model's ability to capture long-range epistasis and allosteric coupling. We view HERMES as a
+hypothesis-generation tool whose predictions are most reliable when mutational effects are driven
+primarily by short-range interactions and local packing. Productive directions for future work
+include better characterizing when locality suffices, further reducing pre-training-induced biases,
+and developing multi-scale approaches that efficiently combine local all-atom predictors with
+complementary global or multi-site models to capture mechanisms beyond the local neighborhood.
 

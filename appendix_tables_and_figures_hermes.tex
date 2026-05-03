@@ -308,6 +308,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{table}[h!]
     \centering
+    \resizebox{\textwidth}{!}{
     \begin{tabular}{c c | c c | c c}
         \toprule
           & & \makecell{\textbf{HERMES GPU}\\{[seconds]}} & \makecell{\textbf{HERMES
@@ -322,6 +323,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
         6VSB & 968 & 69 & 265 & 156 & 151,008 \\
         \bottomrule
     \end{tabular}
+    }
     \figcaption{Execution times for saturation mutagenesis predictions on the viral antigens considered
     in this study.}{ Executions times (in seconds) of HERMES apply to HERMES-{\em fixed} and
     HERMES-{\em amortized} models, regardless of whether zero-shot or fine-tuned. Times were
@@ -630,6 +632,59 @@ surface residues with SASA $> 3 \AA^2$ (right).}
  and Table~\ref{table:antigen_results}; see Methods for details of p-value computation.}
     \label{fig:antigen_pvalues_vs_random}
     \label{fig:antigen_pvalues_vs_blosum62}
+\end{figure}
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{hermes/figures/antigen_figure_types_of_mutations__2.pdf}
+    \figcaption{Model ability to recover different mutation patterns that stabilize antigens.}{
+    \textbf{(A)} Representative examples of mutation types commonly seen in antigen
+    stabilization~\citep{byrne_principles_2022}, and analyzed in this study. The mutated residue(s)
+    are shown in magenta.
+    \textbf{(A.1)} {\em Electrostatic mutation} in hMPV-F: wild-type structure (PDB ID 5WB0, left),
+    in-silico mutant {generated with PyMOL's mutagenesis wizard}; right. The introduced Aspartic
+    acid forms an electrostatic interaction with a nearby Asparagine (dashed yellow line).
+    \textbf{(A.2)} {\em Proline mutation} at the N-terminal of a $\alpha$-helix cap in SARS-CoV-2
+    spike: wild-type structure (PDB ID 6VSB; left), in-silico mutant {generated with PyMOL's
+    mutagenesis wizard}; right.
+    \textbf{(A.3)} {\em Cavity-filling mutation} in RSV-F: mutant structure (PDB ID 4MMS). A bulky
+    hydrophobic substitution packs a previously underfilled region: the $2Fo$-$Fc$ electron density
+    map is shown as a thin mesh.
+    \textbf{(A.4)} {\em Synergistic dimer-stabilizing mutations} in DENV-E: A259W and T262R in the
+    dimer mutant structure (PDB ID 6WY1). introduced in both chains, create a stabilizing
+    cation-$\pi$ interaction (dashed green lines).
+    \textbf{(B)} Number of stabilizing mutations recovered by each model, stratified by mutation
+    class, reported as in Fig.~\ref{fig:antigen_figure_main_results}B.
+    }
+    \label{fig:antigen_figure_of_different_types_of_mutations}
+\end{figure}
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{hermes/figures/denv_e_rosetta_hits_main_figure.pdf}
+    \figcaption{\GM{Identifying new antigen-stabilizing mutations with HERMES for DENV-E.}}{
+    \GM{
+    Panel {\bf A} shows results using the ``stabilize pre-fusion core" pipeline, whereas
+    panel {\bf B} shows results using the ``stabilize pre-fusion and destabilize post-fusion" pipeline.
+    Each panel is split in three sub-panels.
+    \textit{Left}: proportion of Rosetta hits as a function of number of top-$k$ suggested mutations
+    (for all methods except for Random, for which $k$ mutations are sampled at random from the pool
+    of 160 randomly-selected mutations).
+    Rosetta hits were computed multiple times via 200 bootstrap samples with replacement of the 50 REU
+    scores.
+    Solid lines and markers denote the mean across bootstrap samples, whereas shaded regions denote
+    the 5-95 percentile range.
+    We note that all BLOSUM62 suggestions had a score $\geq 1$.
+    P-values were computed via Wilcoxon signed-rank test and corrected for multiple testing via
+    Bonferroni within each panel.
+    \textit{Right}: heatmap showing number of Rosetta hits (blue) and misses (red) for each amino-acid
+    mutation pair suggested by HERMES-{\em amortized}.
+    Here, Rosetta hits were computed using all 50 REU scores instead of bootstrap samples.
+    }
+    }
+    \label{fig:denv_e_rosetta_hits_main_figure}
 \end{figure}
 
 

@@ -59,6 +59,7 @@
 ]{biblatex}
 
 % Name of your .bib file(s)
+\addbibresource{thesis.bib}
 \addbibresource{protholo.bib}
 \addbibresource{bib_armita.bib}
 \addbibresource{armita_bib_safe.bib}
@@ -86,7 +87,6 @@
 \titleformat{\subsubsection}[runin]{\itshape}{}{}{}
 
 
-% Do remember to remove the square bracket!
 \title{Rational protein modeling and design with local and rotation-equivariant neural networks}
 
 
@@ -136,32 +136,32 @@
 \mainmatter
 
 \chapter{Introduction}
-\label{sec:overall_introduction}
-% \input{introduction.tex}
+\label{sec:introduction}
+\input{introduction.tex}
 
 \chapter{SO(3)-Equivariant Framework}
 \label{sec:background}
 \input{background.tex}
 
 \chapter{H-(V)AE: Holographic (Variational) Autoencoder}
-\label{sec:overall_hvae}
+\label{sec:hvae}
 \input{hvae.tex}
 
 \chapter{H-Packer: Holographic Packer}
-\label{sec:overall_hpacker}
+\label{sec:hpacker}
 \input{hpacker.tex}
 
 \chapter{HERMES}
-\label{sec:overall_hermes}
+\label{sec:hermes}
 \input{hermes.tex}
 
 \chapter{Mapping the T-cell receptor specificity landscape with HERMES}
-\label{sec:overall_tcrpmhc}
+\label{sec:tcrpmhc}
 \input{tcrpmhc.tex}
 
-\chapter{Discussion}
-\label{sec:overall_discussion}
-% \input{discussion.tex}
+\chapter{Conclusion and Outlook}
+\label{sec:conclusion}
+% \input{conclusion.tex}
 
 
 \printbibliography[title=References,heading=bibintoc]
@@ -178,25 +178,25 @@
 \setcounter{equation}{0}
 
 
-\chapter{Supplement for chapter~\ref{sec:overall_hvae}}
+\chapter{Supplement for chapter~\ref{sec:hvae}}
 \label{sec:hvae_appendix}
 \input{appendix_text_hvae.tex}
 \clearpage
 \input{appendix_tables_and_figures_hvae.tex}
 
-\chapter{Supplement for chapter~\ref{sec:overall_hpacker}}
+\chapter{Supplement for chapter~\ref{sec:hpacker}}
 \label{sec:hpacker_appendix}
 \input{appendix_text_hpacker.tex}
 \clearpage
 \input{appendix_tables_and_figures_hpacker.tex}
 
-\chapter{Supplement for chapter~\ref{sec:overall_hermes}}
+\chapter{Supplement for chapter~\ref{sec:hermes}}
 \label{sec:hermes_appendix}
 \input{appendix_text_hermes.tex}
 \clearpage
 \input{appendix_tables_and_figures_hermes.tex}
 
-\chapter{Supplement for chapter~\ref{sec:overall_tcrpmhc}}
+\chapter{Supplement for chapter~\ref{sec:tcrpmhc}}
 \label{sec:tcrpmhc_appendix}
 \input{appendix_text_tcrpmhc.tex}
 \clearpage

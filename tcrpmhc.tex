@@ -57,7 +57,7 @@ sparse and skewed training data has remained a challenge in these models.
 a structure-based, rotationally equivariant neural network pre-trained on the protein universe to
 predict amino acid preferences at a residue from its 3D structural
 environment~\cite{Visani2024-sh,Pun2024-qz}. It takes as input all atoms within 10\AA\ of a focal
-residue (with that residue’s atoms masked), featurizing them by atom type, charge, and SASA. HERMES
+residue (with that residue's atoms masked), featurizing them by atom type, charge, and SASA. HERMES
 then outputs energies $E_i(\sigma)$ for the 20 possible amino acids $\sigma$ at residue $i$, which
 serve as logits in a softmax to estimate amino acid likelihoods.
 {\bf (B)} To predict TCR-pMHC affinity, we use two protocols: HERMES-{\em fixed} (left) and
@@ -170,6 +170,7 @@ Fig.~\ref{Fig:1} and SI for details.
 
 \begin{table}[ht]
 \centering
+\resizebox{\textwidth}{!}{
 \begin{tabular}{ll|cc|cccccccc}
 \toprule
  & & \multicolumn{2}{c|}{TCR-pMHC affinity} & \multicolumn{8}{c}{T-cell activity} \\
@@ -188,7 +189,7 @@ Model type & Model & 1G4 TCR & A6 TCR & H2-scDb & TCR1 & TCR2 & TCR3 & TCR4 & TC
 \multirow{1}{*}{Sequence based ML} & TAPIR~\cite{Fast2023-tk} & 0.29 & 0.35 & N/A & 0.36 & 0.36 &
 -0.00 & 0.12 & 0.39* & 0.08 & -0.01 \\
 \midrule
-\multirow{2}{*}{Structure based ML} 
+\multirow{2}{*}{Structure based ML}
 & ESM-IF1~\cite{Hsu2022-km} & 0.38* & 0.17 & 0.12 & 0.43* & 0.41 & 0.19 & -0.15 & 0.28* & 0.25 &
 0.08 \\
 & ProteinMPNN~\cite{Dauparas2022-fu} & -0.01 & 0.49 & \textbf{\underline{0.55}} & 0.46* & 0.52 &
@@ -200,7 +201,7 @@ Model type & Model & 1G4 TCR & A6 TCR & H2-scDb & TCR1 & TCR2 & TCR3 & TCR4 & TC
 & HERMES-\textit{relaxed} & 0.72* & 0.56* & 0.29 & 0.31 & 0.57 & 0.55* & -0.20 & 0.37* & 0.42* &
 0.14* \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \figcaption{Benchmarking of models for predicting TCR-pMHC binding affinities and T-cell
 activities.}
 {The table lists the Spearman~$\rho$ of models' predictions against experimentally
@@ -479,7 +480,7 @@ indicating the complete sequence space, and the green indicating the typical num
 likely to be presented by the MHC of each system; see SI for details. The bottom shows sequence
 motifs as PWMs for (i) true-positive designs that induced T-cell activation, (ii) false positives
 that did not, and (iii) the MHC presentation motif from the MHC Motif Atlas~\cite{Tadros2023-ij}.
-{\bf (D)} 3D structures of TCR–pMHC complexes focused on the peptide are shown for MAGE-A3 (PDB ID:
+{\bf (D)} 3D structures of TCR-pMHC complexes focused on the peptide are shown for MAGE-A3 (PDB ID:
 5BRZ), Titin (PDB ID: 5BS0), and the highest-activity design in (C) modeled by
 AF3~\cite{Abramson2024-jp}. The enhanced activity for Titin versus MAGE-A3, and for the designed
 peptide versus both wild-types follows from the formation of polar bonds between position 8 of the
@@ -656,7 +657,7 @@ space at other positions, possibly due to epistatic interactions. However, furth
 needed to confirm this.
 
 {Several} of our designs outperformed the wild-type peptides in activating T-cells: eight surpassed
-Titin’s GFP levels, and eleven exceeded MAGE-A3’s (Fig.~\ref{Fig:4}C). These improved designs
+Titin's GFP levels, and eleven exceeded MAGE-A3's (Fig.~\ref{Fig:4}C). These improved designs
 strongly favor glutamic acid (E) at position 8 of the peptide, where MAGE-A3 has leucine (L), and
 Titin has glutamine (Q) (Fig.~\ref{Fig:4}D). In Titin, the glutamine forms a polar bond with an
 arginine (R) in the interacting TCR$\beta$, and it is likely responsible for increasing Titin's
@@ -707,9 +708,9 @@ substantial changes in sequence alter the binding geometry of the peptide inside
 To this end, we used AF3 to model the TCR-pMHC interfaces for the experimentally validated
 immunogenic designs from the three systems. Although we see slight variation in both peptide and TCR
 backbone conformations, overall, we found that our designed immunogenic peptides adopt conformations
-very close to their wild‑type templates, even when those designs were generated with HERMES‑{\em
+very close to their wild-type templates, even when those designs were generated with HERMES-{\em
 relaxed} (Fig.~\ref{Fig:4}E). We attribute this structural convergence to two potential factors: (i)
-residual limitations in HERMES peptide‑backbone sampling strategy, and (ii) an inherent AF3 bias
+residual limitations in HERMES peptide-backbone sampling strategy, and (ii) an inherent AF3 bias
 toward conformations it encountered during training. Given that TCRs can cross-react with peptides
 of markedly different conformational poses~\cite{Riley2018-zi}, developing methods that can better
 explore peptide conformational space within the TCR-MHC groove remains a compelling direction for
@@ -763,4 +764,100 @@ partially address this issue, its designs are only reliable within roughly five 
 native peptides {with similar backbone conformations (Fig.~\ref{Fig:4})}, preventing a full
 exploration of the possible peptide poses for a given TCR-MHC complex. Nonetheless, our estimates
 can serve as informative lower bounds on typical MHC-I and TCR degeneracies.
+
+
+\section{Summary}
+
+In this chapter, we introduced a structure-based machine learning model to predict TCR-pMHC
+interactions and to design novel reactive peptides for TCR-MHC complexes. Our approach builds on
+HERMES, a physically motivated equivariant neural network model that we previously
+developed~\cite{Visani2024-sh,Pun2024-qz}. Trained on the protein universe, HERMES predicts amino
+acid propensities based on their atomic environments in protein structures, and has been shown to
+implicitly learn biophysical interatomic interactions in proteins~\cite{Pun2024-qz}, enabling it to
+make highly generalizable predictions. This generalizability is particularly important for TCR-pMHC
+complexes, where only a modest number of experimentally resolved structures are available, and
+computational algorithms often struggle to accurately predict new
+structures~\cite{Bradley2023-rl,Yin2023-zm}.
+
+We found that HERMES-predicted peptide energies closely tracked both TCR-pMHC binding affinities and
+peptide-induced T-cell activities across diverse systems, including variants from a CMV-derived
+viral epitope~\cite{Luksza2022-gx}, the NY-ESO cancer-testis
+antigen~\cite{Aleksic2010-wz,Pettmann2021-kl}, and a melanoma self-antigen~\cite{Luksza2022-gx}.
+Notably, HERMES also accurately predicted the activity of p53-derived neoepitope variants in the
+context of a bispecific antibody-mediated T-cell therapy~\cite{Hsiue2021-ag}. This result
+suggests the algorithm's potential applicability: given a reliable structural template close to the
+system of interest, HERMES can predict peptide-induced T-cell responses, whether through direct TCR
+interactions or antibody-mediated mechanisms. However, drawing more definitive conclusions about
+the generalizability of HERMES would require examining a larger datasets of TCRs interacting with
+pMHC variants.
+
+Based on the HERMES predictions for TCR-pMHC reactivities, we presented a computational protocol for
+{de novo} design of immunogenic peptides that can elicit robust T-cell responses. Starting from the
+structural template of a TCR-MHC with a native (wild-type) peptide, we developed an MCMC search
+guided by HERMES peptide energies to explore the vast sequence space of roughly $10^8$ ($10^{10}$)
+possibilities for 9-residue (11-residue) peptides, to identify immunogenic candidates. Experimental
+validation across three systems---with native peptides from NY-ESO and MAGE cancer epitopes, plus a
+viral epitope from EBV---revealed that our designs reliably activated T-cells, even with up to five
+substitutions from the native peptide used in the structural template. Notably, several MAGE-derived
+variants outperformed or matched the native peptide in T-cell activation, demonstrating the method's
+potential to enhance peptide potency.
+
+This capability can be relevant to personalized peptide-based cancer vaccines, which aim to
+induce durable T-cell memory against a patient's tumor antigens to reduce the risk of
+rebound~\cite{Sahin2018-fv,Vormehr2019-aw,Rojas2023-nx}. Despite their promise, the success of
+cancer vaccines has been limited by low peptide immunogenicity and poor uptake by antigen-presenting
+cells~\cite{Song2024-di}. Recent approaches have employed deep mutational scanning experiments to
+identify more immunogenic cancer {neoantigens} against specific TCR candidates~\cite{Luksza2022-gx}.
+However, these experiments are often limited to scanning single amino acid mutations from the
+wild-type peptide due to the combinatorial explosion when exploring multiple mutations. Moreover,
+the precise TCRs responding to peptide vaccines in a patient are often unknown, and many immune
+responses are induced de novo~\cite{Vormehr2019-aw}. With the caveat of access to suitable
+structural templates, HERMES could inform T-cell vaccine design by computationally generating
+diverse peptide libraries predicted to engage a broad set of candidate TCRs (identified
+independently), nominating vaccine epitopes for subsequent safety and efficacy testing.
+
+These results show the potential of HERMES for designing peptide-based cancer vaccines with
+{neoantigens}, providing an avenue for personalized immunotherapy strategies.
+
+Accurately modeling T-cell specificity remains challenging, in part due to the limited functional
+data on {TCR-epitope} pairs, and the highly cross-reactive nature of {TCR-epitope} interactions. A
+design protocol like the one presented here, coupled with experimental validation, offers a
+promising path forward for future {studies}. By iteratively generating candidate peptide libraries,
+testing them experimentally, and refining the model with each iteration, it should be possible to
+more efficiently explore the high dimensional antigenic sequence space. This active learning
+strategy has a potential for revealing the ``shape space" of {TCR-epitope} interactions, with broad
+applicabilities for early disease diagnosis, and for design of targeted immunotherapies. Moreover,
+this approach can help mitigate immunotherapy-related toxicity by identifying and excluding
+potential self-reactivities--beyond single-point mutations in the target epitope--such as the
+off-target Titin reactivity observed in an engineered T-cell therapy against MAGE-A3 that led to a
+severe cardiac toxicity~\cite{Linette2013-tc}.
+
+Although our findings highlight the promise of structure-based models for immune recognition, a key
+limitation remains the scarcity of high-quality TCR-pMHC structural templates, despite advances from
+tools like AlphaFold3~\cite{Abramson2024-jp} and TCRDock~\cite{Bradley2023-rl}. On the other hand,
+while TCR sequences are more widely available, sequence-based models often lack generalizability
+because existing paired TCR-pMHC data are skewed toward just a few
+peptides~\cite{Shugay2018-nt,Vita2019-qn}. A promising direction for future work lies in developing
+multi-modal flexible methods that integrate structural and sequence-based models, leveraging both
+the depth and generalizability offered by structural information and the scalability of sequence
+data.
+
+TCRs can cross-react with diverse peptides in multiple orientations and
+conformation~\cite{Riley2018-zi}. To reflect this flexibility, we sampled peptide conformational
+space (i) implicitly, by applying noise to the coordinates during training, and (ii) explicitly, by
+locally relaxing the atomic environment after each amino acid substitution. Even so, AlphaFold3
+predicts that our experimentally validated immunogenic designed peptides retain similar structural
+poses as their wild-type templates. This structural convergence may partly stem from AlphaFold3's
+bias toward structures represented in its training set, but it also exposes limitations in our
+current sampling strategy. Future work should therefore aim to co-design peptide sequence, peptide
+backbone geometry, together with the CDR loop conformations of the interacting TCR, enabling a more
+comprehensive exploration of the peptide-TCR conformational landscape.
+
+
+Although our study primarily examines {MHC class I}-restricted peptides, the broad applicability of
+structure-based modeling suggests that similar methods could be adapted for the more complex
+TCR-peptide-MHCII interactions, thereby offering new insights into CD4+ T-cell responses. Moreover,
+incorporating additional immunological factors---such as TCR clustering, co-receptor interactions,
+cross-reactivity with self-antigens, and functional immune profiling---can further enhance the
+accuracy of T-cell response predictions and improve the resulting {de novo} peptide design pipeline.
 

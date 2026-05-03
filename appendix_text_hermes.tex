@@ -285,6 +285,7 @@ ref.~\citep{tao_reliable_2025}.
 For the analysis in Fig.~\ref{fig:radial_plots__esmfold}, we used the ESM Metagenomic Atlas API to
 fold each sequence individually (\url{https://esmatlas.com/resources?action=fold}).
 
+
 \subsection{Structure-conditioned reversibility analysis}
 
 In Figs.~\ref{fig:ssym_figure}~and~\ref{fig:ssym_antisymmetry_reversibility_score_results}, we
@@ -398,12 +399,13 @@ To compute the p-values, we consider two null models:
 
 
 
-
 \subsection{Using Rosetta to score antigen-stabilizing mutations}
-In
-Figures~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations},~\ref{fig:antigen_heatmap}
-and Tables~\ref{table:antigen_results},~\ref{table:speed_on_antigens}, we reported the Rosetta
-scores for the verified antigen-stabilizing mutations. To compute these scores, we used the
+In Figures~\ref{fig:antigen_figure_main_results},~\ref{fig:antigen_figure_of_different_types_of_mutations},
+~\ref{fig:antigen_heatmap} and Tables~\ref{table:antigen_results},~\ref{table:speed_on_antigens}, we reported the Rosetta
+scores for verified antigen-stabilizing mutations.
+\GM{In Figures~\ref{fig:rsv_f_rosetta_hits_main_figure}~and~\ref{fig:denv_e_rosetta_hits_main_figure}
+we used Rosetta scores as oracles for mutations suggested by other models.}
+To compute these scores, we used the
 PyRosetta software~\citep{chaudhury_pyrosetta_2010} to model protein structures, with wild-type
 structures serving as template.
 For each target sequence containing a single point mutation, we threaded the mutant sequence onto
@@ -411,10 +413,12 @@ all chains of the oligomeric template. Each resulting model was then subjected t
 refinement protocol using Rosetta's FastRelax application. This protocol involved five cycles of
 side-chain rotamer repacking followed by gradient-based energy minimization of backbone ($\phi$,
 $\psi$) and side-chain ($\chi$) torsion angles, guided by the \texttt{ref2015\_cart} all-atom energy
-function. To improve conformational sampling, we repeated the threading-and-relaxation procedure 20
-times per mutation. For each mutant, we report the mean Rosetta Energy Unit (REU) score of the five
-lowest-energy (most favorable) relaxed models.
-
+function.
+\GM{To improve conformational sampling, we repeated the threading-and-relaxation procedure 20
+times per mutation for use in the analysis against validated mutations, and 50 when used as an oracle.
+For each mutant, we report the mean Rosetta Energy Unit (REU) score of the 20\%
+lowest-energy (most favorable) relaxed models (5 for the analysis against validated mutations,
+13 when used as an oracle).}
 
 
 
