@@ -423,7 +423,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/zeroshot_models_against_each_other.png}
+    \includegraphics[width=1.0\textwidth]{figures/zeroshot_models_against_each_other.png}
     \figcaption{Comparison of zero-shot model predictions on the Megascale test set.}{ For each
     substitution in the Megascale test set, the predicted change in amino acid propensity upon
     mutation ($\delta \log p$) is compared between two models in each panel. Color indicates local
@@ -438,7 +438,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.85\textwidth]{hermes/figures/radial_plots__no_numbers.pdf}
+    \includegraphics[width=0.85\textwidth]{figures/radial_plots__no_numbers.pdf}
     \figcaption{Predicting mutational effects on thermodynamic folding stability.}{
     Stabilizing-versus-destabilizing classification metrics are computed using $\Delta\Delta G < 0$
     (experimental) and $\Delta \log p > 0$ (predicted) as cutoffs for stabilizing mutations.
@@ -455,7 +455,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/pairwise_pvalues_permutation_bucketed_by_sizereduced_precision_recall_f1.pdf}
     \figcaption{Statistical significance of model performance differences on stabilizing mutation
     identification.}{ Shown are two-tailed p-values for differences in model performance on
     identifying stabilizing mutations across Megascale test set subsets. P-values correspond to the
@@ -469,7 +469,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.4\linewidth]{hermes/figures/pvalues__bucketed_by_size__between_small_large_buckets__vertical.pdf}
+    \includegraphics[width=0.4\linewidth]{figures/pvalues__bucketed_by_size__between_small_large_buckets__vertical.pdf}
     \figcaption{Statistical significance of within-model performance differences in identifying
     stabilizing mutations across mutational size classes.}{ Shown are two-tailed P-values for
     within-model differences in performance when identifying stabilizing mutations from the
@@ -484,7 +484,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/t2837_and_megascale_pairwise_pvalues_permutation.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/t2837_and_megascale_pairwise_pvalues_permutation.pdf}
     \figcaption{Statistical significance of model performance differences in identifying stabilizing
     mutations on the full test set.}{
      Shown are two-tailed p-values for differences in model performance when identifying stabilizing
@@ -498,7 +498,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\linewidth]{hermes/figures/ddg_stability_single_structure_results_with_bp.pdf}
+    \includegraphics[width=0.7\linewidth]{figures/ddg_stability_single_structure_results_with_bp.pdf}
     \figcaption{Pearson correlation between model predictions and experimental stability
     effects on the RaSP test set (8 proteins)~\citep{blaabjerg_rapid_2023}.}{
     Each dot represents one protein, and the horizontal bar indicates the mean correlation across
@@ -511,7 +511,7 @@ even when present in the input structure. ``Uncl." stands for uncleaved prefusio
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{hermes/figures/t2837_pearsonr_broken_down.pdf}
+    \includegraphics[width=0.9\linewidth]{figures/t2837_pearsonr_broken_down.pdf}
     \figcaption{Pearson correlation between model predictions and experimental stability effects
     on the T2837 dataset and its subsets.}{
 Pearson correlation values for all models other than HERMES are taken
@@ -526,7 +526,7 @@ performance of the HERMES models as well as that of the best-performing model ov
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{hermes/figures/radial_plots__esmfold.pdf}
+    \includegraphics[width=0.5\linewidth]{figures/radial_plots__esmfold.pdf}
     \figcaption{Predicting mutational effects on thermodynamic stability using ESMfold
     predicted structures for fine-tuning or testing.}{ Stabilizing-versus-destabilizing
     classification metrics are computed using $\Delta\Delta G < 0$ (experimental) and $\Delta \log p
@@ -544,7 +544,7 @@ performance of the HERMES models as well as that of the best-performing model ov
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.95\textwidth]{hermes/figures/mean_of_abs_symmetric__significance_matrices_all_models_vs_aminoacid_properties__holm_within.pdf}
+    \includegraphics[width=0.95\textwidth]{figures/mean_of_abs_symmetric__significance_matrices_all_models_vs_aminoacid_properties__holm_within.pdf}
     \figcaption{Significance testing results for
     Fig.~\ref{fig:correlations_to_aa_properties}B.}{
     Shown are p-values of two-tailed t-tests comparing the distributions of spearman correlations
@@ -558,7 +558,7 @@ performance of the HERMES models as well as that of the best-performing model ov
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{hermes/figures/mean_of_abs_symmetric_all__average_prediction_matrices__spearman_matrix.pdf}
+    \includegraphics[width=0.6\linewidth]{figures/mean_of_abs_symmetric_all__average_prediction_matrices__spearman_matrix.pdf}
     \figcaption{Spearman correlations between pairs of model-average substitution matrices
     $M^{\model}$.}{ The heatmaps for the underlying model-predicted substitution matrices are shown
     in Fig.~\ref{fig:correlations_to_aa_properties}.}
@@ -567,7 +567,7 @@ performance of the HERMES models as well as that of the best-performing model ov
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{hermes/figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_1.pdf}
+    \includegraphics[width=0.8\textwidth]{figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_1.pdf}
     \figcaption{Model-averaged substitution matrices stratified by protein core and surface
     residues for zero-shot models.}{
 Shown are model-averaged substitution matrices $M^{\model}$ for different zero-shot models (rows
@@ -580,7 +580,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{hermes/figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_2.pdf}
+    \includegraphics[width=0.8\textwidth]{figures/mean_of_abs_symmetric__matrix_heatmaps__by_loc__part_2.pdf}
     \figcaption{Model-averaged substitution matrices stratified by protein core and surface
     residues for stability fine-tuned models.}{
      Similar to Fig.~\ref{fig:average_prediction_matrices__abs_symm__part_1} but for models
@@ -590,7 +590,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{hermes/figures/ssym_antisymmetry_reversibility_score_results.pdf}
+    \includegraphics[width=0.9\linewidth]{figures/ssym_antisymmetry_reversibility_score_results.pdf}
     \figcaption{Model reversibility scores on the Ssym dataset.}{
     Reversibility is quantified as one minus the mean squared error between the forward mutational
     effect $\Delta\log p_{fwd}$ and the negated reverse effect $-\Delta\log p_{rev}$ for different
@@ -605,7 +605,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/heatmap.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/heatmap.pdf}
     \figcaption{Model predictions for amino acid preferences at sites with known
     antigen-stabilizing mutations.}{ Predictions from different models (columns) are shown for sites
     with known antigen-stabilizing mutations specified in Fig.~\ref{fig:antigen_figure_main_results}
@@ -622,8 +622,8 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-\includegraphics[width=0.95\linewidth]{hermes/figures/pvalues_vs_random.pdf}\vspace{0.5cm}
-\includegraphics[width=0.95\linewidth]{hermes/figures/pvalues_vs_blosum62.pdf}
+\includegraphics[width=0.95\linewidth]{figures/pvalues_vs_random.pdf}\vspace{0.5cm}
+\includegraphics[width=0.95\linewidth]{figures/pvalues_vs_blosum62.pdf}
     \figcaption{Statistical significance for the number of retrieved antigen-stabilizing mutations.}{
  Shown are p-values from binomial tests comparing the number of antigen-stabilizing mutations
  retrieved by each model (rows) against random expectation (top) and the BLOSUM62 predictions
@@ -637,7 +637,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=0.9\linewidth]{hermes/figures/antigen_figure_types_of_mutations__2.pdf}
+    \includegraphics[width=0.9\linewidth]{figures/antigen_figure_types_of_mutations__2.pdf}
     \figcaption{Model ability to recover different mutation patterns that stabilize antigens.}{
     \textbf{(A)} Representative examples of mutation types commonly seen in antigen
     stabilization~\citep{byrne_principles_2022}, and analyzed in this study. The mutated residue(s)
@@ -663,7 +663,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=0.7\linewidth]{hermes/figures/denv_e_rosetta_hits_main_figure.pdf}
+    \includegraphics[width=0.7\linewidth]{figures/denv_e_rosetta_hits_main_figure.pdf}
     \figcaption{\GM{Identifying new antigen-stabilizing mutations with HERMES for DENV-E.}}{
     \GM{
     Panel {\bf A} shows results using the ``stabilize pre-fusion core" pipeline, whereas
@@ -690,7 +690,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\linewidth]{hermes/figures/t2837_radial_plot_py_vs_bp.pdf}
+    \includegraphics[width=0.8\linewidth]{figures/t2837_radial_plot_py_vs_bp.pdf}
     \figcaption{Comparison of PyRosetta and Biopython Pre-processing pipelines for predicting
     mutation stability effects on T2837.}{ Classification accuracy metrics, analogous to those shown
     in Fig.~\ref{fig:radial_plots__noise}, are reported for fine-tuned models (left) and zero-shot
@@ -706,7 +706,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/hermes_relaxed_ablation.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/hermes_relaxed_ablation.pdf}
     \figcaption{Ablation of PyRosetta fastrelax parameters for HERMES-\textit{relaxed} 0.50 on
     the cDNA117k dataset.}{
     \textbf{(A)} Classification accuracy metrics, analogous to those shown in
@@ -731,7 +731,7 @@ surface residues with SASA $> 3 \AA^2$ (right).}
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/rsvf_si_figure.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/rsvf_si_figure.pdf}
     \figcaption{Structure of the wild-type pre-fusion RSV-F antigen highlighting observed and
     candidate antigen-stabilizing mutations.}{
 The wild-type structure is shown on the left (PDB ID: 4JHW). A single protomer of the trimer is
@@ -755,7 +755,7 @@ similarly stabilizing effect without over-packing the region.
    
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/ha_si_figure.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/ha_si_figure.pdf}
     \figcaption{Structure of the wild-type pre-fusion Universal-HA antigen, with highlighted
     observed and candidate antigen-stabilizing mutations.}{
     The wild-type structure is shown on the left (PDB ID 7VDF).
@@ -773,7 +773,7 @@ similarly stabilizing effect without over-packing the region.
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/hmpvf_si_figure.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/hmpvf_si_figure.pdf}
     \figcaption{Structure of the wild-type pre-fusion hMPV-F antigen, with highlighted observed
     and candidate antigen-stabilizing mutations.}{
     The wild-type structure is shown on the left (PDB ID 5WB0).
@@ -805,7 +805,7 @@ similarly stabilizing effect without over-packing the region.
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/denve_si_figure.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/denve_si_figure.pdf}
     \figcaption{Structure of wild-type pre-fusion DENV-E antigen, with highlighted observed and
     candidate mutations.}{
     The wild-type structure is shown on the left (PDB ID 1OAN).

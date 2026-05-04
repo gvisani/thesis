@@ -52,7 +52,7 @@ sparse and skewed training data has remained a challenge in these models.
 
  
 \begin{figure}[th!]
-\includegraphics[width=1.0\textwidth]{tcrpmhc/figures/schematic_0}
+\includegraphics[width=1.0\textwidth]{figures/schematic_0}
 \figcaption{HERMES model for predicting and designing TCR-pMHC interactions.}{ {\bf (A)} HERMES is
 a structure-based, rotationally equivariant neural network pre-trained on the protein universe to
 predict amino acid preferences at a residue from its 3D structural
@@ -120,7 +120,7 @@ recognize in humans and mice.
 
 \begin{figure}[ht!]
 	\centering
-	\includegraphics[width=0.9\textwidth]{tcrpmhc/figures/affinity_figure_0}
+	\includegraphics[width=0.9\textwidth]{figures/affinity_figure_0}
 	\figcaption{Predicting binding affinity of TCR-pMHC complexes.}{ {\bf(A)} The structure of the
 	NY-ESO-1
 	peptide (purple), in complex with HLA-A*02:01 and a purified specific 1G4 TCR is shown (PDB ID:
@@ -349,7 +349,7 @@ T-cells across varying peptide concentrations; see Methods on details of inferri
 
 With the exception of TCR1 (where a TCR-pMHC template with HLA-A*02:01 and one peptide variant was
 already available), we relied on AlphaFold3 (AF3)~\cite{Abramson2024-jp} to model the remaining
-TCR-pMHC complexes; see Table~\AffActInfoTable~and Dataset~\AfInfoDataset~for template information
+TCR-pMHC complexes; see Table~\AffActInfoTable~and for template information
 and AF3 sequence inputs for TCRs~2-7. {As shown in Figs.~\ref{Fig:3}A,
 and~\ActivityHeatmapsFigure,~HERMES-{\em fixed} peptide energy predictions (eq.~\ref{eq:pepEn})
 correlate well with experimental EC$_{50}$ measurements for the CMV peptide variants, reaching up to
@@ -407,7 +407,7 @@ Fig.~\AfExamplesFigure).
 
 \begin{figure}[ht!]
 	\centering
-	\includegraphics[width=0.9\textwidth]{tcrpmhc/figures/activity_all_0}
+	\includegraphics[width=0.9\textwidth]{figures/activity_all_0}
 	\figcaption{Predicting T-cell activity in response to peptide variants.}{
 	{\bf (A-C)} The predicted HERMES-{\em fixed} peptide energies versus experimentally measured T-cell
 	activity are shown for (A) HLA-A*02:01-restricted CMV peptide variants interacting with TCR1-TCR3
@@ -420,7 +420,7 @@ Fig.~\AfExamplesFigure).
 	Spearman correlations.} Except for TCR1 (resolved structure, PDB ID: 5D2N~\cite{Yang2015-cj}), the
 	other TCR-pMHC complexes were modeled with AF3, and the model's peptide PAE for each wild-type
 	peptide is denoted. These structures are used as templates to estimate peptide energies with
-	HERMES-{\em fixed}; see Table~\AffActInfoTable~and Dataset~\AfInfoDataset~for details on the
+	HERMES-{\em fixed}; see Table~\AffActInfoTable~for details on the
 	templates. In all panels, TCR-$\alpha$ (TRA) is shown in blue, TCR-$\beta$ (TRB) in orange, the
 	peptide in magenta, and HLA in gray. {\bf (D)} The predicted HERMES-{\em fixed} peptide energies
 	are shown against experimentally measured T-cell activity for single point mutants of the
@@ -459,7 +459,7 @@ affinities;
 
 \begin{figure}[th!]
 \centering
-\includegraphics[width=0.63\textwidth]{tcrpmhc/figures/design_figure_final_4_0}
+\includegraphics[width=0.63\textwidth]{figures/design_figure_final_4_0}
 \figcaption{{De novo} peptide design to elicit a T-cell response.}{ {\bf (A-C)} Validation results
 are
 shown for designed peptides built upon the wild-type templates from (A) NY-ESO peptide against TCR
@@ -566,8 +566,7 @@ expressing the specified HLA in each system. For NY-ESO designs, we determined t
 of GFP-positive cells} through both flow cytometry and fluorescence microscopy. Given the
 consistency between the two experimental approaches (Fig.~\FlowMicroscopyFigure) we relied on
 fluorescence microscopy only to measure GFP levels induced by different peptides for MAGE and EBV
-designs; see SI for experimental details and Dataset~\experimentalMeasurementsDataset~for data on
-these measurements.
+designs; see Appendix for experimental details.
 
 We used two structural templates for the NY-ESO system: one containing the original 9-amino acid
 peptide SLLMWITQC, and another with the more immunogenic C9V
@@ -603,7 +602,7 @@ positives (Fig.~\ref{Fig:4}B).
 
 
 \begin{figure}[th!]
-\includegraphics[width=0.9\textwidth]{tcrpmhc/figures/entropy_TCRMHC_cartoon_0}
+\includegraphics[width=0.9\textwidth]{figures/entropy_TCRMHC_cartoon_0}
 \figcaption{Evaluating T-cell specificity from {de novo} designed peptides.}{ {\bf (A)} 
 T-cell specificity is measured by peptide entropy, which is computed from the HERMES-{\em fixed}
 predicted amino acid likelihood matrix, starting from a TCR-pMHC structural template. Each point on

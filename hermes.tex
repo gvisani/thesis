@@ -95,7 +95,7 @@ Code is open source at \url{https://github.com/StatPhysBio/hermes/tree/main}.
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/hermes_with_inference.pdf} \figcaption{Overview of
+    \includegraphics[width=1.0\linewidth]{figures/hermes_with_inference.pdf} \figcaption{Overview of
     HERMES.}{
     \textbf{(A)} Model architecture: HERMES takes as input an all-atom structural neighborhood
     (10~\AA{} radius) around a masked focal residue. Each atom is represented by its 3D coordinates,
@@ -233,7 +233,7 @@ folding. Thus, the effect of a mutation $\wt \rightarrow \mt$ on folding stabili
 $\Delta \Delta G_{\wt \rightarrow \mt} = \Delta G_\mt - \Delta G_\wt$.\\
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.70\textwidth]{hermes/figures/radial_plots__noise__no_numbers.pdf}
+    \includegraphics[width=0.70\textwidth]{figures/radial_plots__noise__no_numbers.pdf}
     \figcaption{Predicting mutational effects on thermodynamic folding stability.}{
     Stabilizing-versus-destabilizing classification metrics are computed using $\Delta\Delta G < 0$
     (experimental) and $\Delta \log p > 0$ (predicted) as cutoffs for stabilizing mutations.
@@ -317,7 +317,7 @@ HERMES-{\em amortized} on small$\to$large substitutions.\\
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{hermes/figures/barplots_bucketed_by_size__zeroshot_plus_finetuned__precision_and_recall_and_f1.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/barplots_bucketed_by_size__zeroshot_plus_finetuned__precision_and_recall_and_f1.pdf}
     \figcaption{Impact of amino acid size changes on predicting mutational effects on protein
     stability.}{
     Amino acids are grouped into three size classes based on van der Waals volume (as listed), and
@@ -360,7 +360,7 @@ comparable recall and F1 scores for small$\to$large and large$\to$small substitu
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\textwidth]{hermes/figures/confusion_matrices_and_boxplot_with_abs.pdf}
+    \includegraphics[width=1.0\textwidth]{figures/confusion_matrices_and_boxplot_with_abs.pdf}
     \figcaption{Uncovering mutation preferences via model-averaged substitution matrices.}{
     \textbf{(A)} 
     Heatmaps of model-averaged substitution matrices $M^{\model}$ computed by averaging over the
@@ -431,7 +431,7 @@ restricting to the core (Fig.~\ref{fig:correlations_to_aa_properties}B).\\
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.9\textwidth]{hermes/figures/reversibility_and_wt_bias.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/reversibility_and_wt_bias.pdf}
     \figcaption{Identifying model biases with structure-conditioned reversibility}{
     \textbf{(A)} 
    Spearman correlations between experimental stability changes ($\Delta\Delta G$ and model
@@ -513,7 +513,7 @@ future work.
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=0.9\linewidth]{hermes/figures/antigen_design_concept.pdf}
+    \includegraphics[width=0.9\linewidth]{figures/antigen_design_concept.pdf}
     \figcaption{\GM{Overview of structure-based vaccine design against enveloped viruses.}}{
         \GM{
             A large proportion of viruses are enveloped by a bi-lipid membrane akin to that of human cells,
@@ -583,7 +583,7 @@ pre-training or during stability fine-tuning.
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/antigen_figure_main_results_with_time.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/antigen_figure_main_results_with_time.pdf}
     \figcaption{Recovering previously-identified antigen-stabilizing mutations with HERMES.}{
     \textbf{(A)} Model recall is evaluated on 33 previously reported antigen-stabilizing mutations
     (rows) across five viral antigens. For each antigen, the PDB structure used for scoring is
@@ -771,7 +771,9 @@ In the pre-fusion conformation, alanine 298 is in an under-packed region of the 
 (with the exception of a single threonine); mutating it to an isoleucine provides better packing without requiring any
 relaxation of the neighborhood. Furthermore, even though this mutation
 was identified without concern for the post-fusion conformation, site 298 is on the surface of the post-fusion conformation
-thus a mutation to Isoleucine would not likely not further stabilize it (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}A, right).
+thus a mutation to Isoleucine would not likely not further stabilize it (Figure~\ref{fig:rsv_f_rosetta_hits_main_figure}A, right)
+~\footnote{After having already written this, my collaborator Zac Jones discovered that the A298I mutation was
+declared in a patent, which is validating for the pipeline!~\url{https://patents.google.com/patent/US20170298101A1/en}}.
 N175P instead was identified with the pipeline that includes the predicted effect on the post-fusion conformation,
 and is a canonical example of a proline mutation: in pre-fusion the site is on a loop, specifically on a
 kink, which allows for prolines; in post-fusion instead it is on a $\alpha$-helix, which generally cannot
@@ -784,7 +786,7 @@ mutations for experimental validation.
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=1.0\linewidth]{hermes/figures/rsv_f_rosetta_hits_main_figure.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/rsv_f_rosetta_hits_main_figure.pdf}
     \figcaption{\GM{Identifying new antigen-stabilizing mutations with HERMES for RSV-F.}}{
     \GM{
     Panel {\bf A} shows results using the ``stabilize pre-fusion core" pipeline, whereas
