@@ -1,184 +1,116 @@
 
 
-%% Discussion from HERMES paper
+% Many of the tasks of biological and translational interest fundamentally arise from inter-atomic interactions between proteins'
+% constituent amino-acids, for example predicting a protein's lowest-energy 3D structure
+% from its sequence, predicting ioptimal rota
 
-% \section{Discussion}
-% We introduced HERMES, a family of fast, structure-based machine learning models for predicting the
-% effects of mutations on protein function. HERMES leverages SO(3)-equivariant neural networks
-% operating on local atomic neighborhoods in a protein structure to predict amino acid propensities,
-% whose differences can be used to predict mutational effects. This formulation yields a
-% computationally efficient predictor that is naturally suited to high-throughput settings. HERMES
-% captures mutational impacts on diverse phenotypes, including thermodynamic stability and
-% protein–protein binding affinity, and it provides a practical tool for antigen stabilization in
-% vaccine design.
+% Some tasks of particular biological and translational interest include: predicting a protein's lowest-energy 3D structure
+% from its sequence, predicting the side-chains flexibility 
 
-% A central finding is that encoding packing flexibility is essential for accurate predictions across
-% mutations involving amino acids of different sizes. HERMES-{\em fixed}, a lightweight protocol that
-% evaluates mutations in the rigid wild-type structure, exhibits strong bias toward size-conserving
-% substitutions. Explicitly modeling relaxation via Rosetta~\citep{chaudhury_pyrosetta_2010},
-% (HERMES-{\em relaxed} protocol) resolves this bias but incurs substantial computational cost. Our
-% amortized approach offers an effective compromise: by fine-tuning on relaxed predictions for just
-% 0.5\% of pre-training data, HERMES-{\em amortized} learns implicit packing flexibility that can be
-% leveraged for predictions at HERMES-{\em fixed} speed. This capability proves particularly valuable
-% for antigen stabilization, where HERMES-{\em amortized} recovers over half of the verified
-% stabilizing mutations in our benchmark and shows strong performance on proline substitutions (87.5\%
-% recovery), which stabilize proteins by restricting backbone conformational freedom.
+Creating accurate models of protein function, to be used for tasks in both prediction and design, is a hallmark of protein science.
+Since almost all protein functions derive from the inter-atomic interations between the protein's constituent amino-acids,
+both among themselves (folding) and with other biomolecules (e.g. ther proteins or small molecules),
+first-principles methods rooted in physics have appeared to be the right approach to build models
+that generalize across protein functions.
 
-% Beyond zero-shot use, HERMES can be fine-tuned directly on experimental labels using a simple
-% end-to-end procedure. Notably, both the native and the fine-tuned models use the difference of amino
-% acid scores for predicting mutational effects, which yields an inherent reversibility with respect
-% to mutation order--a thermodynamic consistency property that is often enforced via explicit
-% 19$\times$ data augmentation~\citep{diaz_stability_2024}.
+However, in recent years physics-based methods have fallen out of favor due to their computational complexity,
+which hinders their usability.
+Machine learning substitutes first-principles, general modeling with effective theories learned from data,
+specific to a task and particular data modalities.
+Models learned from data dispense of details that are not important for the task, resulting in effective theories
+that ...
 
-% With fine-tuning, HERMES achieves competitive accuracy on thermodynamic stability benchmarks when
-% trained on the same data as prior methods~\citep{blaabjerg_rapid_2023, diaz_stability_2024,
-% dieckhaus_transfer_2024}. Interestingly, stability fine-tuning does not consistently transfer to
-% antigen stabilization and can even degrade performance. One plausible explanation is dataset
-% mismatch: the high-throughput stability datasets used for
-% fine-tuning~\citep{tsuboyama_mega-scale_2023} are enriched for relatively small, compact domains,
-% whereas vaccine antigens are often larger, multi-domain, and conformationally heterogeneous, with
-% stabilizing mutations frequently targeting quaternary contacts, glycoprotein-specific features, or
-% prefusion-state constraints. Resolving this discrepancy will likely require broader supervision that
-% better reflects antigen structure and design objectives, or task-aligned fine-tuning data.
 
-% We also demonstrate that pre-training on wild-type amino acid classification remains necessary for
-% strong performance; models trained only on currently-available experimental stability data fail.
-% Notably, pre-trained models exhibit ``wild-type preference," assigning elevated probabilities to
-% wild-type residues in wild-type structural contexts. This bias correlates with sequence similarity
-% to pre-training proteins, suggesting partial memorization rather than purely generalizable learning.
-% Fine-tuning partially ameliorates but does not eliminate this effect, representing a fundamental
-% trade-off in current training paradigms. More robust pre-training objectives, stronger
-% regularization, or explicit debiasing strategies may be required to fully address this issue.
+The challenge with machine learning is to develop a method that is data-efficient, and has a high chance of generalizing
+to new data that was not used to fit it.
 
-% A key application we highlight is structure-based vaccine design, where practitioners seek to
-% stabilize substitutions that preserve a desired prefusion conformation {of} a vaccine antigen to
-% elicit immune responses targeting relevant epitopes. For this task, a useful model should propose
-% stabilizing mutation candidates across different sites of an antigen. On the limited available data
-% comprising 33 verified antigen-stabilizing mutations across five viruses, HERMES performs well in
-% recovering these mutations. Moreover, the strict locality of the model makes it straightforward {and
-% fast} to apply to large antigens and assemblies that can pose challenges for architectures modeling
-% global interactions in proteins. Our results show that local all-atom environments modeled by HERMES
-% can encode multiple stabilization mechanisms, including cavity filling, backbone rigidification via
-% proline, and favorable electrostatic remodeling, while also underscoring limitations for mechanisms
-% that depend on long-range coupling, or multi-site epistasis.
+First-principles can still guide the design of the machine learning models.
+For example, as a protein's binding ability is largely driven by its structure, and in particular in the composition of its binding site,
+then it follows that predicting a protein's binding affinity to a target should be easier - i.e. require less data - if provided with structural information.
 
-% We further evaluated HERMES on predicting changes in protein--protein binding affinity using the
-% SKEMPI dataset~\citep{jankauskaite_skempi_2019}. In the zero-shot setting, HERMES shows measurable
-% predictive signal, and supervised fine-tuning on SKEMPI {substantially} improves performance.
-% Recent state-of-the-art approaches for binding prediction like Pythia-PPI~\citep{tao_reliable_2025}
-% indicate that design choices such as self-distillation can substantially improve
-% performance~\citep{tao_reliable_2025}; we expect HERMES would similarly benefit from such
-% approaches, representing a clear next step.
+Repeat stuff about equivariance, locality, and atomic and biophysical reresentation, that I said at the end of the introduction
 
-% Several directions could extend HERMES' capabilities. Developing larger, more diverse training
-% datasets, particularly for antigen stabilization and binding, would likely improve performance, as
-% our results indicate that training data dominates architectural differences in determining benchmark
-% performance. The locality of HERMES appears to be a double-edged sword: local neighborhoods reduce
-% input complexity, remove constraints on protein size, and improve scalability, but necessarily limit
-% the model's ability to capture long-range epistasis and allosteric coupling. We view HERMES as a
-% hypothesis-generation tool whose predictions are most reliable when mutational effects are driven
-% primarily by short-range interactions and local packing. Productive directions for future work
-% include better characterizing when locality suffices, further reducing pre-training-induced biases,
-% and developing multi-scale approaches that efficiently combine local all-atom predictors with
-% complementary global or multi-site models to capture mechanisms beyond the local neighborhood.
+
+In Chapter 2 I introduced the framework...
+    introduce neighborhoods!!!
+    the framework was developed largely by Michael Pun, who applied it in his Holographic Convolutional Neural Network
+
+In Chapter 3, I applied the SO(3)-equivariant framework to the domain of unsupervised learning, developing the Holographic (Variational) AutoEncoder (H-(V)AE).
+H-(V)AE's key idea is to disentangle the latent space into a maximally informative invariant embedding - which learns a compact representation
+of the input in a "canonical" orientation - and a single rotation matrix that learns the orientation of the input relative to the "canonical" one.
+Through simple experiments on spherical images, we provide evidence that the "canonical" orientation is one where all the training samples are
+maximally overlapped on top of each other.
+We learn compact rotationally-invariant embeddings of residue-centered protein neighborhoods, and show that they efficiently encode key biophysical and structural
+properties of the neighborhoods, and can be used as features for downstream tasks; indeed, pairing them with a Random Forest Regressor \todo{cite}
+results in state-of-the-art performance on predicting protein-ligand binding affinity on the PDBBind dataset \todo{cite}.
+Furthermore, H-(V)AE neighborhoods embeddings are currently being used by a colleague to easily identify structural features that are indicative
+of a protein's functional family, in a manner akin to \todo{cite paper using zernike representations to represent protein structures (or was it surfaces? have to dig for it)}
+
+In Chapter 4 ... H-Packer
+    mention it is used in BioEmu
+
+In Chapter 5 ... HERMES
+    Improved modeling of local relaxation as a result of mutations at no inference-time cost with HERMES-amortized
+    Developed a fine-tuning pipeline to fine-tune HERMES on desired mutational effects, demonstrating performance
+    comparable to state-of-the-art models on stability effects when fine-tuning on the same data.
+    Thoroughly analyzed model biases 
+
+
+In Chapter 6 ... HERMES for TCR-pMHC work
+    Say something about biology here maybe. What I learned. Mention specificity perhaps, or do it later in the "outlook" section
 
 
 
-%% Discussion from TCR-specificity design paper
-
-% \section*{Discussion}
-%  In this work, we introduced a structure-based machine learning model to predict TCR-pMHC
-%  interactions and to design novel reactive peptides for TCR-MHC complexes. Our approach builds on
-%  HERMES, a physically motivated equivariant neural network model that we previously
-%  developed~\cite{Visani2024-sh,Pun2024-qz}. Trained on the protein universe, HERMES predicts amino
-%  acid propensities based on their atomic environments in protein structures, and has been shown to
-%  implicitly learn biophysical interatomic interactions in proteins~\cite{Pun2024-qz}, enabling it to
-%  make highly generalizable predictions. This generalizability is particularly important for TCR-pMHC
-%  complexes, where only a modest number of experimentally resolved structures are available, and
-%  computational algorithms often struggle to accurately predict new
-%  structures~\cite{Bradley2023-rl,Yin2023-zm}.
-
-% We found that HERMES-predicted peptide energies closely tracked both TCR-pMHC binding affinities and
-% peptide-induced T-cell activities across diverse systems, including variants from a CMV-derived
-% viral epitope~\cite{Luksza2022-gx}, the NY-ESO cancer-testis
-% antigen~\cite{Aleksic2010-wz,Pettmann2021-kl}, and a melanoma self-antigen~\cite{Luksza2022-gx}.
-% Notably, HERMES also accurately predicted the activity of p53-derived neoepitope variants in the
-% context of a bispecific antibody-mediated T-cell therapy~\cite{Hsiue2021-ag}. \AN{This result
-% suggests the algorithm's potential applicability:} given a reliable structural template close to the
-% system of interest, HERMES can predict peptide-induced T-cell responses, whether through direct TCR
-% interactions or antibody-mediated mechanisms. \AN{However, drawing more definitive conclusions about
-% the generalizability of HERMES would require examining a larger datasets of TCRs interacting with
-% pMHC variants.}
-
-% Based on the HERMES predictions for TCR-pMHC reactivities, we presented a computational protocol for
-% {de novo} design of immunogenic peptides that can elicit robust T-cell responses. Starting from the
-% structural template of a TCR-MHC with a native (wild-type) peptide, we developed an MCMC search
-% guided by HERMES peptide energies to explore the vast sequence space of roughly $10^8$ ($10^{10}$)
-% possibilities for 9-residue (11-residue) peptides, to identify immunogenic candidates. Experimental
-% validation across three systems---with native peptides from NY-ESO and MAGE cancer epitopes, plus a
-% viral epitope from EBV---revealed that our designs reliably activated T-cells, even with up to five
-% substitutions from the native peptide used in the structural template. Notably, several MAGE-derived
-% variants outperformed or matched the native peptide in T-cell activation, demonstrating the method’s
-% potential to enhance peptide potency.
-
-% \AN{This capability can be relevant to personalized peptide-based cancer vaccines, which aim to
-% induce durable T-cell memory against a patient's tumor antigens to reduce the risk of
-% rebound~\cite{Sahin2018-fv,Vormehr2019-aw,Rojas2023-nx}. Despite their promise, the success of
-% cancer vaccines has been limited by low peptide immunogenicity and poor uptake by antigen-presenting
-% cells~\cite{Song2024-di}. Recent approaches have employed deep mutational scanning experiments to
-% identify more immunogenic cancer {neoantigens} against specific TCR candidates~\cite{Luksza2022-gx}.
-% However, these experiments are often limited to scanning single amino acid mutations from the
-% wild-type peptide due to the combinatorial explosion when exploring multiple mutations. Moreover,
-% the precise TCRs responding to peptide vaccines in a patient are often unknown, and many immune
-% responses are induced de novo~\cite{Vormehr2019-aw}. With the caveat of access to suitable
-% structural templates, HERMES could inform T-cell vaccine design by computationally generating
-% diverse peptide libraries predicted to engage a broad set of candidate TCRs (identified
-% independently), nominating vaccine epitopes for subsequent safety and efficacy testing.
-% }
-
-% These results show the potential of HERMES for designing peptide-based cancer vaccines with
-% {neoantigens}, providing an avenue for personalized immunotherapy strategies.
-
-% Accurately modeling T-cell specificity remains challenging, in part due to the limited functional
-% data on {TCR-epitope} pairs, and the highly cross-reactive nature of {TCR-epitope} interactions. A
-% design protocol like the one presented here, coupled with experimental validation, offers a
-% promising path forward for future {studies}. By iteratively generating candidate peptide libraries,
-% testing them experimentally, and refining the model with each iteration, it should be possible to
-% more efficiently explore the high dimensional antigenic sequence space. This active learning
-% strategy has a potential for revealing the ``shape space" of {TCR-epitope} interactions, with broad
-% applicabilities for early disease diagnosis, and for design of targeted immunotherapies. Moreover,
-% this approach can help mitigate immunotherapy-related toxicity by identifying and excluding
-% potential self-reactivities--beyond single-point mutations in the target epitope--such as the
-% off-target Titin reactivity observed in an engineered T-cell therapy against MAGE-A3 that led to a
-% severe cardiac toxicity~\cite{Linette2013-tc}.
-
-% Although our findings highlight the promise of structure-based models for immune recognition, a key
-% limitation remains the scarcity of high-quality TCR-pMHC structural templates, despite advances from
-% tools like AlphaFold3~\cite{Abramson2024-jp} and TCRDock~\cite{Bradley2023-rl}. On the other hand,
-% while TCR sequences are more widely available, sequence-based models often lack generalizability
-% because existing paired TCR-pMHC data are skewed toward just a few
-% peptides~\cite{Shugay2018-nt,Vita2019-qn}. A promising direction for future work lies in developing
-% multi-modal flexible methods that integrate structural and sequence-based models, leveraging both
-% the depth and generalizability offered by structural information and the scalability of sequence
-% data.
-
-% {TCRs can cross-react with diverse peptides in multiple orientations and
-% conformation~\cite{Riley2018-zi}. To reflect this flexibility, we sampled peptide conformational
-% space (i) implicitly, by applying noise to the coordinates during training, and (ii) explicitly, by
-% locally relaxing the atomic environment after each amino acid substitution. Even so, AlphaFold3
-% predicts that our experimentally validated immunogenic designed peptides retain similar structural
-% poses as their wild-type templates. This structural convergence may partly stem from AlphaFold3's
-% bias toward structures represented in its training set, but it also exposes limitations in our
-% current sampling strategy. Future work should therefore aim to co-design peptide sequence, peptide
-% backbone geometry, together with the CDR loop conformations of the interacting TCR, enabling a more
-% comprehensive exploration of the peptide-TCR conformational landscape.}
 
 
-% Although our study primarily examines {MHC class I}-restricted peptides, the broad applicability of
-% structure-based modeling suggests that similar methods could be adapted for the more complex
-% TCR-peptide-MHCII interactions, thereby offering new insights into CD4+ T-cell responses. Moreover,
-% incorporating additional immunological factors---such as TCR clustering, co-receptor interactions,
-% cross-reactivity with self-antigens, and functional immune profiling---can further enhance the
-% accuracy of T-cell response predictions and improve the resulting {de novo} peptide desig pipeline.
+
+Talk about *lessons learned*
+
+
+Equivariance
+
+    Thinking in terms of symmetries or anyways conditions you want to respect is important,
+    might pay off in low-data regimes or anyway in cases where exactness is paramount
+
+    Strict equivariance is dying a bit due to concerns for optimization, but new works that tackle the optimization
+    problem, at times by constraining equivariance a bit are on the rise (cite Shubhendu Trivedi's recent ICML-accepted publication I saw on twitter)
+
+
+Interpretability
+
+    Say something more about HERMES vs. ProteinMPNN
+        we observed ProteinMPNN desired putting Methionine residues at the beginning of the peptide chain,
+        because it was trained to recover full protein chains, which tend to have Methionine at the N-terminus!
+
+    As the size and training data of deep learning models increase, they often get more predictive than hand-crafted
+    first-principles models, which in protein modeling really means physics-based.
+    However, they also get more and more opaque.
+
+
+Prediction vs design
+
+    Two sides of the same coin
+    BUT: prediction tends to have a higher bar: there is the desire to be able to predict every edge case
+    design, on the other hand, has a somewhat lower bar: often times one only cares if they can design even just a single
+    protein that works, as that is all it takes
+
+    But really, the same model can be used for prediction and design.
+    A given model can be good at prediction *in a particual setting*, and therefore it will tend to design proteins
+    that work *according to the setting that it is good at predicting*
+
+    We should acknowledge this
+
+
+Seeing machine learning models as hypothesis generation machines: being able to predict in all settings indicates a broadly-usable tool,
+and a model that encompasses all cases in a global model. However, with machine learning we are likely never operating in such a global sense.
+
+Instead, we are learning effective theories from data, which operate in a given regime/setting.
+If a model with certain limitations works well for a prediction, it suggests that the prediction only requires the specific regime in which the model works.
+
+The regime is defined by the assumptions (for example physical locality), but also by whatever "shortcuts" the model has learned on the data!
+Assumptions are proper of hand-crafter models as well, but the other "shortcuts" are learned from the training data, and are often hard to tease out.
+
+Perhaps paint the modeling picture step-by-step, starting from hand-crafter models, and then introducing machine learning models --> higher accuracy, less interpretability.
+    In Chapter 5 we address this a bit
 
 
