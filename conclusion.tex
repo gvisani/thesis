@@ -32,11 +32,12 @@ that respect desired symmetries without the use of additional training data.
 This ensures that the effective theories learned by the models possess these symmetries, deleting at the root the risk
 that they have learned symmetry-breaking shortcuts.
 
-In this thesis, these first-principle considerations are combined into a unified neural network framework
+In this theis, these first-principle considerations are combined into a unified neural network framework
 for building \textit{rotationally-equivariant models of residue-centered atomic neighborhoods}, which is
 described in detail in Chapter 2.
-Throughout my PhD, I have applied this framework to model several aspects of protein structure andfunction,
-always relying on local structural models.
+I then applied this framework to develop several models spanning diverse aspects of protein structure and function,
+which all achieve predictive performances closely training or exceeding the state-of-the-art,
+evidencing the efficacy of the proposed framework.
 
 In Chapter 3, I applied the SO(3)-equivariant framework to the domain of unsupervised learning, developing the Holographic (Variational) AutoEncoder (H-(V)AE).
 H-(V)AE's key idea is to disentangle the latent space into a maximally informative invariant embedding - which learns a compact representation
@@ -55,8 +56,8 @@ This task is common in protein design pipelines, as it complements models that d
 and amino-acid sequences~\citep{dauparas_robust_2022} without modeling exact atomic placement of the side-chains.
 The method I proposed first predicts each side-chain conformation using a local model of backbone-atom and spatially localized amino-acid labels,
 and then iteratively refines the predictions using a model of the previously-predicted all-atom conformations.
-The resulting algorithm - H-Packer - is not state-of-the-art on common benchmarks, but nonetheless its performance, speed and ease-of-use
-have enabled it to be widely used by the community, especially through the popular BioEmu repository~\citep{}.
+The resulting algorithm - H-Packer - is not state-of-the-art on common benchmarks, but nonetheless its sufficiently high performance, speed and ease-of-use
+have enabled it to be widely used by the community, especially through the popular BioEmu codebase~\citep{}.
 
 In Chapter 5, I revisited the work by my former colleague and mentor, Michael Pun, on H-CNN, a model trained to predict the likelihood
 of finding each amino-acid in a local atomic context. In his work, Mike provided proof-of-principle results that the learned likelihoods
@@ -83,7 +84,8 @@ owing to a lack of exhaustive data, coupled with the high level of degeneracy ch
 with many peptides, and vice-versa).
 In this chapter, I used HERMES to model the distribution of peptides that are presented by a specific MHC, and recognized by a specific TCR,
 a problem known among immunologists as that of TCR specificity.
-Our results show that HERMES, without almost any specific knowledge (barring what was in the pre-training data, which deduplication at 30\% similarity greatly reduced)
+Our results show that HERMES, without almost any specific knowledge~\footnote{barring what was in the pre-training data, which deduplication
+at 30\% similarity greatly reduced, see Chapter~\ref{sec:hermes}}
 of TCR-pMHC interactions, but access to a reliable wild-type TCR-pMHC structure, can be used to design a broad range of peptides that a target TCR
 interacts with. HERMES not only successfully identifies peptide residues that do not contribute to TCR binding and thus can be ignored,
 but is also able to suggest peptides that engage in stronger interactions with the TCR than the wild-type.
@@ -96,22 +98,67 @@ the use of a zero-shot model like HERMES. This of course comes at the expense of
 which is not always available and ignores any possible alternative conformation.
 
 
-The successes of the methods presented in this thesis are a testament to the design choices ...
+% Easy-to-use implementations of these tools are publicly-available and have received increasing adoption
+% from the protein engineering community at large. (this is repeating something said for H-packer already...)
 
-equivariance did X, and while people now are moving away from equivariance, I believe our framework
-will stand the test of time because it is much simpler than other equivariant solutions, though less expressive,
-but that is fine for the coarse tasks we want to work on.
 
-we couldn't use the framework instead for something like predicting all the forces on the atoms:
-the framework works as a way to quickly an make rotationally-equivariant predictions at the level of an amino-acid,
-from the amino-acid's surrounding structural environment.
+The successes of the methods presented in this thesis are a testament to the effectiveness of the design choices
+that underlie the structure-based, residue-centered framework used to build all of them.
+This effectiveness likely hinges on two main factors.
+
+First, the neural networks built with this framework particularly efficient at modeling the atomic environments
+to the degree that is required by the tasks considered in this thesis.
+Indeed, the SO(3)-equivariant neural networks built in this thesis are strictly less expressive than several SE(3)-equivariant
+alternatives commonly referenced in the atomic modeling literature~\citep{batzner_e3-equivariant_2022, liao_equiformer_2022, thomas_tensor_2018}.
+Their expressiveness - and associated computational complexity - is however unnecessary for the tasks considered here.
+In fact, those neural networks are often used to fit force measurements \textit{on each atom}, and thus require representing the neighborhood
+and all the interactions with atom-level precision.
+By constrast, the neural networks in this thesis encode atomic environments into a lossy representation, and process is with way fewer
+expensive tensor product operations.
+However, they are also only required to make predictions \textit{for the focal residue}, a generally more ``coarse-grained" setting
+that likely requires less precise details.
+Therefore, the success of the models in this thesis is indicative that less expressive models are sufficient for the tasks here considered.
+Finding the right level of expressiveness for a task is important.
+Not only because lower expressiveness it reduces the risk for overfitting~\citep{bishop_pattern_2006},
+but also because it often reduces computational complexity, and the risk that something might go wrong during model development.
+Indeed, strictly equivariant and expressive models~\citep{batzner_e3-equivariant_2022, liao_equiformer_2022, thomas_tensor_2018}
+have been known to be very computationally expensive, and difficult to optimize, to the point that recent works
+have been trying to relax the constraint of strict equivariance to improve optimization properties~\citep{pertigkiozoglou_recurrent_2026}.
+Instead, I believe the framework presented in this thesis will stand the test of time owing to its balanced simplicity,
+which keeps it fast and easy to optimize without compromising on equivariance.
+
+Second, the focus on modeling local atomic environments directly results in the learning of effective theories over the inter-atomic
+and inter-residue interactions that render single protein folds and protein-protein interactions stable, which are hallmarks of protein function.
+This is in contrast for example with models trained to model amino-acid distributions in functional protein sequences without worrying about structure,
+which have been shown to capture meaningful correlates between amino-acid variability and functional variability only as deeply as evolution has sampled them~\citep{zhang_protein_2024}.
+
+The design choices of locality and static atomic environment however also have their drawbacks.
+For instance, applying a mutation 
+
+
+These drawbacks, together with others coming from different sources such as wild-type preference bias isussed in Chapter 5,
+
+
+Interpretability work is important!!!
+
+
+Viewing ML models not only through an engineering mindset - as predictive tools - but also through a more fundamentally scientific one
+- as effective theories - reveals their usefulness as hypothesis generation machines useful to uncover the principles
+underlying specific biological processes. (rewrite this ...)
+
+
+
+As a concrete example, the focus on local and full-atom modeling limits the accuracy of HERMES to mutation effect
+that are driven by local interactions, and in particular with minimal side-chain relaxations upon mutations.
+
 
 the focus on local and full-atom modeling limits the scope of the models to being able to accurately
-predict effects that are driven by local interactions and een better with within minimal relaxation.
+predict effects that are driven by local interactions and even better with within minimal relaxation.
 Indeed, the success of HERMES on TCR-pMHC interactions
 could be seen as evidence that TCR-pMHC interactions are largely driven by local effects,
 and that neural substitutability is largely driven by preservation of steric properties - a hypothesis that is
 actually supported by a completely complementary analysis~\citep{pyo_data-driven_2025}.
+
 
 
 Nevertheless, just like HERMES-amortized improved the model's performance without changing its speed,
@@ -128,26 +175,6 @@ kind of in between ProteinMPNN and HERMES
 
 Mention that folks in the King lab are looking for something "different" from ProteinMPNN?
 I envision a Mixture of Experts approach, where a particular model is used for the scenario in which it works best. (cite MoEs?)
-
-
-
-\todo{
-    this transition is super weak --> instead, name the unifying thread scross the successes
-
-    I am writing way too many details and repeating myself a bunch.
-
-    talk myself up more. I successfully applied some principles, I successfully achieved the balance that I talk about at the beginning of
-    the conclusion
-
-    talk about future work as: further analyzing the bias 
-
-    avoid the "lessons" promise, it's too limiting. do it only if it arises naturally as I write
-
-    these sections are so disconnected it's painful. maybe don't even mention the whole equivariance thing, it's so hard to add
-    in a way that fits with everything else
-
-}
-
 
 
 % Overall, the documented successes of the models presented in this thesis are indicative of the effectiveness
