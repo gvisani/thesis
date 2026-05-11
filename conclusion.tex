@@ -133,48 +133,65 @@ This is in contrast for example with models trained to model amino-acid distribu
 which have been shown to capture meaningful correlates between amino-acid variability and functional variability only as deeply as evolution has sampled them~\citep{zhang_protein_2024}.
 
 The design choices of locality and static atomic environment however also have their drawbacks.
-For instance, applying a mutation 
-
-
-These drawbacks, together with others coming from different sources such as wild-type preference bias isussed in Chapter 5,
-
-
-Interpretability work is important!!!
-
-
-Viewing ML models not only through an engineering mindset - as predictive tools - but also through a more fundamentally scientific one
-- as effective theories - reveals their usefulness as hypothesis generation machines useful to uncover the principles
-underlying specific biological processes. (rewrite this ...)
-
-
-
-As a concrete example, the focus on local and full-atom modeling limits the accuracy of HERMES to mutation effect
-that are driven by local interactions, and in particular with minimal side-chain relaxations upon mutations.
-
-
-the focus on local and full-atom modeling limits the scope of the models to being able to accurately
-predict effects that are driven by local interactions and even better with within minimal relaxation.
-Indeed, the success of HERMES on TCR-pMHC interactions
-could be seen as evidence that TCR-pMHC interactions are largely driven by local effects,
-and that neural substitutability is largely driven by preservation of steric properties - a hypothesis that is
-actually supported by a completely complementary analysis~\citep{pyo_data-driven_2025}.
-
-
-
-Nevertheless, just like HERMES-amortized improved the model's performance without changing its speed,
-other improvements are possible within the framework.
-
-For example,
-- jointly modeling amino-acid label and side-chain configuration
-- getting a notion of uncertainty or confidence in the predictions, which would guide users' expectations and inform
+\red{discuss these drawbacks}\\
+\red{emphasize that what we call drawbacks define the domain and assumptions in which the effective theory
+represented by the model is applicable, which helps in using the model effectively as a tool when it works,
+and also turns the model into an hypothesis generation machine.}
+\red{discuss future directions within this framework, including:
+\begin{itemize}
+    \item jointly modeling amino-acid label and side-chain configuration
+    \item getting a notion of uncertainty or confidence in the predictions, which would guide users' expectations and inform
 areas where models are weaker
-- training HERMES without the full side-chains, but still with local neighborhoods, with an input parameterization
+    \item training HERMES without the full side-chains, but still with local neighborhoods, with an input parameterization
 similar to that of the \textit{initial guess} H-Packer model. This would disentangle locality and all-atom design choices,
 kind of in between ProteinMPNN and HERMES
+\end{itemize}
+}
 
 
-Mention that folks in the King lab are looking for something "different" from ProteinMPNN?
-I envision a Mixture of Experts approach, where a particular model is used for the scenario in which it works best. (cite MoEs?)
+
+% For instance, applying a mutation 
+
+
+% These drawbacks, together with others coming from different sources such as wild-type preference bias isussed in Chapter 5,
+
+
+% Interpretability work is important!!!
+
+
+% Viewing ML models not only through an engineering mindset - as predictive tools - but also through a more fundamentally scientific one
+% - as effective theories - reveals their usefulness as hypothesis generation machines useful to uncover the principles
+% underlying specific biological processes. (rewrite this ...)
+
+
+
+% As a concrete example, the focus on local and full-atom modeling limits the accuracy of HERMES to mutation effect
+% that are driven by local interactions, and in particular with minimal side-chain relaxations upon mutations.
+
+
+% the focus on local and full-atom modeling limits the scope of the models to being able to accurately
+% predict effects that are driven by local interactions and even better with within minimal relaxation.
+% Indeed, the success of HERMES on TCR-pMHC interactions
+% could be seen as evidence that TCR-pMHC interactions are largely driven by local effects,
+% and that neural substitutability is largely driven by preservation of steric properties - a hypothesis that is
+% actually supported by a completely complementary analysis~\citep{pyo_data-driven_2025}.
+
+
+
+% Nevertheless, just like HERMES-amortized improved the model's performance without changing its speed,
+% other improvements are possible within the framework.
+
+% For example,
+% - jointly modeling amino-acid label and side-chain configuration
+% - getting a notion of uncertainty or confidence in the predictions, which would guide users' expectations and inform
+% areas where models are weaker
+% - training HERMES without the full side-chains, but still with local neighborhoods, with an input parameterization
+% similar to that of the \textit{initial guess} H-Packer model. This would disentangle locality and all-atom design choices,
+% kind of in between ProteinMPNN and HERMES
+
+
+% Mention that folks in the King lab are looking for something "different" from ProteinMPNN?
+% I envision a Mixture of Experts approach, where a particular model is used for the scenario in which it works best. (cite MoEs?)
 
 
 % Overall, the documented successes of the models presented in this thesis are indicative of the effectiveness
