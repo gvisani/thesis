@@ -45,8 +45,8 @@ of the input in a "canonical" orientation - and a single rotation matrix that le
 Through simple experiments on spherical images, we provide evidence that the "canonical" orientation is one where all the training samples are
 maximally overlapped on top of each other.
 Finally, when applied to protein neighborhoods H-(V)AE was able to learn compact embeddings that efficiently encode key biophysical and structural
-properties of the neighborhoods, and that can be successfully used as features for downstream tasks; indeed, pairing them with a Random Forest Regressor \todo{cite}
-resulted in state-of-the-art performance on predicting protein-ligand binding affinity on the PDBBind dataset \todo{cite}.
+properties of the neighborhoods, and that can be successfully used as features for downstream tasks; indeed, pairing them with a Random Forest Regressor~\citep{breiman_random_2001}
+resulted in state-of-the-art performance on predicting protein-ligand binding affinity on the ATOM3D Ligand Binding Affinity dataset~\citep{townshend_atom3d_2021}.
 Furthermore, H-(V)AE neighborhood embeddings are currently being used by a colleague to easily identify structural features that are indicative
 of a protein's functional family, following similar principles as~\citep{sael_improved_2010, daberdaku_exploring_2018}.
 
@@ -57,7 +57,7 @@ and amino-acid sequences~\citep{dauparas_robust_2022} without modeling exact ato
 The method I proposed first predicts each side-chain conformation using a local model of backbone-atom and spatially localized amino-acid labels,
 and then iteratively refines the predictions using a model of the previously-predicted all-atom conformations.
 The resulting algorithm - H-Packer - is not state-of-the-art on common benchmarks, but nonetheless its sufficiently high performance, speed and ease-of-use
-have enabled it to be widely used by the community, especially through the popular BioEmu codebase~\citep{}.
+have enabled it to be widely used by the community, especially through the popular BioEmu codebase~\citep{lewis_scalable_2025}.
 
 In Chapter 5, I revisited the work by my former colleague and mentor, Michael Pun, on H-CNN, a model trained to predict the likelihood
 of finding each amino-acid in a local atomic context. In his work, Mike provided proof-of-principle results that the learned likelihoods
@@ -149,7 +149,7 @@ are not feasible with slower albeit potentially more accurate approaches.
 
 Nevertheless, just like HERMES-\textit{amortized} improved the model's performance without changing its speed,
 other improvements are possible within the framework.
-A relatively small improvement would be distilling the predictions of each 10-model HERMES ensemble into a single model,
+A relatively small improvement would be distilling the predictions of each 10-model HERMES ensemble into a single model~\citep{hinton_distilling_2015},
 to further increase inference speed and make the models even more CPU-friendly.
 I would also want to estimate prediction uncertainty for both HERMES and H-Packer. This would have the primary purpose of guiding users'
 expectations with respect to model predictions, but also the predicted uncertainty itself may be predictive of relevant physical quantities,
@@ -164,7 +164,7 @@ amino-acid labels and side-chain configurations, with the additional inclusion i
 found in proteins - like phosphorus and common metallic ions.
 Such a model would still only use local atomic neighborhoods as input, but it would include "mask" and amino-acid-specific tokens to handle
 the cases in which amino-acid labels and side-chain conformations are respectively unknown; in many ways it would be a direct competitor of
-LigandMPNN, but developed with strict locality and our rotationally equivariant framework.
+LigandMPNN~\citep{dauparas_atomic_2025}, but developed with strict locality and our rotationally equivariant framework.
 This model would be a direct substitute of both HERMES and H-Packer, and in addition be able to
 (1) design structure-conditioned sequences without assuming side-specific independence,
 and (2) better design protein interfaces against non-protein molecules like DNA, ions, and small-molecule ligands.

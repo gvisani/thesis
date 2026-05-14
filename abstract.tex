@@ -1,0 +1,47 @@
+
+Proteins carry out their diverse biological roles - from catalysis to immune recognition - by engaging in specific
+physical interactions with other molecules.
+These interactions are mediated by the protein's three-dimensional structure: the precise spatial arrangement of
+atoms at a binding site determines which molecules the protein can interact with, and how strongly.
+Predicting how a protein's structure gives rise to specific interactions - and how changes to the protein's amino-acid
+sequence alter them - is therefore central to understanding disease mechanisms and designing novel therapeutics.
+
+Physics-based approaches such as Molecular Dynamics and Rosetta provide principled, generalizable models of these
+interactions, but remain severely bottlenecked by computational cost.
+Machine learning has emerged as a compelling alternative, learning effective theories directly from data -
+coarse-grained approximations that do not need to resolve individual inter-atomic interactions to remain predictive of
+higher-level properties.
+However, the central challenge in developing useful ML models for proteins lies in carefully balancing model
+expressivity, training data availability, and representation choice, such that the learned shortcuts remain
+physically meaningful and predictive across diverse settings.
+
+In this thesis, I argue that this balance is best achieved by letting first-principles reasoning guide ML design choices.
+The physical principle that protein function emerges from local inter-atomic interactions motivates two concrete choices:
+modeling \textit{residue-centered local atomic environments} (neighborhoods), and enforcing \textit{rotational
+equivariance}, ensuring that the models' predictions respect the rotational symmetry inherent to inter-atomic interactions.
+These choices are combined into a unified SO(3)-equivariant neural network framework, which I describe in
+Chapter~\ref{sec:background}.
+
+I then apply this framework to develop three models spanning diverse aspects of protein structure and function.
+In Chapter~\ref{sec:hvae}, I introduce H-(V)AE, a rotationally equivariant (Variational) AutoEncoder that learns
+compact embeddings of local atomic environments.
+These embeddings encode key biophysical and structural properties and yield state-of-the-art performance on predicting
+protein-ligand binding affinity.
+In Chapter~\ref{sec:hpacker}, I present H-Packer, which uses the framework to tackle rotamer packing - the task of
+predicting physically correct side-chain conformations consistent with a given backbone - achieving competitive
+performance against leading physics-based and ML-based methods, and seeing broad adoption by the community.
+In Chapter~\ref{sec:hermes}, I introduce HERMES, a structure-based model pre-trained to predict amino-acid propensities
+from local atomic contexts, and used in zero-shot - or after efficient fine-tuning - to predict mutational effects on
+protein stability and protein-protein binding affinity, matching or exceeding state-of-the-art performance.
+I also characterize HERMES' strengths, weaknesses, and biases, and demonstrate its applicability to structure-based
+vaccine antigen design.
+
+Finally, in Chapter~\ref{sec:tcrpmhc}, I leverage HERMES to address the problem of T-Cell Receptor (TCR) specificity:
+predicting which peptide antigens a given TCR will recognize, a key open problem in theoretical immunology.
+Without any explicit training on TCR-pMHC interaction data, HERMES successfully models the distribution of peptides
+recognized by a target TCR, enabling de novo design of immunogenic peptides and achieving experimental T-cell activation
+with a success rate of up to 50\%.
+
+Taken together, the results in this thesis demonstrate that physical locality and rotational equivariance are effective
+inductive biases for machine learning models of proteins, yielding a fast, principled, and broadly applicable framework
+for protein modeling and design.
