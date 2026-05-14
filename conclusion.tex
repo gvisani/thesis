@@ -10,9 +10,9 @@ by slow speeds and high need for computational resources.
 In recent years, machine learning (ML) - driven by highly expressive neural networks - has risen to fill
 this gap by substituting first-principles, general modeling with effective theories learned from data,
 each specific to a single or a circumscribed set of tasks and to a particular representation choice.
-These models are fast, but their speed is traded with potential loss of relevant information in the
+These models are fast, but their speed is traded for potential loss of relevant information in the
 effective theory learned from data.
-Thus, the main challenge in developing useful machine learning model rests in carefully balancing
+Thus, the main challenge in developing a useful machine learning model rests in carefully balancing
 model expressivity, training data, and choice of representation, such that the learned "shortcuts" are predictive
 of real-world phenomena.
 
@@ -32,11 +32,11 @@ that respect desired symmetries without the use of additional training data.
 This ensures that the effective theories learned by the models possess these symmetries, deleting at the root the risk
 that they have learned symmetry-breaking shortcuts.
 
-In this theis, these first-principle considerations are combined into a unified neural network framework
+In this thesis, these first-principle considerations are combined into a unified neural network framework
 for building \textit{rotationally-equivariant models of residue-centered atomic neighborhoods}, which is
 described in detail in Chapter 2.
 I then applied this framework to develop several models spanning diverse aspects of protein structure and function,
-which all achieve predictive performances closely training or exceeding the state-of-the-art,
+which all achieve predictive performances closely matching or exceeding the state-of-the-art,
 evidencing the efficacy of the proposed framework.
 
 In Chapter 3, I applied the SO(3)-equivariant framework to the domain of unsupervised learning, developing the Holographic (Variational) AutoEncoder (H-(V)AE).
@@ -47,7 +47,7 @@ maximally overlapped on top of each other.
 Finally, when applied to protein neighborhoods H-(V)AE was able to learn compact embeddings that efficiently encode key biophysical and structural
 properties of the neighborhoods, and that can be successfully used as features for downstream tasks; indeed, pairing them with a Random Forest Regressor \todo{cite}
 resulted in state-of-the-art performance on predicting protein-ligand binding affinity on the PDBBind dataset \todo{cite}.
-Furthermore, H-(V)AE neighborhoods embeddings are currently being used by a colleague to easily identify structural features that are indicative
+Furthermore, H-(V)AE neighborhood embeddings are currently being used by a colleague to easily identify structural features that are indicative
 of a protein's functional family, following similar principles as~\citep{sael_improved_2010, daberdaku_exploring_2018}.
 
 Then, in Chapter 4, I used the SO(3)-equivariant framework to tackle the task known as "rotamer packing", which concerns finding physically correct side-chain
@@ -89,7 +89,7 @@ at 30\% similarity greatly reduced, see Chapter~\ref{sec:hermes}}
 of TCR-pMHC interactions, but access to a reliable wild-type TCR-pMHC structure, can be used to design a broad range of peptides that a target TCR
 interacts with. HERMES not only successfully identifies peptide residues that do not contribute to TCR binding and thus can be ignored,
 but is also able to suggest peptides that engage in stronger interactions with the TCR than the wild-type.
-This chapter is not only a testament to HERMES' ability of modeling amino-acid substitutions in diverse structural contexts,
+This chapter is not only a testament to HERMES' ability to model amino-acid substitutions in diverse structural contexts,
 it is also a testament to the importance of paradigm shifts.
 Indeed, prior to this work, most research on TCR specificity prediction and design was performed using sequence representations
 and relied on experimental training-data distributions heavily skewed towards high TCR diversity and low peptide diversity.
@@ -106,264 +106,65 @@ The successes of the methods presented in this thesis are a testament to the eff
 that underlie the structure-based, residue-centered framework used to build all of them.
 This effectiveness likely hinges on two main factors.
 
-First, the neural networks built with this framework particularly efficient at modeling the atomic environments
+First, the neural networks built with this framework are particularly efficient at modeling the atomic environments
 to the degree that is required by the tasks considered in this thesis.
 Indeed, the SO(3)-equivariant neural networks built in this thesis are strictly less expressive than several SE(3)-equivariant
 alternatives commonly referenced in the atomic modeling literature~\citep{batzner_e3-equivariant_2022, liao_equiformer_2022, thomas_tensor_2018}.
 Their expressiveness - and associated computational complexity - is however unnecessary for the tasks considered here.
 In fact, those neural networks are often used to fit force measurements \textit{on each atom}, and thus require representing the neighborhood
-and all the interactions with atom-level precision.
-By constrast, the neural networks in this thesis encode atomic environments into a lossy representation, and process is with way fewer
+and all the interactions with high atom-level precision.
+By contrast, the neural networks in this thesis encode atomic environments into a lossy representation, and processes it with way fewer
 expensive tensor product operations.
 However, they are also only required to make predictions \textit{for the focal residue}, a generally more ``coarse-grained" setting
 that likely requires less precise details.
-Therefore, the success of the models in this thesis is indicative that less expressive models are sufficient for the tasks here considered.
-Finding the right level of expressiveness for a task is important.
-Not only because lower expressiveness it reduces the risk for overfitting~\citep{bishop_pattern_2006},
+Therefore, the success of the models in this thesis is indicative that less expressive models are sufficient for the tasks considered here.
+Finding the right level of expressiveness for a task is important:
+not only because lower expressiveness reduces the risk for overfitting~\citep{bishop_pattern_2006},
 but also because it often reduces computational complexity, and the risk that something might go wrong during model development.
 Indeed, strictly equivariant and expressive models~\citep{batzner_e3-equivariant_2022, liao_equiformer_2022, thomas_tensor_2018}
-have been known to be very computationally expensive, and difficult to optimize, to the point that recent works
-have been trying to relax the constraint of strict equivariance to improve optimization properties~\citep{pertigkiozoglou_recurrent_2026}.
+have been known to be both very computationally expensive and difficult to optimize, to the point that recent works
+have been trying to relax the constraint of equivariance to improve optimization properties~\citep{pertigkiozoglou_recurrent_2026}.
 Instead, I believe the framework presented in this thesis will stand the test of time owing to its balanced simplicity,
 which keeps it fast and easy to optimize without compromising on equivariance.
 
-Second, the focus on modeling local atomic environments directly results in the learning of effective theories over the inter-atomic
+Second, the focus on modeling local atomic environments directly results in the learning of effective theories over the majority of inter-atomic
 and inter-residue interactions that render single protein folds and protein-protein interactions stable, which are hallmarks of protein function.
 This is in contrast for example with models trained to model amino-acid distributions in functional protein sequences without worrying about structure,
 which have been shown to capture meaningful correlates between amino-acid variability and functional variability only as deeply as evolution has sampled them~\citep{zhang_protein_2024}.
 
-The design choices of locality and static atomic environment however also have their drawbacks.
-\red{discuss these drawbacks}\\
-\red{emphasize that what we call drawbacks define the domain and assumptions in which the effective theory
-represented by the model is applicable, which helps in using the model effectively as a tool when it works,
-and also turns the model into an hypothesis generation machine.}
-\red{discuss future directions within this framework, including:
-\begin{itemize}
-    \item jointly modeling amino-acid label and side-chain configuration
-    \item getting a notion of uncertainty or confidence in the predictions, which would guide users' expectations and inform
-areas where models are weaker
-    \item training HERMES without the full side-chains, but still with local neighborhoods, with an input parameterization
-similar to that of the \textit{initial guess} H-Packer model. This would disentangle locality and all-atom design choices,
-kind of in between ProteinMPNN and HERMES
-\end{itemize}
-}
-
-
-
-% For instance, applying a mutation 
-
-
-% These drawbacks, together with others coming from different sources such as wild-type preference bias isussed in Chapter 5,
-
-
-% Interpretability work is important!!!
-
-
-% Viewing ML models not only through an engineering mindset - as predictive tools - but also through a more fundamentally scientific one
-% - as effective theories - reveals their usefulness as hypothesis generation machines useful to uncover the principles
-% underlying specific biological processes. (rewrite this ...)
-
-
-
-% As a concrete example, the focus on local and full-atom modeling limits the accuracy of HERMES to mutation effect
-% that are driven by local interactions, and in particular with minimal side-chain relaxations upon mutations.
-
-
-% the focus on local and full-atom modeling limits the scope of the models to being able to accurately
-% predict effects that are driven by local interactions and even better with within minimal relaxation.
-% Indeed, the success of HERMES on TCR-pMHC interactions
-% could be seen as evidence that TCR-pMHC interactions are largely driven by local effects,
-% and that neural substitutability is largely driven by preservation of steric properties - a hypothesis that is
-% actually supported by a completely complementary analysis~\citep{pyo_data-driven_2025}.
-
-
-
-% Nevertheless, just like HERMES-amortized improved the model's performance without changing its speed,
-% other improvements are possible within the framework.
-
-% For example,
-% - jointly modeling amino-acid label and side-chain configuration
-% - getting a notion of uncertainty or confidence in the predictions, which would guide users' expectations and inform
-% areas where models are weaker
-% - training HERMES without the full side-chains, but still with local neighborhoods, with an input parameterization
-% similar to that of the \textit{initial guess} H-Packer model. This would disentangle locality and all-atom design choices,
-% kind of in between ProteinMPNN and HERMES
-
-
-% Mention that folks in the King lab are looking for something "different" from ProteinMPNN?
-% I envision a Mixture of Experts approach, where a particular model is used for the scenario in which it works best. (cite MoEs?)
-
-
-% Overall, the documented successes of the models presented in this thesis are indicative of the effectiveness
-% of the design choices that underlie them.
-% This effectiveness is of course not absolute, as also documented in these chapters.
-% Therefore, in what follows, I would like to offer more perspective on the tradeoffs inherent in the design choices presented in this thesis,
-% and then compile them into a set of ``lessons" I have learned throughout my PhD, and that will hopefully guide me onto my next chapter.
-
-% Starting from equivariance. While enforcing equivariance certainly improves the data efficiency of neural networks by reducing their function class in a manner that preserves
-% key symmetries, strictly equivariant models have actually fallen out of favor in recent years~\todo{cite af3 and the bitter pill molecular conformer paper}.
-% The reason for this has been that many equivariant architectures are generally harder to optimize: they take more epochs and have more unstable
-% training dynamics than more ``traditional" unconstrained architectures \todo{cite}.
-% While this problem seems to be relevant on a case-by-case basis, it does indicate a tradeoff between the size of the function class represented by
-% the neural network, and the ability of current optimization algorithms to effectively search in this function class space.
-% Recent works attempt to navigate this tradeoff by relaxing equivariance enough to make optimization easier.
-% I do not think this issue plagues the neural networks presented in this thesis, in part because, in the space of equivariant neural networks based on spherical harmonics,
-% they are very simple. Indeed, many alternative models store steerable tensor representations for all atoms in the input point cloud,
-% computing many tensor products between them~\todo{cite tensor field networks, nequip, equiformer}.
-% Instead, in our framework, we only hold a single, large steerable tensor representing the full point cloud.
-% This approach greatly coarse-grains the atomic point cloud, especially at the edges of the sphere, but such coarse graining
-% makes the models much faster and the optimization simpler, while being sufficiently expressive for the tasks presented in this thesis.
-% Furthermore, the equivariant framework shared by this thesis and by~\todo{cite tensor field networks, nequip, equiformer},
-% is arguably quite complex to learn and reason about if you do not have formal training in physics or group theory.
-% I believe that it is also for this reason that many researchers have shifted away from
-% it, and have accepted the higher computational and data requirements of traditional approaches.
-
-% Moving onto protein-specific design choices, we have shown in Chapter 5 that HERMES' full-atom input endows it with a strong preference for
-% steric-preserving substitutions, stronger than it is observed in nature and thus often deleterious for predicting mutational effects.
-% Fundamentally, the issue stems from the static nature of the predictions: faster predictions are made from static snapshots, but side-chains
-% often readjust upon mutations, a setting that naive predictions of HERMES, specifically those of HERMES-\textit{fixed} - simply cannot model.
-% Adapting the side-chains to a particular mutant using Rosetta ameliorates the issue: the atomic picture is not static anymore;
-% however, they render the model effectively as slow as using Rosetta itself for predicting mutation effects. 
-% A compromise is achieved in HERMES-\textit{amortized}, which makes predictions from the static atomic environment, but implicitly
-% resolves potential relaxation events.
-% Now, we may ask, could alternative design choices have ameliorated the issue to begin with? Of course yes.
-% For example, ProteinMPNN~\citep{dauparas_robust_2022} is the main competitor of HERMES for mutation effect prediction, as thoroughly discussed in Chapters 5 and 6.
-% Interestingly, ProteinMPNN does not display similar strong biases for steric-preserving substitutions.
-% In fact, its predictions, also made from a static snapshot of the wild-type structure, are unbothered by size considerations.
-% I attribute this to the choice made by its authors to represent side-chains
-% not by their exact atomic placement, but by spatially localized amino-acid labels, completely ignoring lowest-energy atomic side-chain placement.
-% Indeed, this strategy inherently renders ProteinMPNN's predictions more ``flexible" from a structural standpoint.
-% This benefit of ProteinMPNN's approach is to be contrasted with the downside stemming from modeling proteins at a coarser level of detail
-% which requires more examples to learn patterns consistent with the underlying physics, and thus broadly generalizable.
-% With sufficient data, I believe that a coarser approach like that of ProteinMPNN would actually be preferable to the
-% full-atom modeling of HERMES, for the ability of making fast predictions from static snapshots with implicit side-chain flexibility.
-% Nevertheless, as it stands, HERMES-\textit{amortized} appears to have the upper hand in some applications,
-% for example structure-based vaccine design, as demonstrated in Chapter 5.
-
-% Finally, we come to locality. In the context of predicting the identity of a single masked amino-acid or side-chain conformation,
-% assuming strict locality likely does not remove any important information. This is especially true if including and assuming the correctness
-% of the precise side-chain conformations. Indeed, the local side-chain conformations are derived yes from local interactions with the
-% focal residue - whose specifics we wish to predict - but also implicitly from the surroundings.
-% Therefore, if again assuming a fully static picture, there should be enough information about the global state of the system in the
-% immediate local surrounding of the focal residue, to predict its identity or side-chain conformation.
-% Things change once we assume flexibility in the structure, such as when evaluating the likelihood of a particular mutation,
-% or predicting multiple side-chain conformations at once. 
-% Then, interactions that are non-local with respect to the focal residue could impact the true observables,
-% but they are not considered in the prediction of a local model.
-% The same applies to the prediction of a global property, like the effect of a mutation on protein stability or protein-protein
-% binding affinity. In some cases, a mutation can cause a chain of local structural changes that affect non-local areas of the protein
-% in such a way as to affect stability or affinity: these effects are impossible to determine by HERMES, since it is
-% unaware of the protein's composition away from the focal residue.
-% This, however, does not render local models like HERMES and H-Packer practically useless.
-% In fact, their predictions can be reliable in cases where the target observables are driven primarily
-% by short-range interactions and local packing.
-% In fact, they can be even more reliable in these cases than the prediction of a global model like ProteinMPNN,
-% in virtue of the fact that all their representation capacity is devoted to a fundamentally less complex input representation,
-% and thus they have less opportunities for learning overly-simplifying shortcuts.
-% Then, if we have reason to believe that most relevant effects will remain local, we may have a more useful model in our hands if we
-% focus on keeping it local and reliable.
-
-
-% Overall, these considerations 
-
-% Overall, throughout my analysis I have found that identifying how specific design choices result into specific biases or deleterious ``shortcuts",
-% is equally as hard as it is important, and I have learned to withhold surprise when finding a shortcut I had not thought about.
-
-% I have also come to realize, however, the practical
-
-
-
-
-% The locality of HERMES appears to be a double-edged sword: local neighborhoods reduce
-% input complexity, remove constraints on protein size, and improve scalability, but necessarily limit
-% the model's ability to capture long-range epistasis and allosteric coupling. We view HERMES as a
-% hypothesis-generation tool whose predictions are most reliable when mutational effects are driven
-% primarily by short-range interactions and local packing.
-
-
-% \todo{add binding affinity predictions to HERMES Chapter (5)!!}
-
-% predictions of binding affinity differences with HERMES only work well when the mutations are at the interface.
-
-% , and specifically the residue-centered locality
-
-
-
-
-% however, the choice of locality 
-
-% Locality, on the other hand, instead is highly justified as a strategy. Indeed, 
-
-% Locality is also a choice that differs from ProteinMPNN, which instead considers as input the entire protein structure,
-% with the crucial option of having multiple mutations 
-
-% Locality, particuarly structural locality, is heavily justified
-
-
-
-% Moving onto protein-specific design choices, we have strict locality.
-% For example, in the context of HERMES, assuming that the preference for a given amino-acid is driven exclusively by its immediate structural context,
-% completely ignores cases in which an amino-acid
-
-
-
-% Talk about examples of how making different decisions yields different types of models. Say that it's especially noticeable in the context of a task like that of HERMES.
-
-% These choices are in contrast with learning
-
-% On the contrary, building models of protein sequences learns different 
-
-
-
-% Talk about *lessons learned*
-
-
-% Interpretability
-
-%     Say something more about HERMES vs. ProteinMPNN
-%         we observed ProteinMPNN desired putting Methionine residues at the beginning of the peptide chain,
-%         because it was trained to recover full protein chains, which tend to have Methionine at the N-terminus!
-
-%     As the size and training data of deep learning models increase, they often get more predictive than hand-crafted
-%     first-principles models, which in protein modeling really means physics-based.
-%     However, they also get more and more opaque.
-
-
-% Prediction vs design
-
-%     Two sides of the same coin
-%     BUT: prediction tends to have a higher bar: there is the desire to be able to predict every edge case
-%     design, on the other hand, has a somewhat lower bar: often times one only cares if they can design even just a single
-%     protein that works, as that is all it takes
-
-%     But really, the same model can be used for prediction and design.
-%     A given model can be good at prediction *in a particual setting*, and therefore it will tend to design proteins
-%     that work *according to the setting that it is good at predicting*
-
-%     We should acknowledge this
-
-
-% Seeing machine learning models as hypothesis generation machines: being able to predict in all settings indicates a broadly-usable tool,
-% and a model that encompasses all cases in a global model. However, with machine learning we are likely never operating in such a global sense.
-
-% Instead, we are learning effective theories from data, which operate in a given regime/setting.
-% If a model with certain limitations works well for a prediction, it suggests that the prediction only requires the specific regime in which the model works.
-
-% The regime is defined by the assumptions (for example physical locality), but also by whatever "shortcuts" the model has learned on the data!
-% Assumptions are proper of hand-crafter models as well, but the other "shortcuts" are learned from the training data, and are often hard to tease out.
-
-% Perhaps paint the modeling picture step-by-step, starting from hand-crafter models, and then introducing machine learning models --> higher accuracy, less interpretability.
-%     In Chapter 5 we address this a bit
-
-
-% I leave with the consideration that a useful model is one that is well characterized, for which the level of detail it considers is commensurate with the
-% amount of data it was trained with - generally the more the detail, the less training data is needed -
-
-
-% Science progress often follows the path of least resistance.
-% People want to spend their time developing their own ideas, so sometimes their decision to use a piece of software over another is driven by the time
-% they expect to spend understanding and setting it up ...
-
-% For research involving software, this is translated into ease-of-use, minimizing the time it takes someone to install and understand how to run the code
-% to do the things they are interested in doing.
-
+The design choices of locality and focusing on static atomic environments also pose obvious limits.
+For example, as discussed in Chapters~\ref{sec:hermes}~and~\ref{sec:tcrpmhc}, these choices limit the accuracy of HERMES to mutation effects
+that are driven by local interactions surrounding the mutated site, and in particular with minimal necessary side-chain relaxations upon mutations
+(limit only partially mitigated by HERMES-\textit{amortized}).
+However, what is most dangerous about these limits - and others that may be unveiled - is the ignorance of them.
+Indeed, these limits simply define the domain in which the effective theory represented by the model is applicable.
+Therefore, characterizing them provides a "how to" manual for when the model is applicable and what it can accomplish:
+not much different from a function contract in software engineering.
+Knowledge of these limits also turns the model into a hypothesis generation machine. For example, the success of HERMES-\textit{fixed}
+on scoring and design of TCR-pMHC interactions could be seen as evidence that TCR-pMHC interactions are largely driven by local effects,
+and that neural substitutability at TCR-pMHC interfaces is largely driven by preservation of steric properties 
+- a hypothesis that is actually supported by a complementary line of evidence~\citep{pyo_data-driven_2025}.
+Last, being able to make useful predictions with low computational requirements and high speed unlocks use cases of the model that
+are not feasible with slower albeit potentially more accurate approaches.
+
+Nevertheless, just like HERMES-\textit{amortized} improved the model's performance without changing its speed,
+other improvements are possible within the framework.
+A relatively small improvement would be distilling the predictions of each 10-model HERMES ensemble into a single model,
+to further increase inference speed and make the models even more CPU-friendly.
+I would also want to estimate prediction uncertainty for both HERMES and H-Packer. This would have the primary purpose of guiding users'
+expectations with respect to model predictions, but also the predicted uncertainty itself may be predictive of relevant physical quantities,
+for example side-chain conformational entropy in the case of H-Packer.
+A natural place to start would be reporting and analyzing the 10-model ensemble variance of HERMES.\\
+Thinking instead about large-scale extensions of the framework, insightful future work would be training HERMES without the full side-chains,
+but still with local neighborhoods, and using an input parameterization similar to that of the \textit{initial guess} H-Packer model.
+This would disentangle locality and all-atom design choices, resulting in a model with inductive biases "in-between" those of HERMES
+and of ProteinMPNN.
+Finally, I envision the efforts in this thesis to potentially be unified in a single model that performs auto-regressive prediction of both
+amino-acid labels and side-chain configurations, with the additional inclusion in the neighborhood featurization of atomic types beyond those
+found in proteins - like phosphorus and common metallic ions.
+Such a model would still only use local atomic neighborhoods as input, but it would include "mask" and amino-acid-specific tokens to handle
+the cases in which amino-acid labels and side-chain conformations are respectively unknown; in many ways it would be a direct competitor of
+LigandMPNN, but developed with strict locality and our rotationally equivariant framework.
+This model would be a direct substitute of both HERMES and H-Packer, and in addition be able to
+(1) design structure-conditioned sequences without assuming side-specific independence,
+and (2) better design protein interfaces against non-protein molecules like DNA, ions, and small-molecule ligands.
